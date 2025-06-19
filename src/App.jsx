@@ -141,18 +141,17 @@ export default function App() {
     const handleSaveProject = async (projectData) => {
         if (!userId) return;
 
-        // Check for new category and update if necessary
-        if (!categories[projectData.category]) {
+        if (projectData.category && !categories[projectData.category]) {
             let newCategories = { ...categories };
             newCategories[projectData.category] = generateHslColor(Object.values(categories));
             await setDoc(doc(db, `artifacts/${appId}/users/${userId}/settings`, 'categories'), newCategories, { merge: true });
         }
 
-        if (projectData.id) { // Editing existing project
+        if (projectData.id) {
             const projectId = projectData.id;
             const { id, ...dataToUpdate } = projectData;
             await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/projects`, projectId), dataToUpdate);
-        } else { // Creating new project
+        } else {
             const { id, ...dataToCreate } = projectData;
             await addDoc(collection(db, `artifacts/${appId}/users/${userId}/projects`), { ...dataToCreate, createdAt: new Date() });
         }
@@ -279,7 +278,7 @@ export default function App() {
                 {`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.3s ease-out forwards; } .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }`}
             </style>
             <div className="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col">
-                <TopNavBar activeView={activeView} setActiveView={setActiveView} setIsSettingsModalOpen={setIsSettingsModalOpen} setIsProjectModalOpen={openNewProjectModal} hasActiveSession={!!activeSession} />
+                <TopNavBar activeView={activeView} setActiveView={setActiveView} setIsSettingsModalOpen={setIsSettingsModalOpen} onNewProject={openNewProjectModal} hasActiveSession={!!activeSession} />
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{renderView()}</main>
                 {isSessionEndModalOpen && <SessionEndModal onClose={() => setIsSessionEndModalOpen(false)} onSave={handleSaveSessionNotes} />}
                 {isProjectModalOpen && <ProjectModal 
