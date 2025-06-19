@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { 
     getFirestore, 
     collection, 
@@ -29,8 +28,10 @@ const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
 // --- Initialize Firebase ---
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
+
+// --- Hardcoded User ID ---
+const basePath = `artifacts/${appId}/public/data`;
 
 // --- Nudge System Configuration ---
 const NUDGE_CONFIG = {
@@ -40,9 +41,9 @@ const NUDGE_CONFIG = {
 };
 
 const POMODORO_CONFIG = {
-    WORK_SESSION: 25 * 60, // 25 minutes
-    SHORT_BREAK: 5 * 60, // 5 minutes
-    LONG_BREAK: 10 * 60 // 10 minutes
+    WORK_SESSION: 25 * 60,
+    SHORT_BREAK: 5 * 60,
+    LONG_BREAK: 10 * 60
 };
 
 // --- Helper Functions ---
@@ -55,7 +56,6 @@ const formatTime = (seconds) => { const mins = Math.floor(seconds / 60); const s
 // --- Main App Component ---
 export default function App() {
     // --- State ---
-    const [userId, setUserId] = useState(null);
     const [projects, setProjects] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [categories, setCategories] = useState({});
@@ -72,22 +72,15 @@ export default function App() {
     const [editingTask, setEditingTask] = useState(null);
     const [sessionEndData, setSessionEndData] = useState(null);
 
-    // --- Effects for Auth, Data Loading, Theme and Active Session ---
+    // --- Effects for Data Loading and Theme ---
     useEffect(() => {
-        onAuthStateChanged(auth, user => {
-            if (user) setUserId(user.uid);
-            else signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed:", error));
-        });
-    }, []);
-
-    useEffect(() => {
-        if (!userId) return;
-        const settingsDocRef = doc(db, `artifacts/${appId}/users/${userId}/settings`, 'config');
+        const settingsDocRef = doc(db, basePath, 'settings', 'config');
         const unsubSettings = onSnapshot(settingsDocRef, (doc) => setSettings(doc.exists() ? { totalTasksCompleted: 0, ...doc.data() } : { ntfyUrl: '', totalTasksCompleted: 0, nudgeMode: NUDGE_CONFIG.MODES.AUTOMATIC, theme: 'dark' }));
-        const unsubProjects = onSnapshot(query(collection(db, `artifacts/${appId}/users/${userId}/projects`)), s => setProjects(s.docs.map(d => ({ id: d.id, ...d.data(), createdAt: d.data().createdAt?.toDate() }))));
-        const unsubTasks = onSnapshot(query(collection(db, `artifacts/${appId}/users/${userId}/tasks`)), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data(), createdAt: d.data().createdAt?.toDate(), completedAt: d.data().completedAt?.toDate(), dueDate: d.data().dueDate?.toDate() }))));
-        const unsubCategories = onSnapshot(doc(db, `artifacts/${appId}/users/${userId}/settings`, 'categories'), doc => setCategories(doc.exists() ? doc.data() : {}));
-        const unsubSession = onSnapshot(doc(db, `artifacts/${appId}/users/${userId}/tracking`, 'activeSession'), (doc) => {
+        
+        const unsubProjects = onSnapshot(query(collection(db, basePath, 'projects')), s => setProjects(s.docs.map(d => ({ id: d.id, ...d.data(), createdAt: d.data().createdAt?.toDate() }))));
+        const unsubTasks = onSnapshot(query(collection(db, basePath, 'tasks')), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data(), createdAt: d.data().createdAt?.toDate(), completedAt: d.data().completedAt?.toDate(), dueDate: d.data().dueDate?.toDate() }))));
+        const unsubCategories = onSnapshot(doc(db, basePath, 'settings', 'categories'), doc => setCategories(doc.exists() ? doc.data() : {}));
+        const unsubSession = onSnapshot(doc(db, basePath, 'tracking', 'activeSession'), (doc) => {
             if (doc.exists() && doc.data().active) {
                 const data = doc.data();
                 const endTime = data.startTime.toDate().getTime() + data.duration * 1000;
@@ -103,7 +96,7 @@ export default function App() {
         });
 
         return () => { unsubSettings(); unsubProjects(); unsubTasks(); unsubCategories(); unsubSession(); };
-    }, [userId]);
+    }, []);
     
     useEffect(() => { document.documentElement.classList.toggle('dark', settings.theme === 'dark'); }, [settings.theme]);
 
@@ -139,73 +132,53 @@ export default function App() {
 
     // --- Handlers ---
     const handleSaveProject = async (projectData) => {
-        if (!userId) return;
-
         if (projectData.category && !categories[projectData.category]) {
             let newCategories = { ...categories };
             newCategories[projectData.category] = generateHslColor(Object.values(categories));
-            await setDoc(doc(db, `artifacts/${appId}/users/${userId}/settings`, 'categories'), newCategories, { merge: true });
+            await setDoc(doc(db, basePath, 'settings', 'categories'), newCategories, { merge: true });
         }
 
         if (projectData.id) {
             const projectId = projectData.id;
             const { id, ...dataToUpdate } = projectData;
-            await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/projects`, projectId), dataToUpdate);
+            await updateDoc(doc(db, basePath, 'projects', projectId), dataToUpdate);
         } else {
             const { id, ...dataToCreate } = projectData;
-            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/projects`), { ...dataToCreate, createdAt: new Date() });
+            await addDoc(collection(db, basePath, 'projects'), { ...dataToCreate, createdAt: new Date() });
         }
         
         setIsProjectModalOpen(false);
         setEditingProject(null);
     };
 
-    const openNewProjectModal = () => {
-        setEditingProject(null);
-        setIsProjectModalOpen(true);
-    };
-
-    const openEditProjectModal = (project) => {
-        setEditingProject(project);
-        setIsProjectModalOpen(true);
-    };
-
     const handleSaveTask = async (taskData) => {
-        if (!userId) return;
         const { id, ...dataToSave } = taskData;
         if (id) {
-            await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, id), dataToSave);
+            await updateDoc(doc(db, basePath, 'tasks', id), dataToSave);
         } else {
-            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/tasks`), { ...dataToSave, createdAt: new Date() });
+            await addDoc(collection(db, basePath, 'tasks'), { ...dataToSave, createdAt: new Date() });
         }
         setIsTaskDetailModalOpen(false);
         setEditingTask(null);
     };
 
     const handleStartTask = async (task) => {
-        if (!userId || activeSession) return;
-        const session = {
-            taskId: task.id,
-            startTime: new Date(),
-            duration: POMODORO_CONFIG.WORK_SESSION,
-            isDouble: false,
-            active: true,
-            type: 'work'
-        };
-        await setDoc(doc(db, `artifacts/${appId}/users/${userId}/tracking`, 'activeSession'), session);
-        await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, task.id), { status: 'in-progress' });
+        if (activeSession) return;
+        const session = { taskId: task.id, startTime: new Date(), duration: POMODORO_CONFIG.WORK_SESSION, isDouble: false, active: true, type: 'work' };
+        await setDoc(doc(db, basePath, 'tracking', 'activeSession'), session);
+        await updateDoc(doc(db, basePath, 'tasks', task.id), { status: 'in-progress' });
         setActiveView('tracking');
     };
-
-    const handleSessionEnd = (session) => {
-        setSessionEndData(session);
-        setIsSessionEndModalOpen(true);
-    };
     
+    const openNewProjectModal = () => { setEditingProject(null); setIsProjectModalOpen(true); };
+    const openEditProjectModal = (project) => { setEditingProject(project); setIsProjectModalOpen(true); };
+    const handleSessionEnd = (session) => { setSessionEndData(session); setIsSessionEndModalOpen(true); };
+    const openTaskDetailForNew = (template) => { setEditingTask(template); setIsTaskDetailModalOpen(true); };
+
     const handleSaveSessionNotes = async (notes, markComplete, completionNotes) => {
-        if (!userId || !sessionEndData) return;
+        if (!sessionEndData) return;
         const { taskId, duration, isDouble } = sessionEndData;
-        const taskRef = doc(db, `artifacts/${appId}/users/${userId}/tasks`, taskId);
+        const taskRef = doc(db, basePath, 'tasks', taskId);
         
         const sessionNote = {
             date: new Date(),
@@ -229,23 +202,18 @@ export default function App() {
         setSessionEndData(null);
         
         const breakDuration = isDouble ? POMODORO_CONFIG.LONG_BREAK : POMODORO_CONFIG.SHORT_BREAK;
-        await setDoc(doc(db, `artifacts/${appId}/users/${userId}/tracking`, 'activeSession'), {
+        await setDoc(doc(db, basePath, 'tracking', 'activeSession'), {
             startTime: new Date(),
             duration: breakDuration,
             active: true,
             type: 'break'
         });
     };
-    
-    const openTaskDetailForNew = (template) => {
-        setEditingTask(template);
-        setIsTaskDetailModalOpen(true);
-    };
-    
+
     // --- Render Logic ---
     const renderView = () => {
         if (activeView === 'tracking') {
-            return <TrackingView session={activeSession} tasks={tasks} userId={userId} onSessionEnd={handleSessionEnd} />;
+            return <TrackingView session={activeSession} tasks={tasks} userId={'shared'} onSessionEnd={handleSessionEnd} />;
         }
         if (selectedProjectId) {
             const project = projects.find(p => p.id === selectedProjectId);
@@ -253,7 +221,7 @@ export default function App() {
                 key={project.id} 
                 project={project}
                 tasks={tasks.filter(t => t.projectId === project.id)}
-                userId={userId} 
+                userId={'shared'} 
                 settings={settings} 
                 categoryColor={categories[project.category]}
                 onOpenTaskDetail={(task) => { setEditingTask(task); setIsTaskDetailModalOpen(true); }}
@@ -287,7 +255,7 @@ export default function App() {
                     existingProject={editingProject}
                     categories={Object.keys(categories)} 
                 />}
-                {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} userId={userId} />}
+                {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} userId={'shared'} />}
                 {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} />}
             </div>
         </>
@@ -326,7 +294,6 @@ function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, onNewPro
         </header>
     );
 }
-
 
 // --- Views ---
 function DashboardView({ projects, tasks, nudgeState, setSelectedProjectId, categories, activeSession }) {
@@ -448,13 +415,13 @@ function TrackingView({ session, tasks, userId, onSessionEnd }) {
     const handleStop = async () => {
         if (!userId) return;
         onSessionEnd(session);
-        await setDoc(doc(db, `artifacts/${appId}/users/${userId}/tracking`, 'activeSession'), { active: false }, { merge: true });
+        await setDoc(doc(db, basePath, 'tracking', 'activeSession'), { active: false }, { merge: true });
     };
 
     const handleDouble = async () => {
         if (!userId || !session || session.type !== 'work' ) return;
         const newDuration = POMODORO_CONFIG.WORK_SESSION * 2;
-        await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tracking`, 'activeSession'), {
+        await updateDoc(doc(db, basePath, 'tracking', 'activeSession'), {
             duration: newDuration,
             isDouble: true
         });
@@ -499,7 +466,7 @@ function ProjectView({ project, tasks, userId, settings, categoryColor, onOpenTa
 
     const handleQuickAddTask = async () => {
         if (!newTaskTitle.trim() || !userId) return;
-        await addDoc(collection(db, `artifacts/${appId}/users/${userId}/tasks`), {
+        await addDoc(collection(db, basePath, 'tasks'), {
             projectId: project.id, title: newTaskTitle.trim(), detail: '', isComplete: false, createdAt: new Date(), tags: [], dueDate: null, status: 'idle'
         });
         setNewTaskTitle('');
@@ -515,13 +482,13 @@ function ProjectView({ project, tasks, userId, settings, categoryColor, onOpenTa
     const handleToggleTask = async (task) => {
         if (!userId) return;
         const isCompleting = !task.isComplete;
-        await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, task.id), { 
+        await updateDoc(doc(db, basePath, 'tasks', task.id), { 
             isComplete: isCompleting, 
             completedAt: isCompleting ? new Date() : null,
             status: 'idle'
         });
         if (isCompleting) {
-            const settingsRef = doc(db, `artifacts/${appId}/users/${userId}/settings`, 'config');
+            const settingsRef = doc(db, basePath, 'settings', 'config');
             await setDoc(settingsRef, { totalTasksCompleted: increment(1) }, {merge: true});
             sendNudgeNotification(nudgeState.level);
         }
@@ -719,7 +686,7 @@ function SettingsModal({ onClose, currentSettings, userId }) {
     
     const handleSave = async () => {
         if (!userId) return;
-        const settingsRef = doc(db, `artifacts/${appId}/users/${userId}/settings`, 'config');
+        const settingsRef = doc(db, basePath, 'settings', 'config');
         try {
             await setDoc(settingsRef, { ntfyUrl, nudgeMode, theme }, { merge: true });
             onClose();
