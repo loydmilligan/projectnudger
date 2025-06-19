@@ -65,6 +65,7 @@ export default function App() {
     const [selectedProjectId, setSelectedProjectId] = useState(null);
     
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+    const [editingProject, setEditingProject] = useState(null);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
     const [isSessionEndModalOpen, setIsSessionEndModalOpen] = useState(false);
@@ -137,24 +138,37 @@ export default function App() {
     }, [projects, tasks, settings.nudgeMode]);
 
     // --- Handlers ---
-    const handleAddProject = async (projectData) => {
+    const handleSaveProject = async (projectData) => {
         if (!userId) return;
-        if (nudgeState.level >= NUDGE_CONFIG.LEVELS.LAZY) {
-             alert("New project creation is blocked! The most aggressive nudge mode is active. Reduce your open project count or finish very old projects first.");
-             return;
-        }
-        if (nudgeState.level >= NUDGE_CONFIG.LEVELS.STAY_ON_TARGET) {
-            if (!confirm("Warning: 'Stay on Target' mode is active. You have several open projects. Are you sure you want to add another?")) {
-                return;
-            }
-        }
-        let newCategories = { ...categories };
+
+        // Check for new category and update if necessary
         if (!categories[projectData.category]) {
+            let newCategories = { ...categories };
             newCategories[projectData.category] = generateHslColor(Object.values(categories));
             await setDoc(doc(db, `artifacts/${appId}/users/${userId}/settings`, 'categories'), newCategories, { merge: true });
         }
-        await addDoc(collection(db, `artifacts/${appId}/users/${userId}/projects`), { ...projectData, createdAt: new Date() });
+
+        if (projectData.id) { // Editing existing project
+            const projectId = projectData.id;
+            const { id, ...dataToUpdate } = projectData;
+            await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/projects`, projectId), dataToUpdate);
+        } else { // Creating new project
+            const { id, ...dataToCreate } = projectData;
+            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/projects`), { ...dataToCreate, createdAt: new Date() });
+        }
+        
         setIsProjectModalOpen(false);
+        setEditingProject(null);
+    };
+
+    const openNewProjectModal = () => {
+        setEditingProject(null);
+        setIsProjectModalOpen(true);
+    };
+
+    const openEditProjectModal = (project) => {
+        setEditingProject(project);
+        setIsProjectModalOpen(true);
     };
 
     const handleSaveTask = async (taskData) => {
@@ -246,6 +260,7 @@ export default function App() {
                 onOpenTaskDetail={(task) => { setEditingTask(task); setIsTaskDetailModalOpen(true); }}
                 onOpenNewTaskDetail={openTaskDetailForNew}
                 onStartTask={handleStartTask}
+                onEditProject={openEditProjectModal}
                 nudgeState={nudgeState}
                 onBack={() => setSelectedProjectId(null)} 
              /> : null;
@@ -264,10 +279,15 @@ export default function App() {
                 {`@keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.3s ease-out forwards; } .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }`}
             </style>
             <div className="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col">
-                <TopNavBar activeView={activeView} setActiveView={setActiveView} setIsSettingsModalOpen={setIsSettingsModalOpen} setIsProjectModalOpen={setIsProjectModalOpen} hasActiveSession={!!activeSession} />
+                <TopNavBar activeView={activeView} setActiveView={setActiveView} setIsSettingsModalOpen={setIsSettingsModalOpen} setIsProjectModalOpen={openNewProjectModal} hasActiveSession={!!activeSession} />
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{renderView()}</main>
                 {isSessionEndModalOpen && <SessionEndModal onClose={() => setIsSessionEndModalOpen(false)} onSave={handleSaveSessionNotes} />}
-                {isProjectModalOpen && <ProjectModal onClose={() => setIsProjectModalOpen(false)} onSave={handleAddProject} categories={Object.keys(categories)} />}
+                {isProjectModalOpen && <ProjectModal 
+                    onClose={() => {setIsProjectModalOpen(false); setEditingProject(null);}} 
+                    onSave={handleSaveProject} 
+                    existingProject={editingProject}
+                    categories={Object.keys(categories)} 
+                />}
                 {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} userId={userId} />}
                 {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} />}
             </div>
@@ -276,7 +296,7 @@ export default function App() {
 }
 
 // --- Navigation ---
-function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, setIsProjectModalOpen, hasActiveSession }) {
+function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, onNewProject, hasActiveSession }) {
     const navItems = [ { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'projects', label: 'Projects', icon: Briefcase }, { id: 'tasks', label: 'Tasks', icon: ListChecks }];
     if (hasActiveSession) {
         navItems.push({ id: 'tracking', label: 'Tracking', icon: TimerIcon });
@@ -297,7 +317,7 @@ function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, setIsPro
                         </nav>
                     </div>
                     <div className="flex items-center space-x-4">
-                        <button onClick={() => setIsProjectModalOpen(true)} className="hidden sm:flex items-center px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
+                        <button onClick={onNewProject} className="hidden sm:flex items-center px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
                             <Plus size={18} className="mr-2"/> New Project
                         </button>
                         <button onClick={() => setIsSettingsModalOpen(true)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"><Settings size={20} /></button>
@@ -463,7 +483,7 @@ function TrackingView({ session, tasks, userId, onSessionEnd }) {
     );
 }
 
-function ProjectView({ project, tasks, userId, settings, categoryColor, onOpenTaskDetail, onOpenNewTaskDetail, nudgeState, onBack, onStartTask }) {
+function ProjectView({ project, tasks, userId, settings, categoryColor, onOpenTaskDetail, onOpenNewTaskDetail, nudgeState, onBack, onStartTask, onEditProject }) {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const projectTasks = useMemo(() => tasks.filter(t => t.projectId === project.id).sort((a, b) => (a.isComplete - b.isComplete) || (a.createdAt || 0) - (b.createdAt || 0)), [tasks, project.id]);
     
@@ -512,9 +532,12 @@ function ProjectView({ project, tasks, userId, settings, categoryColor, onOpenTa
 
     return (
         <div className="space-y-6 animate-fade-in">
-             <button onClick={onBack} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline mb-4">&larr; Back to All Projects</button>
-            <div>
+             <button onClick={onBack} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline mb-4">&larr; Back</button>
+            <div className="flex justify-between items-center">
                 <h2 className="font-display text-5xl">{project.name}</h2>
+                <button onClick={() => onEditProject(project)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <Edit2 size={20} />
+                </button>
             </div>
             <div className="p-4 rounded-lg" style={{ backgroundColor: getAnalogousColor(categoryColor) }}>
                 <h3 className="font-semibold text-lg mb-4 text-white/90">Tasks</h3>
@@ -613,30 +636,40 @@ function ActiveTimerWidget({ session, task }) {
 }
 
 // --- MODALS ---
-function ProjectModal({ onClose, onSave, categories }) {
-    const [name, setName] = useState('');
-    const [category, setCategory] = useState('');
-    const [url, setUrl] = useState('');
-    const [priority, setPriority] = useState(3);
-    const [isNewCategory, setIsNewCategory] = useState(categories.length === 0);
-
-    useEffect(() => { setIsNewCategory(categories.length === 0); if (categories.length > 0 && !isNewCategory) setCategory(categories[0]) }, [categories, isNewCategory]);
-    
-    const handleCategoryChange = (value) => {
-        if (value === '__NEW__') { setIsNewCategory(true); setCategory(''); } 
-        else { setIsNewCategory(false); setCategory(value); }
-    };
+function ProjectModal({ onClose, onSave, existingProject, categories }) {
+    const [name, setName] = useState(existingProject?.name || '');
+    const [category, setCategory] = useState(existingProject?.category || '');
+    const [url, setUrl] = useState(existingProject?.url || '');
+    const [priority, setPriority] = useState(existingProject?.priority || 3);
+    const [isNewCategory, setIsNewCategory] = useState(!existingProject && categories.length === 0);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!name.trim() || !category.trim()) return;
-        onSave({ name, category, url, priority: Number(priority) });
+        onSave({ id: existingProject?.id, name, category, url, priority: Number(priority) });
     };
+
+    const handleCategoryChange = (e) => {
+        const value = e.target.value;
+        if (value === '__NEW__') {
+            setIsNewCategory(true);
+            setCategory('');
+        } else {
+            setIsNewCategory(false);
+            setCategory(value);
+        }
+    };
+    
+    useEffect(() => {
+        if (!existingProject && categories.length > 0) {
+            setCategory(categories[0]);
+        }
+    }, [existingProject, categories]);
 
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in-fast">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-                <h3 className="text-xl font-semibold mb-4">Create New Project</h3>
+                <h3 className="text-xl font-semibold mb-4">{existingProject ? 'Edit Project' : 'Create New Project'}</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="text-sm font-medium">Project Name</label>
@@ -644,14 +677,16 @@ function ProjectModal({ onClose, onSave, categories }) {
                     </div>
                     <div>
                         <label className="text-sm font-medium">Category</label>
-                        {!isNewCategory && categories.length > 0 ? (
-                            <select onChange={e => handleCategoryChange(e.target.value)} value={category} className="w-full mt-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm">
+                        <div className="flex items-center space-x-2">
+                           <select value={isNewCategory ? '__NEW__' : category} onChange={handleCategoryChange} className="w-full mt-1 bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm">
+                                <option value="" disabled>Select category...</option>
                                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
                                 <option value="__NEW__">-- Create New Category --</option>
                             </select>
-                        ) : (
-                            <input type="text" value={category} onChange={e => setCategory(e.target.value)} placeholder="Enter new category name" required className="w-full mt-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm"/>
-                        )}
+                        </div>
+                         {isNewCategory && (
+                             <input type="text" value={category} onChange={e => setCategory(e.target.value)} placeholder="Enter new category name" required className="w-full mt-2 bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm"/>
+                         )}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -670,7 +705,7 @@ function ProjectModal({ onClose, onSave, categories }) {
                     </div>
                     <div className="flex justify-end space-x-3 pt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 rounded-md text-sm font-semibold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                        <button type="submit" className="px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Create</button>
+                        <button type="submit" className="px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Save</button>
                     </div>
                 </form>
             </div>
