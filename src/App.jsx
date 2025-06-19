@@ -10,9 +10,10 @@ import {
     doc,
     setDoc,
     increment,
-    arrayUnion
+    arrayUnion,
+    getDocs
 } from 'firebase/firestore';
-import { Plus, Zap, Target, Folder, Link, Calendar, Hash, Settings, X, Tag, Edit2, ShieldAlert, LayoutDashboard, ListChecks, Briefcase, Sun, Moon, PlayCircle, Timer as TimerIcon, Coffee, Square, CheckCircle } from 'lucide-react';
+import { Plus, Zap, Target, Folder, Link, Calendar, Hash, Settings, X, Tag, Edit2, ShieldAlert, LayoutDashboard, ListChecks, Briefcase, Sun, Moon, PlayCircle, Timer as TimerIcon, Coffee, Square, CheckCircle, Download } from 'lucide-react';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -151,6 +152,16 @@ export default function App() {
         setEditingProject(null);
     };
 
+    const openNewProjectModal = () => {
+        setEditingProject(null);
+        setIsProjectModalOpen(true);
+    };
+
+    const openEditProjectModal = (project) => {
+        setEditingProject(project);
+        setIsProjectModalOpen(true);
+    };
+
     const handleSaveTask = async (taskData) => {
         const { id, ...dataToSave } = taskData;
         if (id) {
@@ -170,10 +181,10 @@ export default function App() {
         setActiveView('tracking');
     };
     
-    const openNewProjectModal = () => { setEditingProject(null); setIsProjectModalOpen(true); };
-    const openEditProjectModal = (project) => { setEditingProject(project); setIsProjectModalOpen(true); };
-    const handleSessionEnd = (session) => { setSessionEndData(session); setIsSessionEndModalOpen(true); };
-    const openTaskDetailForNew = (template) => { setEditingTask(template); setIsTaskDetailModalOpen(true); };
+    const handleSessionEnd = (session) => {
+        setSessionEndData(session);
+        setIsSessionEndModalOpen(true);
+    };
 
     const handleSaveSessionNotes = async (notes, markComplete, completionNotes) => {
         if (!sessionEndData) return;
@@ -209,6 +220,57 @@ export default function App() {
             type: 'break'
         });
     };
+    
+    const openTaskDetailForNew = (template) => {
+        setEditingTask(template);
+        setIsTaskDetailModalOpen(true);
+    };
+    
+    const handleExportData = async () => {
+        console.log("Starting data export...");
+        try {
+            const projectsQuery = query(collection(db, basePath, 'projects'));
+            const tasksQuery = query(collection(db, basePath, 'tasks'));
+
+            const [projectsSnapshot, tasksSnapshot] = await Promise.all([
+                getDocs(projectsQuery),
+                getDocs(tasksQuery)
+            ]);
+
+            const allTasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            const aggregatedProjects = projectsSnapshot.docs.map(pDoc => {
+                const project = { id: pDoc.id, ...pDoc.data() };
+                const projectTasks = allTasks.filter(t => t.projectId === project.id);
+                return { ...project, tasks: projectTasks };
+            });
+
+            const exportData = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                settings,
+                categories,
+                projects: aggregatedProjects
+            };
+
+            const jsonString = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nudger-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            console.log("Export successful.");
+
+        } catch (error) {
+            console.error("Error exporting data:", error);
+            alert("Data export failed. Check the console for details.");
+        }
+    };
 
     // --- Render Logic ---
     const renderView = () => {
@@ -221,7 +283,6 @@ export default function App() {
                 key={project.id} 
                 project={project}
                 tasks={tasks.filter(t => t.projectId === project.id)}
-                userId={'shared'} 
                 settings={settings} 
                 categoryColor={categories[project.category]}
                 onOpenTaskDetail={(task) => { setEditingTask(task); setIsTaskDetailModalOpen(true); }}
@@ -255,7 +316,7 @@ export default function App() {
                     existingProject={editingProject}
                     categories={Object.keys(categories)} 
                 />}
-                {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} userId={'shared'} />}
+                {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} onExportData={handleExportData} />}
                 {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} />}
             </div>
         </>
@@ -294,6 +355,7 @@ function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, onNewPro
         </header>
     );
 }
+
 
 // --- Views ---
 function DashboardView({ projects, tasks, nudgeState, setSelectedProjectId, categories, activeSession }) {
@@ -465,7 +527,7 @@ function ProjectView({ project, tasks, userId, settings, categoryColor, onOpenTa
     }, [settings]);
 
     const handleQuickAddTask = async () => {
-        if (!newTaskTitle.trim() || !userId) return;
+        if (!newTaskTitle.trim()) return;
         await addDoc(collection(db, basePath, 'tasks'), {
             projectId: project.id, title: newTaskTitle.trim(), detail: '', isComplete: false, createdAt: new Date(), tags: [], dueDate: null, status: 'idle'
         });
@@ -480,7 +542,6 @@ function ProjectView({ project, tasks, userId, settings, categoryColor, onOpenTa
     };
 
     const handleToggleTask = async (task) => {
-        if (!userId) return;
         const isCompleting = !task.isComplete;
         await updateDoc(doc(db, basePath, 'tasks', task.id), { 
             isComplete: isCompleting, 
@@ -679,13 +740,12 @@ function ProjectModal({ onClose, onSave, existingProject, categories }) {
     );
 }
 
-function SettingsModal({ onClose, currentSettings, userId }) {
+function SettingsModal({ onClose, currentSettings, onExportData }) {
     const [ntfyUrl, setNtfyUrl] = useState(currentSettings.ntfyUrl || '');
     const [nudgeMode, setNudgeMode] = useState(currentSettings.nudgeMode || NUDGE_CONFIG.MODES.AUTOMATIC);
     const [theme, setTheme] = useState(currentSettings.theme || 'dark');
     
     const handleSave = async () => {
-        if (!userId) return;
         const settingsRef = doc(db, basePath, 'settings', 'config');
         try {
             await setDoc(settingsRef, { ntfyUrl, nudgeMode, theme }, { merge: true });
@@ -731,8 +791,15 @@ function SettingsModal({ onClose, currentSettings, userId }) {
                         <input type="url" value={ntfyUrl} onChange={e => setNtfyUrl(e.target.value)} placeholder="https://ntfy.sh/your-topic"
                                className="w-full mt-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm"/>
                     </div>
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                         <label className="text-sm font-medium">Data Management</label>
+                         <button onClick={onExportData} className="w-full mt-2 flex items-center justify-center px-4 py-2 rounded-md text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors">
+                            <Download size={16} className="mr-2"/> Export All Data
+                        </button>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Download a JSON file of all your projects and tasks.</p>
+                    </div>
                 </div>
-                 <div className="flex justify-end space-x-3 pt-6">
+                 <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
                     <button type="button" onClick={onClose} className="px-4 py-2 rounded-md text-sm font-semibold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
                     <button type="button" onClick={handleSave} className="px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Save Settings</button>
                 </div>
