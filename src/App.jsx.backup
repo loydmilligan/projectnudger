@@ -29,7 +29,6 @@ import ProjectsView from './components/views/ProjectsView';
 import TasksView from './components/views/TasksView';
 import TrackingView from './components/views/TrackingView';
 import ArchivedProjectsView from './components/views/ArchivedProjectsView';
-import ProjectView from './components/views/ProjectView';
 
 
 // --- Main App Component ---
@@ -286,7 +285,332 @@ export default function App() {
     );
 }
 
-// --- Modal Components ---
+// --- Components ---
+
+
+function ProjectsView({ projects, tasks, setSelectedProjectId, categories, ownerFilter, setOwnerFilter, owners }) {
+    return (
+        <div>
+            <div className="md:w-1/3 mb-6">
+                <ProjectFilters ownerFilter={ownerFilter} setOwnerFilter={setOwnerFilter} owners={owners} />
+            </div>
+            <h2 className="text-2xl font-bold mb-6">Projects ({projects.length})</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {projects.map(project => {
+                    const projectTasks = tasks.filter(t => t.projectId === project.id && !t.isComplete).sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
+                    return (
+                        <div key={project.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 border border-transparent hover:border-indigo-500 transition-colors flex flex-col">
+                            <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                    <h3 className="text-lg font-bold">{project.name}</h3>
+                                    <span className="text-xs font-semibold px-2 py-1 rounded-full text-white" style={{backgroundColor: categories[project.category]}}>{project.category}</span>
+                                </div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Owner: {project.owner}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Priority: {project.priority} | Created: {timeAgo(project.createdAt)}</p>
+                                <div className="mt-4 border-t dark:border-gray-700 pt-3">
+                                    <h4 className="text-sm font-semibold mb-2">Next Tasks:</h4>
+                                    <ul className="space-y-2">
+                                        {projectTasks.slice(0, 3).map(task => (
+                                            <li key={task.id} className="text-sm text-gray-600 dark:text-gray-300 truncate">{task.title}</li>
+                                        ))}
+                                        {projectTasks.length === 0 && <li className="text-sm text-gray-400 italic">No pending tasks.</li>}
+                                    </ul>
+                                </div>
+                            </div>
+                             <button onClick={() => setSelectedProjectId(project.id)} className="w-full mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md transition-colors text-sm">
+                                View Details
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+function ProjectFilters({ ownerFilter, setOwnerFilter, owners }) {
+    return (
+        <div className="w-full sm:w-56">
+            <label htmlFor="owner-filter" className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-1">View as</label>
+            <select 
+                id="owner-filter" 
+                value={ownerFilter} 
+                onChange={(e) => setOwnerFilter(e.target.value)}
+                className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+            >
+                {owners.map(owner => <option key={owner} value={owner}>{owner}</option>)}
+            </select>
+        </div>
+    );
+}
+
+function TasksView({ tasks, projects, onStartTask, activeSession }) {
+    const [filters, setFilters] = useState({ project: 'All', tag: '', dueDate: 'All' });
+    const projectMap = useMemo(() => projects.reduce((acc, p) => ({...acc, [p.id]: p.name}), {}), [projects]);
+
+    const filteredTasks = useMemo(() => {
+        return tasks.filter(task => {
+            const projectMatch = filters.project === 'All' || task.projectId === filters.project;
+            const tagMatch = !filters.tag || (task.tags && task.tags.includes(filters.tag));
+            const dateMatch = filters.dueDate === 'All' || (task.dueDate && new Date(task.dueDate) < new Date(new Date().setDate(new Date().getDate() + Number(filters.dueDate))));
+            return projectMatch && tagMatch && dateMatch;
+        }).sort((a,b) => (a.isComplete - b.isComplete) || (a.createdAt || 0) - (b.createdAt || 0));
+    }, [tasks, filters]);
+
+    const allTags = useMemo(() => [...new Set(tasks.flatMap(t => t.tags || []))], [tasks]);
+
+    return (
+        <div>
+            <h2 className="text-2xl font-bold mb-6">Master Task List</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-200 dark:bg-gray-800 rounded-lg">
+                <div>
+                    <label className="text-sm font-medium">Project</label>
+                    <select onChange={e => setFilters({...filters, project: e.target.value})} className="w-full mt-1 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm">
+                        <option value="All">All Projects</option>
+                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                </div>
+                 <div>
+                    <label className="text-sm font-medium">Tag</label>
+                    <select onChange={e => setFilters({...filters, tag: e.target.value})} className="w-full mt-1 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm">
+                        <option value="">All Tags</option>
+                         {allTags.map(tag => <option key={tag} value={tag}>{tag}</option>)}
+                    </select>
+                </div>
+                 <div>
+                    <label className="text-sm font-medium">Due Date</label>
+                    <select onChange={e => setFilters({...filters, dueDate: e.target.value})} className="w-full mt-1 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm">
+                        <option value="All">Any Time</option>
+                        <option value="7">Next 7 Days</option>
+                        <option value="30">Next 30 Days</option>
+                    </select>
+                </div>
+            </div>
+            <ul className="space-y-3">
+                {filteredTasks.map(task => <TaskItem key={task.id} task={task} onStartTask={onStartTask} isTaskActive={activeSession?.taskId === task.id}/>)}
+            </ul>
+        </div>
+    );
+}
+
+function TrackingView({ session, tasks, onSessionEnd }) {
+    const task = useMemo(() => tasks.find(t => t.id === session?.taskId), [tasks, session]);
+    
+    const handleStop = async () => {
+        onSessionEnd(session);
+        await setDoc(doc(db, basePath, 'tracking', 'activeSession'), { active: false }, { merge: true });
+    };
+
+    const handleDouble = async () => {
+        if (!session || session.type !== 'work' ) return;
+        const newDuration = POMODORO_CONFIG.WORK_SESSION * 2;
+        await updateDoc(doc(db, basePath, 'tracking', 'activeSession'), { duration: newDuration, isDouble: true });
+    }
+
+    if (!session || !task) {
+        return <div className="text-center p-10"><h2 className="text-2xl font-bold">No active session.</h2><p>Start a task from the Projects or Tasks view.</p></div>
+    }
+
+    return (
+        <div className="max-w-2xl mx-auto text-center">
+            <div className={`p-8 rounded-lg ${session.type === 'work' ? 'bg-indigo-600' : 'bg-green-600'}`}>
+                <h2 className="text-3xl font-bold text-white">{session.type === 'work' ? 'Work Session' : 'Rest & Recharge'}</h2>
+                <Timer key={session.startTime.toString()} duration={session.duration} startTime={session.startTime.toDate()} onFinish={handleStop} />
+            </div>
+            <div className="mt-6 p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+                 <h3 className="text-xl font-bold">{task.title}</h3>
+                 <p className="text-gray-600 dark:text-gray-400 mt-2">{task.detail}</p>
+            </div>
+            <div className="mt-6 flex justify-center space-x-4">
+                {session.type === 'work' && !session.isDouble && <button onClick={handleDouble} className="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold">Double Session</button>}
+                <button onClick={handleStop} className="px-6 py-3 bg-red-500 text-white rounded-lg font-semibold">Stop & Log</button>
+            </div>
+        </div>
+    );
+}
+
+function ProjectView({ project, tasks, settings, categoryColor, onOpenTaskDetail, onOpenNewTaskDetail, nudgeState, onBack, onStartTask, onEditProject }) {
+    const [newTaskTitle, setNewTaskTitle] = useState('');
+    const projectTasks = useMemo(() => tasks.filter(t => t.projectId === project.id).sort((a, b) => (a.isComplete - b.isComplete) || (a.createdAt || 0) - (b.createdAt || 0)), [tasks, project.id]);
+    
+    const sendNudgeNotification = useCallback((level) => {
+        const { THRESHOLDS, LEVELS } = NUDGE_CONFIG;
+        const totalCompleted = settings.totalTasksCompleted || 0;
+        let shouldNudge = false;
+        let message = `Remember what's important. Some of your projects are getting old.`;
+        if (level === LEVELS.LAZY && (totalCompleted + 1) % THRESHOLDS.TASK_INTERVAL_LEVEL_3 === 0) { shouldNudge = true; message = `Hey look something shiny! Don't get distracted from your older, important projects.`; }
+        else if (level === LEVELS.STAY_ON_TARGET && (totalCompleted + 1) % THRESHOLDS.TASK_INTERVAL_LEVEL_2 === 0) { shouldNudge = true; message = `Stay on target. You've got some old projects that need attention.`; }
+        else if (level === LEVELS.REMEMBER && (totalCompleted + 1) % THRESHOLDS.TASK_INTERVAL_LEVEL_1 === 0) { shouldNudge = true; }
+        if (shouldNudge) { if (settings.ntfyUrl) fetch(settings.ntfyUrl, { method: 'POST', body: message, headers: { 'Title': 'Project Nudger Alert' } }); if ('Notification' in window && Notification.permission === 'granted') new Notification('Project Nudger', { body: message }); if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance(message)); }
+    }, [settings]);
+
+    const handleQuickAddTask = async () => {
+        if (!newTaskTitle.trim()) return;
+        await addDoc(collection(db, basePath, 'tasks'), {
+            projectId: project.id, title: newTaskTitle.trim(), detail: '', isComplete: false, createdAt: new Date(), tags: [], dueDate: null, status: 'idle'
+        });
+        setNewTaskTitle('');
+    };
+    
+    const handleOpenAddModal = () => {
+        onOpenNewTaskDetail({
+            projectId: project.id, title: newTaskTitle, detail: '', isComplete: false, tags: [], dueDate: null, status: 'idle'
+        });
+        setNewTaskTitle('');
+    };
+
+    const handleToggleTask = async (task) => {
+        const isCompleting = !task.isComplete;
+        await updateDoc(doc(db, basePath, 'tasks', task.id), { 
+            isComplete: isCompleting, 
+            completedAt: isCompleting ? new Date() : null,
+            status: 'idle'
+        });
+        if (isCompleting) {
+            const settingsRef = doc(db, basePath, 'settings', 'config');
+            await setDoc(settingsRef, { totalTasksCompleted: increment(1) }, {merge: true});
+            sendNudgeNotification(nudgeState.level);
+        }
+    };
+    
+    useEffect(() => { if ('Notification' in window) Notification.requestPermission(); }, []);
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+             <button onClick={onBack} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline mb-4">&larr; Back</button>
+            <div className="flex justify-between items-center">
+                <h2 className="font-display text-5xl">{project.name}</h2>
+                <button onClick={() => onEditProject(project)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <Edit2 size={20} />
+                </button>
+            </div>
+            <div className="p-4 rounded-lg" style={{ backgroundColor: getAnalogousColor(categoryColor) }}>
+                <h3 className="font-semibold text-lg mb-4 text-white/90">Tasks</h3>
+                <div className="flex space-x-2 mb-4">
+                    <input type="text" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleQuickAddTask()}
+                        placeholder="Type new task title..." className="flex-1 bg-gray-900/50 border-gray-600/50 rounded-md p-2 text-sm focus:ring-indigo-400 focus:border-indigo-400"/>
+                    <button onClick={handleOpenAddModal} className="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md text-sm font-semibold text-white">Add Details...</button>
+                </div>
+                <ul className="space-y-2">
+                    {projectTasks.map(task => <TaskItem key={task.id} task={task} onToggle={handleToggleTask} onOpenDetail={onOpenNewTaskDetail} onStartTask={onStartTask}/>)}
+                </ul>
+            </div>
+        </div>
+    );
+}
+
+const RecommendationEngine = React.memo(({ projects, tasks }) => {
+    const recommendation = useMemo(() => {
+        const projectsWithIncompleteTasks = projects
+            .map(p => ({ ...p, incompleteTasks: tasks.filter(t => t.projectId === p.id && !t.isComplete) }))
+            .filter(p => p.incompleteTasks.length > 0)
+            .map(p => {
+                const daysOld = p.createdAt ? (new Date() - p.createdAt) / (1000 * 3600 * 24) : 0;
+                const score = (p.priority || 3) * 2 + daysOld;
+                return { ...p, score };
+            }).sort((a, b) => b.score - a.score); 
+        if (projectsWithIncompleteTasks.length === 0) return { project: null, task: null };
+        const recommendedProject = projectsWithIncompleteTasks[0];
+        const nextTask = recommendedProject.incompleteTasks.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))[0];
+        return { project: recommendedProject, task: nextTask };
+    }, [projects, tasks]);
+    if (!recommendation.project) return <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4"><h2 className="text-lg font-semibold text-green-500 dark:text-green-400 flex items-center"><Zap size={18} className="mr-2"/>All Clear!</h2><p className="text-gray-500 dark:text-gray-400 text-sm mt-1">No pending tasks.</p></div>;
+    return <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4"><h2 className="text-lg font-semibold text-yellow-600 dark:text-yellow-400 flex items-center"><Target size={18} className="mr-2"/>Recommended Next Task</h2><div className="mt-2 text-sm"><p className="font-medium text-gray-800 dark:text-gray-200">{recommendation.task.title}</p><p className="text-gray-600 dark:text-gray-400">From project: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{recommendation.project.name}</span></p><p className="text-gray-500 dark:text-gray-500 text-xs">Priority: {recommendation.project.priority || 'Medium'} | Score: {recommendation.project.score.toFixed(2)}</p></div></div>;
+});
+
+function NudgeStatus({ nudgeState }) {
+    const { LEVELS } = NUDGE_CONFIG;
+    const colorClasses = {
+        [LEVELS.NONE]: "bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/20",
+        [LEVELS.REMEMBER]: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
+        [LEVELS.STAY_ON_TARGET]: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 border-yellow-500/20",
+        [LEVELS.LAZY]: "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20",
+    };
+    return <div className={`p-3 rounded-lg border text-sm flex items-center bg-white dark:bg-gray-800 ${colorClasses[nudgeState.level]}`}><ShieldAlert size={18} className="mr-3 flex-shrink-0" /><div><p className="font-semibold">Nudge Status:</p><p className="text-xs">{nudgeState.message}</p></div></div>;
+}
+
+function TaskItem({ task, onToggle, onOpenDetail, onStartTask, isTaskActive }) {
+    return (
+        <li className={`flex items-center bg-gray-100 dark:bg-gray-900/40 hover:bg-gray-200 dark:hover:bg-gray-900/60 p-2.5 rounded-md text-sm transition-colors group ${isTaskActive ? 'border-l-4 border-indigo-500' : ''} ${task.status === 'in-progress' ? 'opacity-70' : ''}`}>
+            <input type="checkbox" checked={task.isComplete} onChange={() => onToggle(task)} disabled={task.status === 'in-progress'} className="w-4 h-4 rounded bg-gray-300 dark:bg-gray-700 border-gray-400 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 mr-3 flex-shrink-0 disabled:opacity-50"/>
+            <div className="flex-1" onClick={() => onOpenDetail(task)}>
+                <span className={`${task.isComplete ? 'line-through text-gray-500' : 'text-gray-800 dark:text-gray-200'}`}>{task.title}</span>
+                 <div className="flex items-center space-x-2 mt-1">
+                    {task.dueDate && <span className={`text-xs flex items-center ${new Date() > new Date(task.dueDate) ? 'text-red-500' : 'text-gray-500'}`}><Calendar size={12} className="mr-1"/>{new Date(task.dueDate).toLocaleDateString()}</span>}
+                    {task.tags?.map(tag => <span key={tag} className="text-xs bg-gray-300 dark:bg-gray-700 px-1.5 py-0.5 rounded">{tag}</span>)}
+                </div>
+            </div>
+            {task.status !== 'in-progress' && !isTaskActive && !task.isComplete &&
+                <button onClick={(e) => { e.stopPropagation(); onStartTask(task);}} className="ml-2 p-1 text-gray-500 hover:text-green-500"><PlayCircle size={18} /></button>
+            }
+            {isTaskActive && <TimerIcon size={18} className="ml-2 text-indigo-500 animate-pulse" />}
+        </li>
+    );
+}
+
+function Timer({ duration, startTime, onFinish }) {
+    const [remaining, setRemaining] = useState(duration);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const elapsed = (Date.now() - startTime.getTime()) / 1000;
+            const newRemaining = Math.max(0, Math.floor(duration - elapsed));
+            setRemaining(newRemaining);
+
+            if (newRemaining <= 0) {
+                clearInterval(interval);
+                try { new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg").play(); } catch(e) { console.error("Audio playback failed", e); }
+                onFinish();
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [duration, startTime, onFinish]);
+
+    return <div className="text-8xl font-bold my-4 text-white font-mono">{formatTime(remaining)}</div>;
+}
+
+function ActiveTimerWidget({ session, task }) {
+    return (
+        <div className={`p-4 rounded-lg shadow ${session.type === 'work' ? 'bg-indigo-100 dark:bg-indigo-900/50' : 'bg-green-100 dark:bg-green-900/50'}`}>
+            <h3 className="font-bold text-lg">{session.type === 'work' ? 'Working On:' : 'On Break'}</h3>
+            {session.type === 'work' && <p className="truncate">{task.title}</p>}
+            <div className="text-center text-3xl font-mono my-2"><Timer key={session.startTime.toString()} duration={session.duration} startTime={session.startTime.toDate()} onFinish={() => {}} /></div>
+        </div>
+    )
+}
+
+function ArchivedProjectsView({ allProjects, onSaveProject }) {
+    const archivedProjects = useMemo(() => allProjects.filter(p => p.status === 'archived'), [allProjects]);
+
+    const handleReactivate = (project) => {
+        onSaveProject({ ...project, status: 'active' });
+    };
+
+    return (
+        <div>
+            <h2 className="text-2xl font-bold mb-6">Archived Projects</h2>
+            {archivedProjects.length === 0 ? (
+                <p className="text-gray-500">No archived projects found.</p>
+            ) : (
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {archivedProjects.map(project => (
+                            <li key={project.id} className="p-4 flex justify-between items-center">
+                                <div>
+                                    <p className="font-semibold">{project.name}</p>
+                                    <p className="text-sm text-gray-500">{project.category}</p>
+                                </div>
+                                <button onClick={() => handleReactivate(project)} className="flex items-center px-3 py-1.5 rounded-md text-sm font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors">
+                                    <ArchiveRestore size={16} className="mr-2"/> Reactivate
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+}
 
 function ProjectModal({ onClose, onSave, existingProject, categories, owners }) {
     const [name, setName] = useState(existingProject?.name || '');
