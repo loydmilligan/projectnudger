@@ -32,7 +32,7 @@ const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- Hardcoded User ID ---
+// --- Hardcoded Data Path ---
 const basePath = `artifacts/${appId}/public/data`;
 
 // --- Nudge System & Pomodoro Configs ---
@@ -74,7 +74,11 @@ export default function App() {
     const [isImportConfirmModalOpen, setIsImportConfirmModalOpen] = useState(false);
     const [fileToImport, setFileToImport] = useState(null);
 
-    // --- Effects for Data Loading and Theme ---
+    // --- Memoized derived state ---
+    const activeTask = useMemo(() => activeSession ? tasks.find(t => t.id === activeSession.taskId) : null, [activeSession, tasks]);
+    const selectedProject = useMemo(() => selectedProjectId ? projects.find(p => p.id === selectedProjectId) : null, [selectedProjectId, projects]);
+
+    // --- Effects for Data Loading, Theme, and Document Title ---
     useEffect(() => {
         const settingsDocRef = doc(db, basePath, 'settings', 'config');
         const unsubSettings = onSnapshot(settingsDocRef, (doc) => setSettings(doc.exists() ? { totalTasksCompleted: 0, ...doc.data() } : { ntfyUrl: '', totalTasksCompleted: 0, nudgeMode: NUDGE_CONFIG.MODES.AUTOMATIC, theme: 'dark' }));
@@ -99,6 +103,19 @@ export default function App() {
     }, []);
     
     useEffect(() => { document.documentElement.classList.toggle('dark', settings.theme === 'dark'); }, [settings.theme]);
+
+    useEffect(() => {
+        let title = "Project Nudger";
+        if (activeView === 'tracking' && activeTask) {
+            title = `Tracking: ${activeTask.title} | Nudger`;
+        } else if (selectedProject) {
+            title = `${selectedProject.name} | Nudger`;
+        } else {
+            const viewName = activeView.charAt(0).toUpperCase() + activeView.slice(1);
+            title = `${viewName} | Nudger`;
+        }
+        document.title = title;
+      }, [activeView, selectedProject, activeTask]);
 
     // --- Nudge Logic ---
     const nudgeState = useMemo(() => {
@@ -258,14 +275,13 @@ export default function App() {
             return <TrackingView session={activeSession} tasks={tasks} onSessionEnd={handleSessionEnd} />;
         }
         if (selectedProjectId) {
-            const project = projects.find(p => p.id === selectedProjectId);
-            return project ? <ProjectView 
-                key={project.id} project={project} tasks={tasks.filter(t => t.projectId === project.id)}
-                settings={settings} categoryColor={categories[project.category]}
+            return <ProjectView 
+                project={selectedProject} tasks={tasks.filter(t => t.projectId === selectedProjectId)}
+                settings={settings} categoryColor={categories[selectedProject.category]}
                 onOpenTaskDetail={(task) => { setEditingTask(task); setIsTaskDetailModalOpen(true); }}
                 onOpenNewTaskDetail={openTaskDetailForNew} onStartTask={handleStartTask}
                 onEditProject={openEditProjectModal} nudgeState={nudgeState} onBack={() => setSelectedProjectId(null)} 
-             /> : null;
+             />;
         }
         switch (activeView) {
             case 'dashboard': return <DashboardView projects={projects} tasks={tasks} nudgeState={nudgeState} setSelectedProjectId={setSelectedProjectId} categories={categories} activeSession={activeSession} />;
@@ -292,6 +308,14 @@ export default function App() {
 }
 
 // --- Components ---
+const NudgerLogo = () => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-indigo-600 dark:text-indigo-400">
+        <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.5"/>
+        <path d="M12 7V13L16 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M19 19L14.65 14.65" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 2" />
+    </svg>
+);
+
 function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, onNewProject, hasActiveSession }) {
     const navItems = [ { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'projects', label: 'Projects', icon: Briefcase }, { id: 'tasks', label: 'Tasks', icon: ListChecks }];
     if (hasActiveSession) {
@@ -302,7 +326,10 @@ function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, onNewPro
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center space-x-8">
-                        <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 font-display">Nudger</h1>
+                        <div className="flex items-center space-x-2">
+                            <NudgerLogo />
+                            <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-display">Project Nudger</h1>
+                        </div>
                         <nav className="hidden md:flex space-x-4">
                             {navItems.map(item => (
                                 <button key={item.id} onClick={() => setActiveView(item.id)}
