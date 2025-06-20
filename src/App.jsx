@@ -83,8 +83,18 @@ export default function App() {
         const settingsDocRef = doc(db, basePath, 'settings', 'config');
         const unsubSettings = onSnapshot(settingsDocRef, (doc) => setSettings(doc.exists() ? { ownerFilter: 'All', ...doc.data() } : { ntfyUrl: '', totalTasksCompleted: 0, nudgeMode: NUDGE_CONFIG.MODES.AUTOMATIC, theme: 'dark', ownerFilter: 'All' }));
         const projectsQuery = query(collection(db, basePath, 'projects'));
-        const unsubProjects = onSnapshot(projectsQuery, s => setProjects(s.docs.map(d => ({ id: d.id, ...d.data(), createdAt: d.data().createdAt?.toDate() }))));
-        const unsubTasks = onSnapshot(query(collection(db, basePath, 'tasks')), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data(), createdAt: d.data().createdAt?.toDate(), completedAt: d.data().completedAt?.toDate(), dueDate: d.data().dueDate?.toDate() }))));
+        const unsubProjects = onSnapshot(projectsQuery, s => setProjects(s.docs.map(d => ({ 
+            id: d.id, 
+            ...d.data(), 
+            createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : d.data().createdAt 
+        }))));
+        const unsubTasks = onSnapshot(query(collection(db, basePath, 'tasks')), s => setTasks(s.docs.map(d => ({ 
+            id: d.id, 
+            ...d.data(), 
+            createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : d.data().createdAt,
+            completedAt: d.data().completedAt?.toDate ? d.data().completedAt.toDate() : d.data().completedAt,
+            dueDate: d.data().dueDate?.toDate ? d.data().dueDate.toDate() : d.data().dueDate
+        }))));
         const unsubCategories = onSnapshot(doc(db, basePath, 'settings', 'categories'), doc => setCategories(doc.exists() ? doc.data() : {}));
         const unsubSession = onSnapshot(doc(db, basePath, 'tracking', 'activeSession'), (doc) => {
              if (doc.exists() && doc.data().active) {
