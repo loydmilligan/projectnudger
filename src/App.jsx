@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    onSnapshot, 
-    query, 
-    updateDoc, 
+import {
+    collection,
+    addDoc,
+    onSnapshot,
+    query,
+    updateDoc,
     doc,
     setDoc,
     increment,
@@ -16,34 +14,12 @@ import {
 } from 'firebase/firestore';
 import { Plus, Zap, Target, Folder, Link, Calendar, Hash, Settings, X, Tag, Edit2, ShieldAlert, LayoutDashboard, ListChecks, Briefcase, Sun, Moon, PlayCircle, Timer as TimerIcon, Coffee, Square, CheckCircle, Download, Upload, Beaker, Archive, ArchiveRestore, Users } from 'lucide-react';
 
-// --- Firebase Configuration ---
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_APP_ID
-};
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const basePath = `artifacts/${appId}/public/data`;
+// Import configurations and utilities
+import { db, basePath } from './config/firebase';
+import { NUDGE_CONFIG, POMODORO_CONFIG } from './config/constants';
+import { timeAgo, generateHslColor, getComplementaryColor, getAnalogousColor, formatTime } from './utils/helpers';
+import { generateDummyData } from './utils/dummyData';
 
-// --- Configs ---
-const NUDGE_CONFIG = {
-    LEVELS: { NONE: 0, REMEMBER: 1, STAY_ON_TARGET: 2, LAZY: 3 },
-    MODES: { AUTOMATIC: 'Automatic', REMEMBER: 'Remember', STAY_ON_TARGET: 'Stay on Target', LAZY: 'Lazy' },
-    THRESHOLDS: { PROJECT_AGE_OLD: 30, PROJECT_AGE_VERY_OLD: 90, PROJECT_COUNT_SOME: 5, PROJECT_COUNT_MANY: 10, TASK_INTERVAL_LEVEL_1: 10, TASK_INTERVAL_LEVEL_2: 5, TASK_INTERVAL_LEVEL_3: 2 }
-};
-const POMODORO_CONFIG = { WORK_SESSION: 25 * 60, SHORT_BREAK: 5 * 60, LONG_BREAK: 10 * 60 };
-
-// --- Helper Functions ---
-const timeAgo = (date) => { if (!date) return 'N/A'; const seconds = Math.floor((new Date() - date) / 1000); if (seconds < 5) return 'just now'; let interval = seconds / 31536000; if (interval > 1) return Math.floor(interval) + " years"; interval = seconds / 2592000; if (interval > 1) return Math.floor(interval) + " months"; interval = seconds / 86400; if (interval > 1) return Math.floor(interval) + " days"; return "Today"; };
-const generateHslColor = (existingColors = []) => { let hue; do { hue = Math.floor(Math.random() * 360); } while (existingColors.some(color => Math.abs(parseInt(color.match(/hsl\((\d+)/)[1]) - hue) < 30)); return `hsl(${hue}, 70%, 50%)`; };
-const getComplementaryColor = (hsl) => { if (!hsl) return 'hsl(200, 70%, 50%)'; const [_, h, s, l] = hsl.match(/hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)/).map(Number); return `hsl(${(h + 180) % 360}, ${s * 0.8}%, ${l * 1.2}%)`; };
-const getAnalogousColor = (hsl) => { if (!hsl) return 'hsl(200, 70%, 20%)'; const [_, h, s, l] = hsl.match(/hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)/).map(Number); return `hsl(${(h + 30) % 360}, ${s * 0.5}%, ${l * 0.5}%)`; };
-const formatTime = (seconds) => { const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`; };
 
 // --- Main App Component ---
 export default function App() {
@@ -270,33 +246,6 @@ export default function App() {
         await setDoc(doc(db, basePath, 'tracking', 'activeSession'), { startTime: new Date(), duration: breakDuration, active: true, type: 'break' });
     };
 
-    const generateDummyData = async () => {
-        if (!confirm("This will add several dummy projects and tasks to your database, replacing existing data. Are you sure?")) return;
-        try {
-            const batch = writeBatch(db);
-            const dummyCategories = { "Work": "hsl(210, 70%, 50%)", "Personal": "hsl(140, 70%, 50%)", "Learning": "hsl(45, 70%, 50%)" };
-            batch.set(doc(db, basePath, 'settings', 'categories'), dummyCategories);
-            const projectsToAdd = [
-                { id: 'dummy_proj_1', name: 'Q3 Report Finalization', owner: 'Matt Mariani', category: 'Work', priority: 10, status: 'active', createdAt: new Date() },
-                { id: 'dummy_proj_2', name: 'Home Reno Planning', owner: 'Mara Mariani', category: 'Personal', priority: 5, status: 'active', createdAt: new Date(Date.now() - 40 * 24 * 3600 * 1000) },
-                { id: 'dummy_proj_3', name: 'Learn Rust Programming', owner: 'Matt Mariani', category: 'Learning', priority: 3, status: 'inactive', createdAt: new Date(Date.now() - 100 * 24 * 3600 * 1000) },
-            ];
-            const tasksToAdd = [
-                { projectId: 'dummy_proj_1', title: "Compile financial data", detail: "Get spreadsheets from finance team.", status: 'idle', isComplete: false },
-                { projectId: 'dummy_proj_1', title: "Draft executive summary", detail: "", status: 'idle', isComplete: false },
-                { projectId: 'dummy_proj_2', title: "Get quotes for kitchen cabinets", detail: "", status: 'idle', isComplete: false },
-                { projectId: 'dummy_proj_2', title: "Choose paint colors", detail: "Leaning towards a neutral gray.", status: 'idle', isComplete: false },
-                { projectId: 'dummy_proj_3', title: "Read the official Rust book", detail: "Focus on chapters 1-5.", status: 'idle', isComplete: false },
-            ];
-            projectsToAdd.forEach(proj => batch.set(doc(db, basePath, 'projects', proj.id), proj));
-            tasksToAdd.forEach(task => batch.set(doc(collection(db, basePath, 'tasks')), task));
-            await batch.commit();
-            alert("Dummy data generated successfully!");
-        } catch (error) {
-            console.error("Dummy data generation failed:", error);
-            alert("Failed to generate dummy data. Check console for details.");
-        }
-    };
 
     // --- Render Logic ---
     const renderView = () => {

@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "exportedAt": "2025-06-19T08:34:27.501Z",
+  "settings": {
+    "totalTasksCompleted": 0,
+    "ntfyUrl": "https://ntfy.mattmariani.com/nudger",
+    "nudgeMode": "Automatic",
+    "theme": "dark"
+  },
+  "categories": {
+    "3d printing": "hsl(116, 70%, 50%)",
+    "software": "hsl(251, 70%, 50%)",
+    "home assistant ": "hsl(24, 70%, 50%)"
+  },
+  "projects": [
+    {
+      "id": "M8skPkldVdkRe0baEY94",
+      "createdAt": {
+        "seconds": 1750321924,
+        "nanoseconds": 335000000
+      },
+      "url": "",
+      "priority": 3,
+      "category": "home assistant ",
+      "name": "setup home assistant light automations",
+      "tasks": [
+        {
+          "id": "4KgPwyZ7XOH9C5VHRtmu",
+          "status": "idle",
+          "dueDate": null,
+          "detail": "",
+          "title": "Gather entities on family room",
+          "createdAt": {
+            "seconds": 1750321950,
+            "nanoseconds": 524000000
+          },
+          "isComplete": false,
+          "projectId": "M8skPkldVdkRe0baEY94",
+          "tags": []
+        },
+        {
+          "id": "C9uwBO9nXks7hhG3RQxb",
+          "detail": "",
+          "tags": [],
+          "isComplete": false,
+          "title": "Gather entities on bedroom",
+          "status": "idle",
+          "createdAt": {
+            "seconds": 1750321961,
+            "nanoseconds": 375000000
+          },
+          "dueDate": null,
+          "projectId": "M8skPkldVdkRe0baEY94"
+        },
+        {
+          "id": "U6mHv8uJp8mPhR1tmAHu",
+          "isComplete": false,
+          "dueDate": null,
+          "detail": "",
+          "createdAt": {
+            "seconds": 1750321953,
+            "nanoseconds": 856000000
+          },
+          "tags": [],
+          "status": "idle",
+          "title": "Gather entities on office",
+          "projectId": "M8skPkldVdkRe0baEY94"
+        },
+        {
+          "id": "Vis0gFEJ7vLeAWuVRgUN",
+          "isComplete": false,
+          "detail": "",
+          "title": "Draft automation",
+          "createdAt": {
+            "seconds": 1750321982,
+            "nanoseconds": 262000000
+          },
+          "tags": [],
+          "dueDate": null,
+          "status": "idle",
+          "projectId": "M8skPkldVdkRe0baEY94"
+        },
+        {
+          "id": "W2ecJ6KyGLxPlsfZtHL4",
+          "title": "Gather entities on laundry room",
+          "detail": "",
+          "isComplete": false,
+          "dueDate": null,
+          "createdAt": {
+            "seconds": 1750321972,
+            "nanoseconds": 157000000
+          },
+          "tags": [],
+          "status": "idle",
+          "projectId": "M8skPkldVdkRe0baEY94"
+        },
+        {
+          "id": "ZHjk0qCkwj4JU07NTyBK",
+          "detail": "",
+          "title": "Gather entities on bathroom",
+          "dueDate": null,
+          "tags": [],
+          "createdAt": {
+            "seconds": 1750321967,
+            "nanoseconds": 318000000
+          },
+          "projectId": "M8skPkldVdkRe0baEY94",
+          "status": "idle",
+          "isComplete": false
+        }
+      ]
+    },
+    {
+      "id": "VIJvEduXY0bGiEqJRLRu",
+      "category": "software",
+      "priority": 3,
+      "name": "dailies",
+      "url": "",
+      "createdAt": {
+        "seconds": 1750319856,
+        "nanoseconds": 198000000
+      },
+      "tasks": [
+        {
+          "id": "FI614GTea8y37KAim7ax",
+          "dueDate": null,
+          "completionNotes": "tests completed and passed!",
+          "title": "test extension is capturing article data",
+          "sessions": [
+            {
+              "notes": "No notes for this session.",
+              "date": {
+                "seconds": 1750319916,
+                "nanoseconds": 434000000
+              },
+              "duration": 1500
+            }
+          ],
+          "createdAt": {
+            "seconds": 1750319877,
+            "nanoseconds": 600000000
+          },
+          "status": "idle",
+          "completedAt": {
+            "seconds": 1750319916,
+            "nanoseconds": 434000000
+          },
+          "detail": "",
+          "projectId": "VIJvEduXY0bGiEqJRLRu",
+          "isComplete": true,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "id": "hwK6UCdY7BlZrQshvgEH",
+      "url": "",
+      "createdAt": {
+        "seconds": 1750321906,
+        "nanoseconds": 11000000
+      },
+      "priority": 3,
+      "category": "3d printing",
+      "name": "home improvement 3d prints",
+      "tasks": []
+    },
+    {
+      "id": "kjtOlHB8kq1uPDNWnrQC",
+      "priority": 3,
+      "name": "Nudger Roadmap",
+      "category": "software",
+      "url": "",
+      "createdAt": {
+        "seconds": 1750322004,
+        "nanoseconds": 241000000
+      },
+      "tasks": [
+        {
+          "id": "0tSqrl8W9VbK8kagaqwO",
+          "title": "add gamification",
+          "createdAt": {
+            "seconds": 1750322045,
+            "nanoseconds": 272000000
+          },
+          "status": "idle",
+          "isComplete": false,
+          "detail": "",
+          "dueDate": null,
+          "tags": [],
+          "projectId": "kjtOlHB8kq1uPDNWnrQC"
+        },
+        {
+          "id": "5rPkvFzO4JlGPguQNumR",
+          "isComplete": false,
+          "title": "obsidian itnegration",
+          "status": "idle",
+          "projectId": "kjtOlHB8kq1uPDNWnrQC",
+          "detail": "",
+          "dueDate": null,
+          "tags": [],
+          "createdAt": {
+            "seconds": 1750322014,
+            "nanoseconds": 959000000
+          }
+        },
+        {
+          "id": "Gx79gLM4QVOtU3jrMUjL",
+          "isComplete": false,
+          "title": "import data",
+          "tags": [],
+          "projectId": "kjtOlHB8kq1uPDNWnrQC",
+          "status": "idle",
+          "dueDate": null,
+          "createdAt": {
+            "seconds": 1750322021,
+            "nanoseconds": 215000000
+          },
+          "detail": ""
+        },
+        {
+          "id": "g6BMWYRN9AEhOO9PDiZq",
+          "tags": [],
+          "isComplete": false,
+          "dueDate": null,
+          "title": "add rest periods to pomodoro timer",
+          "status": "idle",
+          "detail": "",
+          "projectId": "kjtOlHB8kq1uPDNWnrQC",
+          "createdAt": {
+            "seconds": 1750322036,
+            "nanoseconds": 951000000
+          }
+        },
+        {
+          "id": "yFZzxVAC9DD6BzVGeCge",
+          "detail": "",
+          "dueDate": null,
+          "status": "idle",
+          "title": "add project lifecycle status",
+          "createdAt": {
+            "seconds": 1750322054,
+            "nanoseconds": 386000000
+          },
+          "isComplete": false,
+          "tags": [],
+          "projectId": "kjtOlHB8kq1uPDNWnrQC"
+        }
+      ]
+    }
+  ]
+}
