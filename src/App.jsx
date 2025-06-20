@@ -20,6 +20,9 @@ import { NUDGE_CONFIG, POMODORO_CONFIG } from './config/constants';
 import { timeAgo, generateHslColor, getComplementaryColor, getAnalogousColor, formatTime } from './utils/helpers';
 import { generateDummyData } from './utils/dummyData';
 
+// Import layout components
+import TopNavBar from './components/layout/TopNavBar';
+
 
 // --- Main App Component ---
 export default function App() {
@@ -276,53 +279,6 @@ export default function App() {
 }
 
 // --- Components ---
-const NudgerLogo = () => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-indigo-600 dark:text-indigo-400">
-        <path d="M7.5 19.5C6.83333 17.6667 6.5 15.3333 6.5 12.5C6.5 9.66667 6.83333 7.33333 7.5 5.5M12 21C10 18.1667 9 15.1667 9 12C9 8.83333 10 5.83333 12 3M16.5 19.5C17.1667 17.6667 17.5 15.3333 17.5 12.5C17.5 9.66667 17.1667 7.33333 16.5 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M3.50989 9H6.50989" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M3.50989 15H6.50989" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M17.5099 9H20.5099" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M17.5099 15H20.5099" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-);
-
-function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, onNewProject, hasActiveSession }) {
-    const navItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'projects', label: 'Projects', icon: Briefcase },
-        { id: 'tasks', label: 'Tasks', icon: ListChecks },
-        { id: 'archived', label: 'Archived', icon: Archive },
-    ];
-    if (hasActiveSession) { navItems.splice(3, 0, { id: 'tracking', label: 'Tracking', icon: TimerIcon }); }
-    return (
-        <header className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700/80 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    <div className="flex items-center space-x-8">
-                        <div className="flex items-center space-x-2">
-                            <NudgerLogo />
-                            <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 font-display">Project Nudger</h1>
-                        </div>
-                        <nav className="hidden md:flex space-x-4">
-                            {navItems.map(item => (
-                                <button key={item.id} onClick={() => setActiveView(item.id)}
-                                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeView === item.id ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-700 dark:text-indigo-300' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
-                                    <item.icon className="mr-2" size={18} />{item.label}
-                                </button>
-                            ))}
-                        </nav>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        <button onClick={onNewProject} className="hidden sm:flex items-center px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
-                            <Plus size={18} className="mr-2"/> New Project
-                        </button>
-                        <button onClick={() => setIsSettingsModalOpen(true)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"><Settings size={20} /></button>
-                    </div>
-                </div>
-            </div>
-        </header>
-    );
-}
 
 function DashboardView({ projects, tasks, nudgeState, setSelectedProjectId, categories, activeSession, ownerFilter, setOwnerFilter, owners }) {
     const activeTask = activeSession && tasks.find(t => t.id === activeSession.taskId);
