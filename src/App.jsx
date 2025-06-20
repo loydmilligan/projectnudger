@@ -72,7 +72,8 @@ export default function App() {
     const visibleProjects = useMemo(() => {
         return projects.filter(p => {
             const ownerMatch = settings.ownerFilter === 'All' || p.owner === settings.ownerFilter;
-            const statusMatch = p.status === 'active' || p.status === 'inactive';
+            // Show projects that are active, inactive, or have no status (default to active)
+            const statusMatch = !p.status || p.status === 'active' || p.status === 'inactive';
             return ownerMatch && statusMatch;
         });
     }, [projects, settings.ownerFilter]);
@@ -133,6 +134,10 @@ export default function App() {
         }
         if (projectData.id) {
             const { id, ...dataToUpdate } = projectData;
+            // Ensure status is preserved or set to active if missing
+            if (!dataToUpdate.status) {
+                dataToUpdate.status = 'active';
+            }
             await updateDoc(doc(db, basePath, 'projects', id), dataToUpdate);
         } else {
             const { id, ...dataToCreate } = projectData;
@@ -210,6 +215,10 @@ export default function App() {
             data.projects.forEach(project => {
                 if (!project.id) { console.warn("Skipping project with no ID:", project); return; }
                 const { tasks: projectTasks, ...projectData } = project;
+                // Ensure imported projects have a status field
+                if (!projectData.status) {
+                    projectData.status = 'active';
+                }
                 batch.set(doc(db, basePath, 'projects', project.id), projectData);
                 if(projectTasks?.length) {
                     projectTasks.forEach(task => {
