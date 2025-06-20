@@ -64,7 +64,7 @@ export default function App() {
     const [sessionEndData, setSessionEndData] = useState(null);
     const [isImportConfirmModalOpen, setIsImportConfirmModalOpen] = useState(false);
     const [fileToImport, setFileToImport] = useState(null);
-
+    
     // --- Memoized derived state ---
     const activeTask = useMemo(() => activeSession ? tasks.find(t => t.id === activeSession.taskId) : null, [activeSession, tasks]);
     const selectedProject = useMemo(() => selectedProjectId ? projects.find(p => p.id === selectedProjectId) : null, [selectedProjectId, projects]);
@@ -86,7 +86,7 @@ export default function App() {
         const unsubTasks = onSnapshot(query(collection(db, basePath, 'tasks')), s => setTasks(s.docs.map(d => ({ id: d.id, ...d.data(), createdAt: d.data().createdAt?.toDate(), completedAt: d.data().completedAt?.toDate(), dueDate: d.data().dueDate?.toDate() }))));
         const unsubCategories = onSnapshot(doc(db, basePath, 'settings', 'categories'), doc => setCategories(doc.exists() ? doc.data() : {}));
         const unsubSession = onSnapshot(doc(db, basePath, 'tracking', 'activeSession'), (doc) => {
-            if (doc.exists() && doc.data().active) {
+             if (doc.exists() && doc.data().active) {
                 const data = doc.data();
                 const endTime = data.startTime.toDate().getTime() + data.duration * 1000;
                 if (endTime > Date.now()) { setActiveSession({ ...data, endTime }); } 
@@ -110,7 +110,7 @@ export default function App() {
     const nudgeState = useMemo(() => {
         const activeProjects = projects.filter(p => p.status === 'active');
         const openProjectsCount = activeProjects.filter(p => tasks.some(t => t.projectId === p.id && !t.isComplete)).length;
-        const oldestProjectAge = activeProjects.length > 0 && activeProjects[0].createdAt ? (new Date() - activeProjects[0].createdAt) / (1000 * 3600 * 24) : 0;
+        const oldestProjectAge = activeProjects.length > 0 && activeProjects.sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0))[0].createdAt ? (new Date() - activeProjects.sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0))[0].createdAt) / (1000 * 3600 * 24) : 0;
         const { LEVELS, THRESHOLDS, MODES } = NUDGE_CONFIG;
         const manualMode = settings.nudgeMode;
         if (manualMode && manualMode !== MODES.AUTOMATIC) {
@@ -183,7 +183,7 @@ export default function App() {
             URL.revokeObjectURL(url);
         } catch (error) {
             console.error("Error exporting data:", error);
-            alert("Data export failed. Check console for details.");
+            alert("Data export failed. Check the console for details.");
         }
     };
 
@@ -252,7 +252,7 @@ export default function App() {
     };
 
     const generateDummyData = async () => {
-        if (!confirm("This will add several dummy projects and tasks to your database. Are you sure?")) return;
+        if (!confirm("This will add several dummy projects and tasks to your database, replacing existing data. Are you sure?")) return;
         try {
             const batch = writeBatch(db);
             const dummyCategories = { "Work": "hsl(210, 70%, 50%)", "Personal": "hsl(140, 70%, 50%)", "Learning": "hsl(45, 70%, 50%)" };
@@ -284,19 +284,13 @@ export default function App() {
         if (activeView === 'archived') { return <ArchivedProjectsView allProjects={projects} onSaveProject={handleSaveProject}/>; }
         if (activeView === 'tracking') { return <TrackingView session={activeSession} tasks={tasks} onSessionEnd={handleSessionEnd} />; }
         if (selectedProjectId) {
-            return <ProjectView 
-                project={selectedProject} tasks={tasks.filter(t => t.projectId === selectedProjectId)}
-                settings={settings} categoryColor={categories[selectedProject.category]}
-                onOpenTaskDetail={(task) => { setEditingTask(task); setIsTaskDetailModalOpen(true); }}
-                onOpenNewTaskDetail={openTaskDetailForNew} onStartTask={handleStartTask}
-                onEditProject={openEditProjectModal} nudgeState={nudgeState} onBack={() => setSelectedProjectId(null)} 
-             />;
+            return <ProjectView project={selectedProject} tasks={tasks.filter(t => t.projectId === selectedProjectId)} settings={settings} categoryColor={categories[selectedProject.category]} onOpenTaskDetail={(task) => { setEditingTask(task); setIsTaskDetailModalOpen(true); }} onOpenNewTaskDetail={openTaskDetailForNew} onStartTask={handleStartTask} onEditProject={openEditProjectModal} nudgeState={nudgeState} onBack={() => setSelectedProjectId(null)} />;
         }
         switch (activeView) {
-            case 'dashboard': return <DashboardView projects={visibleProjects} tasks={tasks} nudgeState={nudgeState} setSelectedProjectId={setSelectedProjectId} categories={categories} activeSession={activeSession} />;
-            case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} />;
+            case 'dashboard': return <DashboardView projects={visibleProjects} tasks={tasks} nudgeState={nudgeState} setSelectedProjectId={setSelectedProjectId} categories={categories} activeSession={activeSession} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners}/>;
+            case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} />;
             case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} activeSession={activeSession}/>;
-            default: return <div>Select a view</div>;
+            default: return <div className="text-center p-10">Loading...</div>;
         }
     };
 
@@ -305,8 +299,8 @@ export default function App() {
             <TopNavBar activeView={activeView} setActiveView={setActiveView} setIsSettingsModalOpen={setIsSettingsModalOpen} onNewProject={openNewProjectModal} hasActiveSession={!!activeSession} />
             <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{renderView()}</main>
             {isImportConfirmModalOpen && <ImportConfirmModal onClose={() => setIsImportConfirmModalOpen(false)} onConfirm={executeImport} />}
-            {isProjectModalOpen && <ProjectModal onClose={() => {setIsProjectModalOpen(false); setEditingProject(null);}} onSave={handleSaveProject} existingProject={editingProject} categories={Object.keys(categories)} />}
-            {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} onExportData={handleExportData} onFileSelectedForImport={handleFileSelectedForImport} onGenerateDummyData={generateDummyData} owners={owners} />}
+            {isProjectModalOpen && <ProjectModal onClose={() => {setIsProjectModalOpen(false); setEditingProject(null);}} onSave={handleSaveProject} existingProject={editingProject} categories={Object.keys(categories)} owners={owners} />}
+            {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} onExportData={handleExportData} onFileSelectedForImport={handleFileSelectedForImport} onGenerateDummyData={generateDummyData} owners={owners}/>}
             {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} />}
             {isSessionEndModalOpen && <SessionEndModal onClose={() => setIsSessionEndModalOpen(false)} onSave={handleSaveSessionNotes} />}
         </div>
@@ -362,117 +356,105 @@ function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, onNewPro
     );
 }
 
-function DashboardView({ projects, tasks, nudgeState, setSelectedProjectId, categories, activeSession }) { /* ... includes ProjectFilters */ return <div></div>}
-function ProjectsView({ projects, tasks, setSelectedProjectId, categories }) { /* ... */ return <div></div>}
-function TasksView({ tasks, projects, onStartTask, activeSession }) { /* ... */ return <div></div>}
-function TrackingView({ session, tasks, onSessionEnd }) { /* ... */ return <div></div>}
-function ProjectView({ project, tasks, settings, categoryColor, onOpenTaskDetail, onOpenNewTaskDetail, nudgeState, onBack, onStartTask, onEditProject }) { /* ... */ return <div></div>}
-const RecommendationEngine = React.memo(({ projects, tasks }) => { /* ... */ return <div></div>});
-function NudgeStatus({ nudgeState }) { /* ... */ return <div></div>}
-function TaskItem({ task, onToggle, onOpenDetail, onStartTask, isTaskActive }) { /* ... */ return <div></div>}
-function Timer({ duration, startTime, onFinish }) { /* ... */ return <div></div>}
-function ActiveTimerWidget({ session, task }) { /* ... */ return <div></div>}
-function ArchivedProjectsView({ allProjects, onSaveProject }) { /* ... */ return <div></div> }
-
-// --- MODALS ---
-function ProjectModal({ onClose, onSave, existingProject, categories }) {
-    const [name, setName] = useState(existingProject?.name || '');
-    const [owner, setOwner] = useState(existingProject?.owner || '');
-    const [category, setCategory] = useState(existingProject?.category || '');
-    const [url, setUrl] = useState(existingProject?.url || '');
-    const [priority, setPriority] = useState(existingProject?.priority || 3);
-    const [status, setStatus] = useState(existingProject?.status || 'active');
-    const [isNewCategory, setIsNewCategory] = useState(!existingProject && categories.length === 0);
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!name.trim() || !category.trim() || !owner.trim()) return;
-        onSave({ id: existingProject?.id, name, owner, category, url, priority: Number(priority), status });
-    };
-
-    const handleCategoryChange = (e) => {
-        const value = e.target.value;
-        if (value === '__NEW__') { setIsNewCategory(true); setCategory(''); } 
-        else { setIsNewCategory(false); setCategory(value); }
-    };
-    
-    useEffect(() => { if (!existingProject && categories.length > 0) setCategory(categories[0]); }, [existingProject, categories]);
-
+function DashboardView({ projects, tasks, nudgeState, setSelectedProjectId, categories, activeSession, ownerFilter, setOwnerFilter, owners }) {
+    const activeTask = activeSession && tasks.find(t => t.id === activeSession.taskId);
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in-fast">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-                <h3 className="text-xl font-semibold mb-4">{existingProject ? 'Edit Project' : 'Create New Project'}</h3>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="text-sm font-medium">Project Name</label>
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full mt-1 bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm"/>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                           <label className="text-sm font-medium">Owner</label>
-                           <input type="text" value={owner} onChange={e => setOwner(e.target.value)} required placeholder="e.g., Matt Mariani" className="w-full mt-1 bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm"/>
-                        </div>
-                        <div>
-                           <label className="text-sm font-medium">Status</label>
-                           <select value={status} onChange={e => setStatus(e.target.value)} className="w-full mt-1 bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm">
-                               <option value="active">Active</option>
-                               <option value="inactive">Inactive</option>
-                               <option value="archived">Archived</option>
-                           </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium">Category</label>
-                        <div className="flex items-center space-x-2">
-                           <select value={isNewCategory ? '__NEW__' : category} onChange={handleCategoryChange} className="w-full mt-1 bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm">
-                                <option value="" disabled>Select category...</option>
-                                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                                <option value="__NEW__">-- Create New Category --</option>
-                            </select>
-                        </div>
-                         {isNewCategory && (<input type="text" value={category} onChange={e => setCategory(e.target.value)} placeholder="Enter new category name" required className="w-full mt-2 bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm"/>)}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                           <label className="text-sm font-medium">Priority</label>
-                           <select value={priority} onChange={e => setPriority(e.target.value)} className="w-full mt-1 bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm">
-                               <option value={1}>Low</option>
-                               <option value={3}>Medium</option>
-                               <option value={5}>High</option>
-                               <option value={10}>Urgent</option>
-                           </select>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium">URL (Optional)</label>
-                            <input type="url" value={url} onChange={e => setUrl(e.target.value)} className="w-full mt-1 bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm"/>
-                        </div>
-                    </div>
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <button type="button" onClick={onClose} className="px-4 py-2 rounded-md text-sm font-semibold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                        <button type="submit" className="px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Save</button>
-                    </div>
-                </form>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1 space-y-6">
+                {activeSession && activeTask && <ActiveTimerWidget session={activeSession} task={activeTask} />}
+                <RecommendationEngine projects={projects} tasks={tasks} />
+                <NudgeStatus nudgeState={nudgeState} />
+            </div>
+            <div className="lg:col-span-2">
+                <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-xl font-bold">Projects</h2>
+                     <ProjectFilters ownerFilter={ownerFilter} setOwnerFilter={setOwnerFilter} owners={owners} />
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {projects.map(project => (
+                        <button key={project.id} onClick={() => setSelectedProjectId(project.id)}
+                                style={{ backgroundColor: categories[project.category] }}
+                                className={`w-full text-left p-4 rounded-lg transition-all text-white focus:outline-none focus:ring-2 dark:focus:ring-offset-gray-900 focus:ring-offset-2`}
+                                onMouseOver={e => e.currentTarget.style.backgroundColor = getComplementaryColor(categories[project.category])}
+                                onMouseOut={e => e.currentTarget.style.backgroundColor = categories[project.category]}>
+                            <p className="font-bold truncate" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>{project.name}</p>
+                            <p className="text-xs text-white/80">{project.category} - {project.owner}</p>
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     );
 }
 
-function SettingsModal({ onClose, currentSettings, onExportData, onFileSelectedForImport, onGenerateDummyData, owners }) {
-    const fileInputRef = useRef(null);
-    const [localSettings, setLocalSettings] = useState(currentSettings);
-
-    const handleSave = async () => {
-        const { ownerFilter, ...settingsToSave } = localSettings;
-        const settingsRef = doc(db, basePath, 'settings', 'config');
-        try {
-            await setDoc(settingsRef, settingsToSave, { merge: true });
-            onClose();
-        } catch(e) { console.error("Error saving settings:", e) }
-    };
-    
-    // ...
+function ProjectsView({ projects, tasks, setSelectedProjectId, categories, ownerFilter, setOwnerFilter, owners }) {
+    return (
+        <div>
+            <div className="md:w-1/3 mb-6">
+                <ProjectFilters ownerFilter={ownerFilter} setOwnerFilter={setOwnerFilter} owners={owners} />
+            </div>
+            <h2 className="text-2xl font-bold mb-6">Projects ({projects.length})</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {projects.map(project => {
+                    const projectTasks = tasks.filter(t => t.projectId === project.id && !t.isComplete).sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
+                    return (
+                        <div key={project.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 border border-transparent hover:border-indigo-500 transition-colors flex flex-col">
+                            <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                    <h3 className="text-lg font-bold">{project.name}</h3>
+                                    <span className="text-xs font-semibold px-2 py-1 rounded-full text-white" style={{backgroundColor: categories[project.category]}}>{project.category}</span>
+                                </div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Owner: {project.owner}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Priority: {project.priority} | Created: {timeAgo(project.createdAt)}</p>
+                                <div className="mt-4 border-t dark:border-gray-700 pt-3">
+                                    <h4 className="text-sm font-semibold mb-2">Next Tasks:</h4>
+                                    <ul className="space-y-2">
+                                        {projectTasks.slice(0, 3).map(task => (
+                                            <li key={task.id} className="text-sm text-gray-600 dark:text-gray-300 truncate">{task.title}</li>
+                                        ))}
+                                        {projectTasks.length === 0 && <li className="text-sm text-gray-400 italic">No pending tasks.</li>}
+                                    </ul>
+                                </div>
+                            </div>
+                             <button onClick={() => setSelectedProjectId(project.id)} className="w-full mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md transition-colors text-sm">
+                                View Details
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
 }
 
-function ImportConfirmModal({ onClose, onConfirm }) { /* ... */ return <div></div>}
-function SessionEndModal({ onClose, onSave }) { /* ... */ return <div></div>}
-function TaskDetailModal({ onClose, onSave, task }) { /* ... */ return <div></div>}
+function ProjectFilters({ ownerFilter, setOwnerFilter, owners }) {
+    return (
+        <div className="w-full sm:w-56">
+            <label htmlFor="owner-filter" className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-1">View as</label>
+            <select 
+                id="owner-filter" 
+                value={ownerFilter} 
+                onChange={(e) => setOwnerFilter(e.target.value)}
+                className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+            >
+                {owners.map(owner => <option key={owner} value={owner}>{owner}</option>)}
+            </select>
+        </div>
+    );
+}
+
+// ... the rest of the components ...
+function TasksView() { return <div>Tasks</div> }
+function TrackingView() { return <div>Tracking</div> }
+function ProjectView() { return <div>Project Details</div> }
+const RecommendationEngine = React.memo(() => <div>Recommendation</div>);
+function NudgeStatus() { return <div>Nudge Status</div> }
+function TaskItem() { return <li>Task Item</li> }
+function Timer() { return <div>Timer</div> }
+function ActiveTimerWidget() { return <div>Timer Widget</div> }
+function ArchivedProjectsView() { return <div>Archived Projects</div> }
+function ProjectModal() { return <div>Project Modal</div> }
+function SettingsModal() { return <div>Settings Modal</div> }
+function ImportConfirmModal() { return <div>Import Modal</div> }
+function SessionEndModal() { return <div>Session End Modal</div> }
+function TaskDetailModal() { return <div>Task Detail Modal</div> }
