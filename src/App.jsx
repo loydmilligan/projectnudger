@@ -802,11 +802,10 @@ function SettingsModal({ onClose, currentSettings, onExportData, onFileSelectedF
     const [localSettings, setLocalSettings] = useState(currentSettings);
 
     const handleSave = async () => {
-        const { ownerFilter, ...settingsToSave } = localSettings;
         const settingsRef = doc(db, basePath, 'settings', 'config');
         try {
-            await setDoc(settingsRef, settingsToSave, { merge: true });
-            setSettings(localSettings); // Update parent state
+            await setDoc(settingsRef, localSettings, { merge: true });
+            setSettings(localSettings);
             onClose();
         } catch(e) { console.error("Error saving settings:", e) }
     };
