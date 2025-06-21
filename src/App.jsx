@@ -150,11 +150,27 @@ export default function App() {
     };
 
     const handleSaveTask = async (taskData) => {
-        const { id, ...dataToSave } = taskData;
-        if (id) { await updateDoc(doc(db, basePath, 'tasks', id), dataToSave); } 
-        else { await addDoc(collection(db, basePath, 'tasks'), { ...dataToSave, createdAt: new Date() }); }
-        setIsTaskDetailModalOpen(false);
-        setEditingTask(null);
+        try {
+            const { id, ...dataToSave } = taskData;
+            
+            // Remove undefined values to prevent Firestore errors
+            Object.keys(dataToSave).forEach(key => {
+                if (dataToSave[key] === undefined) {
+                    delete dataToSave[key];
+                }
+            });
+            
+            if (id) { 
+                await updateDoc(doc(db, basePath, 'tasks', id), dataToSave); 
+            } else { 
+                await addDoc(collection(db, basePath, 'tasks'), { ...dataToSave, createdAt: new Date() }); 
+            }
+            setIsTaskDetailModalOpen(false);
+            setEditingTask(null);
+        } catch (error) {
+            console.error("Error saving task:", error);
+            alert("Failed to save task. Please try again.");
+        }
     };
 
     const handleStartTask = async (task) => {
@@ -614,7 +630,19 @@ function TaskDetailModal({ onClose, onSave, task }) {
     const [detail, setDetail] = useState(task.detail || '');
     const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
     const [tags, setTags] = useState(task.tags?.join(', ') || '');
-    const handleSubmit = (e) => { e.preventDefault(); onSave({ ...task, title, detail, dueDate: dueDate ? new Date(dueDate) : null, tags: tags.split(',').map(t => t.trim()).filter(Boolean) }); };
+    const handleSubmit = (e) => { 
+        e.preventDefault(); 
+        onSave({ 
+            id: task.id,
+            projectId: task.projectId,
+            title, 
+            detail, 
+            dueDate: dueDate ? new Date(dueDate) : null, 
+            tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+            status: task.status || 'idle',
+            isComplete: task.isComplete || false
+        }); 
+    };
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in-fast">
              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
