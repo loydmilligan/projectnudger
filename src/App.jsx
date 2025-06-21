@@ -30,9 +30,14 @@ import TasksView from './components/views/TasksView';
 import TrackingView from './components/views/TrackingView';
 import ArchivedProjectsView from './components/views/ArchivedProjectsView';
 import ProjectView from './components/views/ProjectView';
+import SettingsView from './components/views/SettingsView';
 
 // Import shared components
 import SessionCompletionModal from './components/shared/SessionCompletionModal';
+import AINudgeDisplay from './components/shared/AINudgeDisplay';
+
+// Import AI nudge service
+import { generateAINudge } from './utils/aiNudgeService';
 
 
 // --- Main App Component ---
@@ -47,7 +52,6 @@ export default function App() {
     const [selectedProjectId, setSelectedProjectId] = useState(null);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
-    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
     const [isSessionEndModalOpen, setIsSessionEndModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState(null);
@@ -56,6 +60,8 @@ export default function App() {
     const [fileToImport, setFileToImport] = useState(null);
     const [isSessionCompletionModalOpen, setIsSessionCompletionModalOpen] = useState(false);
     const [completedSessionType, setCompletedSessionType] = useState(null);
+    const [aiNudgeRecommendations, setAiNudgeRecommendations] = useState(null);
+    const [isAiNudgeDisplayOpen, setIsAiNudgeDisplayOpen] = useState(false);
     
     // --- Memoized derived state ---
     const activeTask = useMemo(() => activeSession ? tasks.find(t => t.id === activeSession.taskId) : null, [activeSession, tasks]);
@@ -216,10 +222,27 @@ export default function App() {
         }
     };
 
-    const handleSessionComplete = () => {
+    const handleSessionComplete = async () => {
         if (!activeSession) return;
+        
         setCompletedSessionType(activeSession.type);
         setIsSessionCompletionModalOpen(true);
+        
+        // Trigger AI nudge for work sessions only
+        if (activeSession.type === 'work') {
+            try {
+                const aiRecommendations = await generateAINudge(settings, projects, tasks);
+                if (aiRecommendations) {
+                    setAiNudgeRecommendations(aiRecommendations);
+                    // Show AI nudge after a short delay to let the session completion modal appear first
+                    setTimeout(() => {
+                        setIsAiNudgeDisplayOpen(true);
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Failed to generate AI nudge:', error);
+            }
+        }
     };
 
     const handleSessionCompletionSaveNotes = async (notes) => {
@@ -369,17 +392,17 @@ export default function App() {
             />;
             case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} />;
             case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} activeSession={activeSession}/>;
+            case 'settings': return <SettingsView currentSettings={settings} onExportData={handleExportData} onFileSelectedForImport={handleFileSelectedForImport} onGenerateDummyData={generateDummyData} owners={owners} setSettings={setSettings} />;
             default: return <div className="text-center p-10">Loading...</div>;
         }
     };
 
     return (
         <div className="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col">
-            <TopNavBar activeView={activeView} setActiveView={setActiveView} setIsSettingsModalOpen={setIsSettingsModalOpen} onNewProject={openNewProjectModal} hasActiveSession={!!activeSession} setSelectedProjectId={setSelectedProjectId} />
+            <TopNavBar activeView={activeView} setActiveView={setActiveView} onNewProject={openNewProjectModal} hasActiveSession={!!activeSession} setSelectedProjectId={setSelectedProjectId} />
             <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{renderView()}</main>
             {isImportConfirmModalOpen && <ImportConfirmModal onClose={() => setIsImportConfirmModalOpen(false)} onConfirm={executeImport} />}
             {isProjectModalOpen && <ProjectModal onClose={() => {setIsProjectModalOpen(false); setEditingProject(null);}} onSave={handleSaveProject} existingProject={editingProject} categories={Object.keys(categories)} owners={owners} />}
-            {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} onExportData={handleExportData} onFileSelectedForImport={handleFileSelectedForImport} onGenerateDummyData={generateDummyData} owners={owners} setSettings={setSettings}/>}
             {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} />}
             {isSessionEndModalOpen && <SessionEndModal onClose={() => setIsSessionEndModalOpen(false)} onSave={handleSaveSessionNotes} />}
             {isSessionCompletionModalOpen && (
@@ -389,6 +412,18 @@ export default function App() {
                     onStartNext={handleStartNextSession}
                     onClose={() => setIsSessionCompletionModalOpen(false)}
                     onSaveNotes={handleSessionCompletionSaveNotes}
+                />
+            )}
+            
+            {/* AI Nudge Display */}
+            {isAiNudgeDisplayOpen && aiNudgeRecommendations && (
+                <AINudgeDisplay 
+                    recommendations={aiNudgeRecommendations}
+                    settings={settings}
+                    onClose={() => {
+                        setIsAiNudgeDisplayOpen(false);
+                        setAiNudgeRecommendations(null);
+                    }}
                 />
             )}
         </div>
@@ -477,87 +512,6 @@ function ProjectModal({ onClose, onSave, existingProject, categories, owners }) 
                         <button type="submit" className="px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Save</button>
                     </div>
                 </form>
-            </div>
-        </div>
-    );
-}
-
-function SettingsModal({ onClose, currentSettings, onExportData, onFileSelectedForImport, onGenerateDummyData, owners, setSettings }) {
-    const fileInputRef = useRef(null);
-    const handleImportClick = () => fileInputRef.current.click();
-    const [localSettings, setLocalSettings] = useState(currentSettings);
-
-    const handleSave = async () => {
-        const settingsRef = doc(db, basePath, 'settings', 'config');
-        try {
-            await setDoc(settingsRef, localSettings, { merge: true });
-            setSettings(localSettings);
-            onClose();
-        } catch(e) { console.error("Error saving settings:", e) }
-    };
-    
-    const NudgeDescription = ({mode}) => {
-        const descriptions = {
-            [NUDGE_CONFIG.MODES.AUTOMATIC]: "System automatically adjusts based on workload.",
-            [NUDGE_CONFIG.MODES.REMEMBER]: "Gentle reminders every 10 tasks on non-recommended projects.",
-            [NUDGE_CONFIG.MODES.STAY_ON_TARGET]: "Warns on new project creation; nudges every 5 tasks.",
-            [NUDGE_CONFIG.MODES.LAZY]: "Blocks new projects; nudges every 2 tasks.",
-        };
-        return <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{descriptions[mode]}</p>
-    }
-
-    return (
-         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in-fast">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md relative" onClick={e => e.stopPropagation()}>
-                 <button onClick={onClose} className="absolute top-3 right-3 p-1 text-gray-400 hover:text-white"><X size={20}/></button>
-                <h3 className="text-xl font-semibold mb-4">Settings</h3>
-                <div className="space-y-6">
-                    <div>
-                        <label className="text-sm font-medium">Theme</label>
-                        <div className="mt-1 flex rounded-md bg-gray-100 dark:bg-gray-700 p-1">
-                            <button onClick={()=>setLocalSettings({...localSettings, theme: 'light'})} className={`w-1/2 py-1 text-sm rounded-md flex items-center justify-center transition-colors ${localSettings.theme === 'light' ? 'bg-white dark:bg-gray-500/50' : ''}`}><Sun className="mr-2" size={16}/>Light</button>
-                            <button onClick={()=>setLocalSettings({...localSettings, theme: 'dark'})} className={`w-1/2 py-1 text-sm rounded-md flex items-center justify-center transition-colors ${localSettings.theme === 'dark' ? 'bg-black/20 dark:bg-gray-900' : ''}`}><Moon className="mr-2" size={16}/>Dark</button>
-                        </div>
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium">Nudge Mode</label>
-                        <select value={localSettings.nudgeMode} onChange={e => setLocalSettings({...localSettings, nudgeMode: e.target.value})} className="w-full mt-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm">
-                            <option value={NUDGE_CONFIG.MODES.AUTOMATIC}>Automatic</option>
-                            <option value={NUDGE_CONFIG.MODES.REMEMBER}>Level 1: Remember</option>
-                            <option value={NUDGE_CONFIG.MODES.STAY_ON_TARGET}>Level 2: Stay on Target</option>
-                            <option value={NUDGE_CONFIG.MODES.LAZY}>Level 3: Lazy Sumb...</option>
-                        </select>
-                        <NudgeDescription mode={localSettings.nudgeMode} />
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium">ntfy.sh Topic URL</label>
-                        <input type="url" value={localSettings.ntfyUrl || ''} onChange={e => setLocalSettings({...localSettings, ntfyUrl: e.target.value})} placeholder="https://ntfy.sh/your-topic"
-                               className="w-full mt-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm"/>
-                    </div>
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                         <label className="text-sm font-medium">Data Management</label>
-                         <div className="mt-2 grid grid-cols-2 gap-2">
-                             <button onClick={onExportData} className="flex items-center justify-center px-4 py-2 rounded-md text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors">
-                                <Download size={16} className="mr-2"/> Export Data
-                            </button>
-                             <button onClick={handleImportClick} className="flex items-center justify-center px-4 py-2 rounded-md text-sm font-semibold bg-gray-600 hover:bg-gray-700 text-white transition-colors">
-                                <Upload size={16} className="mr-2"/> Import Data
-                            </button>
-                            <input type="file" ref={fileInputRef} onChange={onFileSelectedForImport} accept=".json" className="hidden" />
-                         </div>
-                    </div>
-                     <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                         <label className="text-sm font-medium">Testing</label>
-                         <button onClick={onGenerateDummyData} className="w-full mt-2 flex items-center justify-center px-4 py-2 rounded-md text-sm font-semibold bg-yellow-600 hover:bg-yellow-700 text-black transition-colors">
-                            <Beaker size={16} className="mr-2"/> Generate Dummy Data
-                        </button>
-                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Populate the app with sample projects and tasks.</p>
-                    </div>
-                </div>
-                 <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
-                    <button type="button" onClick={onClose} className="px-4 py-2 rounded-md text-sm font-semibold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                    <button type="button" onClick={handleSave} className="px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Save Settings</button>
-                </div>
             </div>
         </div>
     );

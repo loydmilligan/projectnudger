@@ -30,11 +30,20 @@ Project Nudger is a single-page React application built with Vite that implement
 
 ### Core Architecture
 
-- **Single File Component**: The entire application is contained in `src/App.jsx` (~850 lines)
+- **Modular Component Structure**: Application is organized into separate view, layout, and shared components
 - **Firebase Integration**: Uses Firestore for real-time data synchronization and anonymous authentication
 - **State Management**: React hooks with local state management (no external state library)
 - **Styling**: Tailwind CSS with custom HSL color generation for project categories
 - **Real-time Features**: Firestore listeners for live data updates across all views
+
+### Component Organization
+
+- **`src/App.jsx`**: Main application component containing core state management and routing logic
+- **`src/components/views/`**: Screen-level components (DashboardView, ProjectsView, TasksView, etc.)
+- **`src/components/layout/`**: Navigation and layout components (TopNavBar, NudgerLogo)
+- **`src/components/shared/`**: Reusable components used across views (TaskItem, ProjectFilters, etc.)
+- **`src/config/`**: Configuration files (Firebase setup, constants)
+- **`src/utils/`**: Helper functions and utilities
 
 ### Key Systems
 

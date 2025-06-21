@@ -2,7 +2,7 @@ import React from 'react';
 import { Plus, Settings, LayoutDashboard, Briefcase, ListChecks, Archive, Timer as TimerIcon } from 'lucide-react';
 import NudgerLogo from './NudgerLogo';
 
-function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, onNewProject, hasActiveSession, setSelectedProjectId }) {
+function TopNavBar({ activeView, setActiveView, onNewProject, hasActiveSession, setSelectedProjectId }) {
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'projects', label: 'Projects', icon: Briefcase },
@@ -49,7 +49,10 @@ function TopNavBar({ activeView, setActiveView, setIsSettingsModalOpen, onNewPro
                             New Project
                         </button>
                         <button
-                            onClick={() => setIsSettingsModalOpen(true)}
+                            onClick={() => {
+                                setActiveView('settings');
+                                setSelectedProjectId(null);
+                            }}
                             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                         >
                             <Settings size={20} />

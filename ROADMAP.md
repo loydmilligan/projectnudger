@@ -64,6 +64,45 @@ The roadmap below focuses heavily on expanding this nudging system as the applic
 *   **Mobile Responsiveness:** Optimize the interface for mobile and tablet usage with touch-friendly controls and responsive layouts. *(Effort: 3, Benefit: 4)*
 *   **Markdown Support:** Add markdown rendering to task descriptions, project details, and session notes for better formatting and readability. *(Effort: 3, Benefit: 2)*
 
+## Task Screen UI/UX Improvements
+
+*   **Task Drag & Drop Reordering:** Allow tasks to be grabbed and reordered through drag and drop functionality. *(Effort: 3, Benefit: 4)*
+*   **Universal Task Actions:** Fix bug where some tasks cannot be checked off or have timers started - ensure all task interaction buttons work consistently. *(Effort: 2, Benefit: 5)*
+*   **Enhanced Task Sorting:** Add ability to sort tasks by due date (ascending and descending order). *(Effort: 2, Benefit: 3)*
+*   **Task Grouping Options:** Allow tasks to be grouped by due date or by project for better organization. *(Effort: 3, Benefit: 4)*
+*   **Improved Tags Filter:** Expand tag filtering beyond "show all" to allow filtering by specific tags. *(Effort: 2, Benefit: 3)*
+*   **Enhanced Due Date Filters:** Add "Past Due" and "Nudged" options to the due date filter dropdown. *(Effort: 2, Benefit: 4)*
+*   **Nudge Score Sorting:** Add ability to sort tasks by their nudge score to prioritize neglected items. *(Effort: 2, Benefit: 4)*
+*   **Nudge Score Tooltip:** Add explanatory tooltip showing how nudge scores are calculated. *(Effort: 1, Benefit: 2)*
+*   **Clean Project Filter:** Remove inactive and archived projects from project filter dropdown by default. *(Effort: 1, Benefit: 3)*
+*   **Enhanced Task Visual Design:** Create more visual distinction for the box around each task to improve readability. *(Effort: 2, Benefit: 3)*
+*   **Time Tracking Indicators:** Add visual indicator when a task has time tracked against it. *(Effort: 2, Benefit: 3)*
+*   **Expandable Time Tracking Details:** Allow tasks to be expanded to view detailed time tracking information. *(Effort: 3, Benefit: 3)*
+*   **Session Notes Indicators:** Add separate visual indicators for tasks that have session notes or completion notes. *(Effort: 2, Benefit: 3)*
+*   **Expandable Session Notes:** Allow tasks to be expanded to view session or completion notes. *(Effort: 2, Benefit: 3)*
+*   **Colored Tag System:** Add color coding to different tags for better visual organization. *(Effort: 2, Benefit: 3)*
+*   **Age-Based Visual Priority:** Make older tasks more visually prominent through increased brightness or other visual cues. *(Effort: 3, Benefit: 4)*
+
+## Timer Screen UI/UX Improvements
+
+*   **Time Tracking Analytics Dashboard:** Transform timer screen into a comprehensive research and review interface for time tracking insights. *(Effort: 4, Benefit: 4)*
+*   **Weekly Time Summary:** Display summary of time tracked over the last week with key metrics. *(Effort: 3, Benefit: 4)*
+*   **Project Time Distribution:** Add pie chart showing time breakdown by project over the last week. *(Effort: 3, Benefit: 4)*
+*   **Monthly Session Completion Chart:** Display daily session completion over the last month with red/green bar indicators. *(Effort: 3, Benefit: 3)*
+*   **Monthly Nudge Tracking:** Add line chart showing nudges received each day over the last month. *(Effort: 3, Benefit: 3)*
+
+## Projects Screen UI/UX Improvements
+
+*   **Kanban-Style Project Management:** Transform projects screen into a kanban board with configurable project stage buckets. *(Effort: 4, Benefit: 5)*
+*   **Configurable Project Stages:** Allow users to customize the stage buckets for project workflow management. *(Effort: 3, Benefit: 4)*
+*   **Project Drag & Drop:** Enable projects to be dragged and dropped between different stage buckets. *(Effort: 3, Benefit: 4)*
+*   **Enhanced Project Filtering:** Add category and status filters to complement the existing owner filter. *(Effort: 2, Benefit: 3)*
+*   **Task Completion Visual Indicator:** Show visual progress indicator for task completion ratio - projects with all tasks complete appear "full". *(Effort: 3, Benefit: 4)*
+*   **Project Action Buttons:** Add edit, delete, and archive buttons to each project card for direct project management. *(Effort: 2, Benefit: 4)*
+*   **Rename Project Navigation Button:** Change "View Details" button to "Manage Tasks" to better reflect its function. *(Effort: 1, Benefit: 3)*
+*   **Project URL Integration:** Display project URL as a clickable link on the project card when the URL field is populated. *(Effort: 1, Benefit: 3)*
+*   **Optimize Project Card Layout:** Reduce maximum size of project cards to eliminate excessive empty space and improve button proportions on desktop displays. *(Effort: 2, Benefit: 3)*
+
 ## Alternative Views & Navigation
 
 *   **Calendar View:** Display tasks and due dates in a traditional calendar interface with drag-and-drop scheduling. *(Effort: 4, Benefit: 3)*
