@@ -1,23 +1,25 @@
 import React, { useState, useRef } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
-import { Download, Upload, Beaker, Sun, Moon, X } from 'lucide-react';
+import { Download, Upload, Beaker, Sun, Moon, X, Brain } from 'lucide-react';
 import { db, basePath } from '../../config/firebase';
 import { NUDGE_CONFIG } from '../../config/constants';
 
-function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, onGenerateDummyData, owners, setSettings }) {
+function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, onGenerateDummyData, owners, setSettings, projects, tasks, onTestAINudge }) {
     const fileInputRef = useRef(null);
     const handleImportClick = () => fileInputRef.current.click();
     const [localSettings, setLocalSettings] = useState(currentSettings);
 
     const handleSave = async () => {
+        console.log('Saving settings:', localSettings);
         const settingsRef = doc(db, basePath, 'settings', 'config');
         try {
             await setDoc(settingsRef, localSettings, { merge: true });
             setSettings(localSettings);
-            // Show success message or toast here if desired
+            console.log('Settings saved successfully');
+            alert('Settings saved successfully!');
         } catch(e) { 
             console.error("Error saving settings:", e);
-            // Show error message here if desired
+            alert(`Error saving settings: ${e.message}`);
         }
     };
     
@@ -146,20 +148,26 @@ function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, 
                                 <div>
                                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Prompt Template</label>
                                     <textarea 
-                                        value={localSettings.aiPromptTemplate || `You are a productivity coach helping a user avoid procrastination and finish near-complete projects. 
+                                        value={localSettings.aiPromptTemplate || `You are {ROBOT_CHARACTER}, a robot productivity coach analyzing task data.
 
-Analyze the attached project and task data, then provide structured recommendations:
+Return ONLY valid JSON (no markdown, no extra text) in this EXACT format:
 
-Respond with JSON containing:
-- "urgentTasks": [task IDs that need immediate attention]
-- "nearCompletionProjects": [project names that are 80%+ complete but stalled]
-- "neglectedProjects": [project names not touched recently]
-- "recommendedFocus": "A specific, actionable recommendation for UI display"
-- "robotRecommendation": "Same recommendation reworded from the perspective of a famous robot character (HAL 9000, Data, C-3PO, Terminator, WALL-E, R2-D2, etc.) - be creative and fun while staying helpful. Use their distinctive speech patterns and personality."
-- "robotCharacter": "Name of the robot character you chose"
-- "nudgeIntensity": "low" | "medium" | "high"
+{
+  "urgentTasks": [],
+  "nearCompletionProjects": [],
+  "neglectedProjects": [],
+  "recommendedFocus": "Brief recommendation based on the data",
+  "robotRecommendation": "Same recommendation in {ROBOT_CHARACTER}'s voice with their personality",
+  "robotCharacter": "{ROBOT_CHARACTER}",
+  "nudgeIntensity": "low"
+}
 
-Focus on helping the user push near-finished projects over the finish line and avoid starting new projects when existing ones need attention.`} 
+Rules:
+1. Return ONLY the JSON object above
+2. Keep "robotRecommendation" under 200 characters
+3. Use {ROBOT_CHARACTER}'s speech patterns and personality
+4. Base recommendations on actual project data provided
+5. NO markdown formatting, NO code blocks, NO extra text`} 
                                         onChange={e => setLocalSettings({...localSettings, aiPromptTemplate: e.target.value})} 
                                         rows={8}
                                         className="w-full mt-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -170,6 +178,66 @@ Focus on helping the user push near-finished projects over the finish line and a
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Debug Mode */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                    <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Debug & Testing</h2>
+                    
+                    <div className="space-y-6">
+                        <div>
+                            <label className="flex items-center">
+                                <input 
+                                    type="checkbox" 
+                                    checked={localSettings.debugMode || false} 
+                                    onChange={e => setLocalSettings({...localSettings, debugMode: e.target.checked})}
+                                    className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                />
+                                <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Enable debug mode
+                                </span>
+                            </label>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Shows additional testing tools and debug information
+                            </p>
+                        </div>
+
+                        {localSettings.debugMode && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                <div className="space-y-3">
+                                    <button 
+                                        onClick={onGenerateDummyData} 
+                                        className="w-full flex items-center justify-center px-4 py-3 rounded-md text-sm font-semibold bg-yellow-600 hover:bg-yellow-700 text-black transition-colors"
+                                    >
+                                        <Beaker size={16} className="mr-2"/> Generate Dummy Data
+                                    </button>
+                                    
+                                    <button 
+                                        onClick={onTestAINudge || (async () => {
+                                            try {
+                                                const { generateAINudge } = await import('../../utils/aiNudgeService');
+                                                const aiRecommendations = await generateAINudge(localSettings, projects || [], tasks || []);
+                                                console.log('AI Nudge Test Result:', aiRecommendations);
+                                                alert('AI nudge test complete! Check console for detailed results.');
+                                            } catch (error) {
+                                                console.error('AI nudge test failed:', error);
+                                                alert(`AI nudge test failed: ${error.message}`);
+                                            }
+                                        })}
+                                        className="w-full flex items-center justify-center px-4 py-3 rounded-md text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+                                    >
+                                        <Brain size={16} className="mr-2"/> Test AI Nudge
+                                    </button>
+                                    
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                                        <p>• Dummy data creates sample projects and tasks</p>
+                                        <p>• Test AI nudge immediately queries OpenAI with current data</p>
+                                        <p>• Results logged to browser console</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -204,30 +272,16 @@ Focus on helping the user push near-finished projects over the finish line and a
                         </p>
                     </div>
                 </div>
-
-                {/* Development & Testing */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                    <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Development & Testing</h2>
-                    
-                    <div className="space-y-4">
-                        <button 
-                            onClick={onGenerateDummyData} 
-                            className="w-full flex items-center justify-center px-4 py-3 rounded-md text-sm font-semibold bg-yellow-600 hover:bg-yellow-700 text-black transition-colors"
-                        >
-                            <Beaker size={16} className="mr-2"/> Generate Dummy Data
-                        </button>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Populate the app with sample projects and tasks for testing purposes.
-                        </p>
-                    </div>
-                </div>
             </div>
 
             {/* Save Button */}
             <div className="mt-8 flex justify-end">
                 <button 
                     type="button" 
-                    onClick={handleSave} 
+                    onClick={() => {
+                        console.log('Save button clicked');
+                        handleSave();
+                    }} 
                     className="px-6 py-3 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
                 >
                     Save Settings

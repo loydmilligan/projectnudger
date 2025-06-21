@@ -34,6 +34,10 @@ export function prepareDataForAI(projects, tasks) {
         const daysSinceActivity = lastActivity ? 
             Math.floor((now - new Date(lastActivity)) / (1000 * 60 * 60 * 24)) : daysSinceCreated;
 
+        // Calculate nudge score (same algorithm as RecommendationEngine)
+        const daysOld = project.createdAt ? (now - new Date(project.createdAt)) / (1000 * 60 * 60 * 24) : 0;
+        const nudgeScore = (project.priority || 3) * 2 + daysOld;
+
         return {
             id: project.id,
             name: project.name,
@@ -45,6 +49,7 @@ export function prepareDataForAI(projects, tasks) {
             completedTasks: completedTasks.length,
             daysSinceCreated,
             daysSinceActivity,
+            nudgeScore: Math.round(nudgeScore * 100) / 100, // Round to 2 decimal places
             isNearCompletion: completionPercentage >= 80 && completionPercentage < 100,
             isStalled: daysSinceActivity > 7 && completionPercentage > 0,
             isNeglected: daysSinceActivity > 14
@@ -93,21 +98,34 @@ export function prepareDataForAI(projects, tasks) {
 }
 
 /**
- * Call OpenAI API to get AI nudge recommendations
+ * Call 1: Pure data analysis with strict JSON schema
  * @param {string} apiKey - OpenAI API key
- * @param {string} promptTemplate - Custom prompt template
  * @param {Object} projectData - Prepared project/task data
- * @returns {Promise<Object>} AI recommendations
+ * @returns {Promise<Object>} Structured analysis data
  */
-export async function getAINudgeRecommendations(apiKey, promptTemplate, projectData) {
+export async function getDataAnalysis(apiKey, projectData) {
     if (!apiKey || !apiKey.startsWith('sk-')) {
         throw new Error('Valid OpenAI API key is required');
     }
 
-    const systemPrompt = `${promptTemplate}
+    const systemPrompt = `You are a data analysis engine. Your only function is to analyze the provided project and task data and populate a specific JSON schema. You must not deviate from this schema. Your entire response must be ONLY the raw JSON object, with no extra text or markdown.
 
-User's current project data:
-${JSON.stringify(projectData, null, 2)}`;
+**Output Schema (Strict):**
+
+{
+  "urgentTasks": ["string"],
+  "nearCompletionProjects": ["string"],
+  "neglectedProjects": ["string"],
+  "recommendedFocus": "string",
+  "nudgeIntensity": "string"
+}
+
+**Rules (Mandatory):**
+1. Your entire output MUST be a single, raw JSON object.
+2. DO NOT use markdown code blocks (\`\`\`json ... \`\`\`).
+3. Base all recommendations strictly on the user's data.
+4. Populate all fields in the schema, even if they are empty arrays \`[]\`.
+5. nudgeIntensity must be "low", "medium", or "high".`;
 
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -117,7 +135,7 @@ ${JSON.stringify(projectData, null, 2)}`;
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
+                model: 'gpt-4o-mini',
                 messages: [
                     {
                         role: 'system',
@@ -125,11 +143,11 @@ ${JSON.stringify(projectData, null, 2)}`;
                     },
                     {
                         role: 'user',
-                        content: 'Please analyze my project data and provide structured recommendations in JSON format.'
+                        content: JSON.stringify(projectData, null, 2)
                     }
                 ],
-                max_tokens: 500,
-                temperature: 0.3
+                max_tokens: 400,
+                temperature: 0.1
             })
         });
 
@@ -145,57 +163,156 @@ ${JSON.stringify(projectData, null, 2)}`;
             throw new Error('No response received from OpenAI');
         }
 
-        // Try to parse JSON from the AI response
-        let recommendations;
+        console.log('🤖 Call 1 - Raw analysis response:', aiResponse);
+        
+        // Parse the JSON response
+        let analysis;
         try {
-            // Look for JSON in the response (may be wrapped in markdown code blocks)
-            const jsonMatch = aiResponse.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || 
-                             aiResponse.match(/(\{[\s\S]*\})/);
+            // Clean the response and parse
+            let jsonString = aiResponse.trim();
             
-            if (jsonMatch) {
-                recommendations = JSON.parse(jsonMatch[1]);
-            } else {
-                throw new Error('No valid JSON found in AI response');
+            // Remove any markdown if present (shouldn't be there, but just in case)
+            const codeBlockMatch = jsonString.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+            if (codeBlockMatch) {
+                jsonString = codeBlockMatch[1];
             }
+            
+            analysis = JSON.parse(jsonString);
+            console.log('🤖 Call 1 - Successfully parsed analysis:', analysis);
+            
         } catch (parseError) {
-            console.error('Failed to parse AI response:', aiResponse);
-            throw new Error(`Failed to parse AI response as JSON: ${parseError.message}`);
+            console.error('🤖 Call 1 - Failed to parse analysis response:', aiResponse);
+            throw new Error(`Failed to parse analysis response: ${parseError.message}`);
         }
 
-        // Validate the response structure
+        // Validate required fields
         const requiredFields = ['urgentTasks', 'nearCompletionProjects', 'neglectedProjects', 'recommendedFocus', 'nudgeIntensity'];
-        const robotFields = ['robotRecommendation', 'robotCharacter'];
-        const missingFields = requiredFields.filter(field => !(field in recommendations));
-        const missingRobotFields = robotFields.filter(field => !(field in recommendations));
+        const missingFields = requiredFields.filter(field => !(field in analysis));
         
         if (missingFields.length > 0) {
-            console.warn('AI response missing required fields:', missingFields);
+            console.warn('🤖 Call 1 - Missing fields:', missingFields);
+            // Fill in missing fields
+            const defaults = {
+                urgentTasks: [],
+                nearCompletionProjects: [],
+                neglectedProjects: [],
+                recommendedFocus: 'Focus on completing your highest priority tasks.',
+                nudgeIntensity: 'medium'
+            };
+            analysis = { ...defaults, ...analysis };
         }
-        
-        if (missingRobotFields.length > 0) {
-            console.warn('AI response missing robot fields:', missingRobotFields);
-        }
-        
-        // Fill in missing fields with defaults
-        recommendations = {
-            urgentTasks: [],
-            nearCompletionProjects: [],
-            neglectedProjects: [],
-            recommendedFocus: 'Focus on completing your highest priority tasks.',
-            nudgeIntensity: 'medium',
-            robotRecommendation: 'INITIATING PRODUCTIVITY PROTOCOL. FOCUS ON YOUR HIGHEST PRIORITY TASKS, HUMAN.',
-            robotCharacter: 'Generic Robot',
-            ...recommendations
-        };
 
-        return {
-            ...recommendations,
-            timestamp: new Date().toISOString(),
-            rawResponse: aiResponse
-        };
+        return analysis;
 
     } catch (error) {
-        console.error('AI Nudge Service Error:', error);
+        console.error('🤖 Call 1 - Data Analysis Error:', error);
+        throw error;
+    }
+}
+
+/**
+ * Call 2: Robot personality generation
+ * @param {string} apiKey - OpenAI API key
+ * @param {string} robotCharacter - Selected robot character
+ * @param {string} recommendedFocus - Text from Call 1 to rephrase
+ * @returns {Promise<string>} Robot personality response
+ */
+export async function getRobotPersonality(apiKey, robotCharacter, recommendedFocus) {
+    if (!apiKey || !apiKey.startsWith('sk-')) {
+        throw new Error('Valid OpenAI API key is required');
+    }
+
+    const systemPrompt = `You are a robot character actor. Adopt the persona of ${robotCharacter}. Rephrase the following user-provided text in your character's voice and personality. Keep your response under 200 characters.`;
+
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    {
+                        role: 'system',
+                        content: systemPrompt
+                    },
+                    {
+                        role: 'user',
+                        content: `Here is the text to rephrase:\n\n"${recommendedFocus}"`
+                    }
+                ],
+                max_tokens: 100,
+                temperature: 0.7
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+        }
+
+        const data = await response.json();
+        const robotResponse = data.choices[0]?.message?.content;
+
+        if (!robotResponse) {
+            throw new Error('No robot response received from OpenAI');
+        }
+
+        console.log('🤖 Call 2 - Robot personality response:', robotResponse);
+        return robotResponse.trim();
+
+    } catch (error) {
+        console.error('🤖 Call 2 - Robot Personality Error:', error);
+        throw error;
+    }
+}
+
+/**
+ * Orchestrate both AI calls to get complete recommendations
+ * @param {string} apiKey - OpenAI API key
+ * @param {Object} projectData - Prepared project/task data
+ * @returns {Promise<Object>} Complete AI recommendations
+ */
+export async function getAINudgeRecommendations(apiKey, projectData) {
+    // Select random robot character
+    const robotCharacters = [
+        'R2-D2', 'C-3PO', 'HAL 9000', 'Data', 'Terminator', 
+        'WALL-E', 'Bender', 'Optimus Prime', 'Johnny 5', 'Marvin'
+    ];
+    
+    const selectedRobot = robotCharacters[Math.floor(Math.random() * robotCharacters.length)];
+    console.log('🤖 Selected robot character:', selectedRobot);
+
+    try {
+        // Call 1: Get data analysis
+        console.log('🤖 Making Call 1: Data Analysis...');
+        const analysis = await getDataAnalysis(apiKey, projectData);
+        
+        // Call 2: Get robot personality (with fallback)
+        let robotRecommendation;
+        try {
+            console.log('🤖 Making Call 2: Robot Personality...');
+            robotRecommendation = await getRobotPersonality(apiKey, selectedRobot, analysis.recommendedFocus);
+        } catch (robotError) {
+            console.warn('🤖 Call 2 failed, using fallback robot message:', robotError.message);
+            robotRecommendation = `INITIATING PRODUCTIVITY PROTOCOL. ${analysis.recommendedFocus.toUpperCase()}`;
+        }
+        
+        // Combine results
+        const recommendations = {
+            ...analysis,
+            robotRecommendation,
+            robotCharacter: selectedRobot,
+            timestamp: new Date().toISOString()
+        };
+        
+        console.log('🤖 Final combined recommendations:', recommendations);
+        return recommendations;
+
+    } catch (error) {
+        console.error('🤖 Two-call strategy failed:', error);
         throw error;
     }
 }
@@ -208,8 +325,17 @@ ${JSON.stringify(projectData, null, 2)}`;
  * @returns {Promise<Object>} AI recommendations or null if disabled/error
  */
 export async function generateAINudge(settings, projects, tasks) {
+    console.log('🤖 AI Nudge Service: Starting generation');
+    console.log('Settings:', { 
+        aiNudgeEnabled: settings.aiNudgeEnabled, 
+        hasApiKey: !!settings.openaiApiKey,
+        apiKeyLength: settings.openaiApiKey?.length || 0,
+        apiKeyStart: settings.openaiApiKey?.substring(0, 10) + '...'
+    });
+    
     // Check if AI nudges are enabled
     if (!settings.aiNudgeEnabled) {
+        console.log('AI nudges are disabled');
         return null;
     }
 
@@ -220,20 +346,23 @@ export async function generateAINudge(settings, projects, tasks) {
     }
 
     try {
+        console.log('🤖 Preparing data for AI analysis...');
         // Prepare data for AI analysis
         const projectData = prepareDataForAI(projects, tasks);
+        console.log('Project data prepared:', projectData.summary);
         
-        // Get AI recommendations
+        console.log('🤖 Calling OpenAI API...');
+        // Get AI recommendations using two-call strategy
         const recommendations = await getAINudgeRecommendations(
             settings.openaiApiKey,
-            settings.aiPromptTemplate || 'You are a productivity coach. Analyze the project data and provide recommendations.',
             projectData
         );
 
+        console.log('🤖 AI recommendations received:', recommendations);
         return recommendations;
 
     } catch (error) {
-        console.error('Failed to generate AI nudge:', error);
+        console.error('🤖 Failed to generate AI nudge:', error);
         
         // Return a fallback nudge
         return {
@@ -242,6 +371,8 @@ export async function generateAINudge(settings, projects, tasks) {
             neglectedProjects: [],
             recommendedFocus: 'Unable to generate AI recommendations. Please check your settings.',
             nudgeIntensity: 'low',
+            robotRecommendation: 'INITIATING PRODUCTIVITY PROTOCOL. FOCUS ON YOUR HIGHEST PRIORITY TASKS, HUMAN.',
+            robotCharacter: 'Generic Robot',
             error: error.message,
             timestamp: new Date().toISOString()
         };

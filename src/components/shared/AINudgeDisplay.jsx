@@ -1,26 +1,41 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Brain, AlertCircle, CheckCircle, Clock, Target, X, Volume2 } from 'lucide-react';
 
-function AINudgeDisplay({ recommendations, onClose, settings }) {
+function AINudgeDisplay({ recommendations, onClose, settings, activeSession, onStartTaskAfterRest }) {
+    const hasTriggeredRef = useRef(false);
+    
     if (!recommendations) return null;
 
-    // Trigger TTS when component mounts
+    // Trigger TTS and ntfy notification when component mounts (only once)
     useEffect(() => {
-        if (recommendations.robotRecommendation && 'speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(recommendations.robotRecommendation);
-            speechSynthesis.speak(utterance);
-        }
+        if (!hasTriggeredRef.current && recommendations.robotRecommendation) {
+            // TTS
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(recommendations.robotRecommendation);
+                speechSynthesis.speak(utterance);
+            }
 
-        // Send ntfy notification if configured
-        if (settings?.ntfyUrl && recommendations.robotCharacter && recommendations.robotRecommendation) {
-            const message = `🤖 ${recommendations.robotCharacter}: ${recommendations.robotRecommendation}`;
-            fetch(settings.ntfyUrl, { 
-                method: 'POST', 
-                body: message, 
-                headers: { 'Title': 'AI Nudge Alert' } 
-            }).catch(err => console.warn('Failed to send ntfy notification:', err));
+            // ntfy notification (only one notification)
+            if (settings?.ntfyUrl && recommendations.robotCharacter) {
+                const message = `🤖 ${recommendations.robotCharacter}: ${recommendations.robotRecommendation}`;
+                fetch(settings.ntfyUrl, { 
+                    method: 'POST', 
+                    body: message, 
+                    headers: { 'Title': 'AI Nudge Alert' } 
+                }).catch(err => console.warn('Failed to send ntfy notification:', err));
+            }
+            
+            hasTriggeredRef.current = true;
         }
     }, [recommendations, settings]);
+    
+    // Auto-hide modal when rest session ends
+    useEffect(() => {
+        if (activeSession && activeSession.type === 'work') {
+            // Rest session has ended, hide the modal
+            onClose();
+        }
+    }, [activeSession, onClose]);
 
     const getIntensityColor = (intensity) => {
         switch (intensity) {
@@ -109,9 +124,45 @@ function AINudgeDisplay({ recommendations, onClose, settings }) {
                             <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
                                 Recommended Focus
                             </h3>
-                            <p className="text-gray-700 dark:text-gray-300">
+                            <p className="text-gray-700 dark:text-gray-300 mb-4">
                                 {recommendations.recommendedFocus}
                             </p>
+                            
+                            {/* Detailed Analysis */}
+                            {recommendations.originalResponse && (
+                                <div className="bg-white/50 dark:bg-gray-700/50 rounded p-3 text-sm">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="font-medium text-gray-600 dark:text-gray-400">Projects</p>
+                                            <p className="text-gray-800 dark:text-gray-200">
+                                                {recommendations.originalResponse.projects?.totalProjects || 0} total, 
+                                                {recommendations.originalResponse.projects?.activeProjects || 0} active
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-gray-600 dark:text-gray-400">Tasks</p>
+                                            <p className="text-gray-800 dark:text-gray-200">
+                                                {recommendations.originalResponse.tasks?.totalTasks || 0} total, 
+                                                {recommendations.originalResponse.tasks?.overdueTasks || 0} overdue
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Start Task After Rest Button */}
+                            {activeSession?.type === 'break' && onStartTaskAfterRest && (
+                                <button
+                                    onClick={() => {
+                                        onStartTaskAfterRest();
+                                        onClose();
+                                    }}
+                                    className="mt-4 w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+                                >
+                                    <Target size={16} />
+                                    <span>Start Focus Session After Break</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

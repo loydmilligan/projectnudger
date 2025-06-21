@@ -62,6 +62,7 @@ export default function App() {
     const [completedSessionType, setCompletedSessionType] = useState(null);
     const [aiNudgeRecommendations, setAiNudgeRecommendations] = useState(null);
     const [isAiNudgeDisplayOpen, setIsAiNudgeDisplayOpen] = useState(false);
+    const [queuedSessionAfterRest, setQueuedSessionAfterRest] = useState(null);
     
     // --- Memoized derived state ---
     const activeTask = useMemo(() => activeSession ? tasks.find(t => t.id === activeSession.taskId) : null, [activeSession, tasks]);
@@ -99,7 +100,20 @@ export default function App() {
                 const data = doc.data();
                 const endTime = data.startTime.toDate().getTime() + data.duration * 1000;
                 if (endTime > Date.now()) { setActiveSession({ ...data, endTime }); } 
-                else { setDoc(doc.ref, { active: false }, { merge: true }); setActiveSession(null); }
+                else { 
+                    setDoc(doc.ref, { active: false }, { merge: true }); 
+                    setActiveSession(null);
+                    
+                    // Check if there's a queued session after rest
+                    if (data.type === 'break' && queuedSessionAfterRest) {
+                        console.log('🍅 Starting queued work session after rest:', queuedSessionAfterRest);
+                        // Start the queued session automatically
+                        setTimeout(() => {
+                            handleStartSession(queuedSessionAfterRest.task, 'work', queuedSessionAfterRest.duration);
+                            setQueuedSessionAfterRest(null);
+                        }, 500); // Small delay to ensure UI updates
+                    }
+                }
             } else {
                 setActiveSession(null);
             }
@@ -269,6 +283,35 @@ export default function App() {
         setIsSessionCompletionModalOpen(false);
     };
     
+    const handleStartTaskAfterRest = () => {
+        // Find the highest priority task to queue
+        const availableTasks = tasks.filter(task => !task.isComplete);
+        
+        if (availableTasks.length === 0) {
+            console.log('🍅 No available tasks to queue');
+            return;
+        }
+        
+        // Sort by priority (lower number = higher priority) then by creation date
+        const bestTask = availableTasks.sort((a, b) => {
+            const priorityA = a.priority || 5;
+            const priorityB = b.priority || 5;
+            if (priorityA !== priorityB) return priorityA - priorityB;
+            
+            const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+            const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+            return dateB - dateA; // Newer tasks first if same priority
+        })[0];
+        
+        // Queue the session for 25 minutes (standard work session)
+        setQueuedSessionAfterRest({
+            task: bestTask,
+            duration: 25 * 60 // 25 minutes in seconds
+        });
+        
+        console.log('🍅 Queued task for after rest session:', bestTask.title);
+    };
+    
     const handleExportData = async () => {
         try {
             const [projectsSnapshot, tasksSnapshot] = await Promise.all([
@@ -392,7 +435,29 @@ export default function App() {
             />;
             case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} />;
             case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} activeSession={activeSession}/>;
-            case 'settings': return <SettingsView currentSettings={settings} onExportData={handleExportData} onFileSelectedForImport={handleFileSelectedForImport} onGenerateDummyData={generateDummyData} owners={owners} setSettings={setSettings} />;
+            case 'settings': return <SettingsView 
+                currentSettings={settings} 
+                onExportData={handleExportData} 
+                onFileSelectedForImport={handleFileSelectedForImport} 
+                onGenerateDummyData={generateDummyData} 
+                owners={owners} 
+                setSettings={setSettings}
+                projects={projects}
+                tasks={tasks}
+                onTestAINudge={async () => {
+                    try {
+                        const aiRecommendations = await generateAINudge(settings, projects, tasks);
+                        if (aiRecommendations) {
+                            setAiNudgeRecommendations(aiRecommendations);
+                            setIsAiNudgeDisplayOpen(true);
+                        }
+                        console.log('AI Nudge Test Result:', aiRecommendations);
+                    } catch (error) {
+                        console.error('AI nudge test failed:', error);
+                        alert(`AI nudge test failed: ${error.message}`);
+                    }
+                }}
+            />;
             default: return <div className="text-center p-10">Loading...</div>;
         }
     };
@@ -420,6 +485,8 @@ export default function App() {
                 <AINudgeDisplay 
                     recommendations={aiNudgeRecommendations}
                     settings={settings}
+                    activeSession={activeSession}
+                    onStartTaskAfterRest={handleStartTaskAfterRest}
                     onClose={() => {
                         setIsAiNudgeDisplayOpen(false);
                         setAiNudgeRecommendations(null);
