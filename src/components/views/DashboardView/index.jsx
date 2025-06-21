@@ -1,17 +1,36 @@
 import React from 'react';
 import RecommendationEngine from './RecommendationEngine';
 import NudgeStatus from './NudgeStatus';
-import ActiveTimerWidget from './ActiveTimerWidget';
+import EnhancedTimerWidget from './EnhancedTimerWidget';
 import ProjectFilters from '../../shared/ProjectFilters';
 import { getComplementaryColor } from '../../../utils/helpers';
 
-function DashboardView({ projects, tasks, nudgeState, setSelectedProjectId, categories, activeSession, ownerFilter, setOwnerFilter, owners }) {
-    const activeTask = activeSession && tasks.find(t => t.id === activeSession.taskId);
-    
+function DashboardView({ 
+    projects, 
+    tasks, 
+    nudgeState, 
+    setSelectedProjectId, 
+    categories, 
+    activeSession, 
+    ownerFilter, 
+    setOwnerFilter, 
+    owners,
+    onStartSession,
+    onPauseSession,
+    onResetSession,
+    onSessionComplete
+}) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 space-y-6">
-                {activeSession && activeTask && <ActiveTimerWidget session={activeSession} task={activeTask} />}
+                <EnhancedTimerWidget
+                    activeSession={activeSession}
+                    tasks={tasks}
+                    onStartSession={onStartSession}
+                    onPauseSession={onPauseSession}
+                    onResetSession={onResetSession}
+                    onSessionComplete={onSessionComplete}
+                />
                 <RecommendationEngine projects={projects} tasks={tasks} />
                 <NudgeStatus nudgeState={nudgeState} />
             </div>

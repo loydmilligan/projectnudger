@@ -31,6 +31,9 @@ import TrackingView from './components/views/TrackingView';
 import ArchivedProjectsView from './components/views/ArchivedProjectsView';
 import ProjectView from './components/views/ProjectView';
 
+// Import shared components
+import SessionCompletionModal from './components/shared/SessionCompletionModal';
+
 
 // --- Main App Component ---
 export default function App() {
@@ -51,6 +54,8 @@ export default function App() {
     const [sessionEndData, setSessionEndData] = useState(null);
     const [isImportConfirmModalOpen, setIsImportConfirmModalOpen] = useState(false);
     const [fileToImport, setFileToImport] = useState(null);
+    const [isSessionCompletionModalOpen, setIsSessionCompletionModalOpen] = useState(false);
+    const [completedSessionType, setCompletedSessionType] = useState(null);
     
     // --- Memoized derived state ---
     const activeTask = useMemo(() => activeSession ? tasks.find(t => t.id === activeSession.taskId) : null, [activeSession, tasks]);
@@ -159,6 +164,71 @@ export default function App() {
         await updateDoc(doc(db, basePath, 'tasks', task.id), { status: 'in-progress' });
         setActiveView('tracking');
     };
+
+    // Enhanced timer functions for the new dashboard widget
+    const handleStartSession = async (task, sessionType, duration) => {
+        if (activeSession) return;
+        
+        const session = {
+            taskId: task?.id || null,
+            startTime: new Date(),
+            duration: duration,
+            isDouble: duration > 30 * 60, // More than 30 minutes is considered double
+            active: true,
+            type: sessionType
+        };
+        
+        await setDoc(doc(db, basePath, 'tracking', 'activeSession'), session);
+        
+        if (task && sessionType === 'work') {
+            await updateDoc(doc(db, basePath, 'tasks', task.id), { status: 'in-progress' });
+        }
+    };
+
+    const handlePauseSession = async () => {
+        if (!activeSession) return;
+        await setDoc(doc(db, basePath, 'tracking', 'activeSession'), { active: false }, { merge: true });
+    };
+
+    const handleResetSession = async () => {
+        if (!activeSession) return;
+        await setDoc(doc(db, basePath, 'tracking', 'activeSession'), { active: false }, { merge: true });
+        
+        // Reset task status if it was in progress
+        if (activeSession.taskId && activeSession.type === 'work') {
+            await updateDoc(doc(db, basePath, 'tasks', activeSession.taskId), { status: 'idle' });
+        }
+    };
+
+    const handleSessionComplete = () => {
+        if (!activeSession) return;
+        setCompletedSessionType(activeSession.type);
+        setIsSessionCompletionModalOpen(true);
+    };
+
+    const handleSessionCompletionSaveNotes = async (notes) => {
+        if (!activeSession || !activeSession.taskId) return;
+        
+        const sessionNote = {
+            date: new Date(),
+            duration: activeSession.duration,
+            notes: notes || "No notes for this session."
+        };
+
+        await updateDoc(doc(db, basePath, 'tasks', activeSession.taskId), {
+            status: 'idle',
+            sessions: arrayUnion(sessionNote)
+        });
+    };
+
+    const handleStartNextSession = async (task, sessionType, duration) => {
+        // Close current session
+        await setDoc(doc(db, basePath, 'tracking', 'activeSession'), { active: false }, { merge: true });
+        
+        // Start new session
+        await handleStartSession(task, sessionType, duration);
+        setIsSessionCompletionModalOpen(false);
+    };
     
     const handleExportData = async () => {
         try {
@@ -266,7 +336,21 @@ export default function App() {
             return <ProjectView project={selectedProject} tasks={tasks.filter(t => t.projectId === selectedProjectId)} settings={settings} categoryColor={categories[selectedProject.category]} onOpenTaskDetail={(task) => { setEditingTask(task); setIsTaskDetailModalOpen(true); }} onOpenNewTaskDetail={openTaskDetailForNew} onStartTask={handleStartTask} onEditProject={openEditProjectModal} nudgeState={nudgeState} onBack={() => setSelectedProjectId(null)} />;
         }
         switch (activeView) {
-            case 'dashboard': return <DashboardView projects={visibleProjects} tasks={tasks} nudgeState={nudgeState} setSelectedProjectId={setSelectedProjectId} categories={categories} activeSession={activeSession} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners}/>;
+            case 'dashboard': return <DashboardView 
+                projects={visibleProjects} 
+                tasks={tasks} 
+                nudgeState={nudgeState} 
+                setSelectedProjectId={setSelectedProjectId} 
+                categories={categories} 
+                activeSession={activeSession} 
+                ownerFilter={settings.ownerFilter} 
+                setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} 
+                owners={owners}
+                onStartSession={handleStartSession}
+                onPauseSession={handlePauseSession}
+                onResetSession={handleResetSession}
+                onSessionComplete={handleSessionComplete}
+            />;
             case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} />;
             case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} activeSession={activeSession}/>;
             default: return <div className="text-center p-10">Loading...</div>;
@@ -282,6 +366,15 @@ export default function App() {
             {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} currentSettings={settings} onExportData={handleExportData} onFileSelectedForImport={handleFileSelectedForImport} onGenerateDummyData={generateDummyData} owners={owners} setSettings={setSettings}/>}
             {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} />}
             {isSessionEndModalOpen && <SessionEndModal onClose={() => setIsSessionEndModalOpen(false)} onSave={handleSaveSessionNotes} />}
+            {isSessionCompletionModalOpen && (
+                <SessionCompletionModal
+                    sessionType={completedSessionType}
+                    tasks={tasks}
+                    onStartNext={handleStartNextSession}
+                    onClose={() => setIsSessionCompletionModalOpen(false)}
+                    onSaveNotes={handleSessionCompletionSaveNotes}
+                />
+            )}
         </div>
     );
 }
