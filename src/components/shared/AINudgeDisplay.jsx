@@ -212,6 +212,19 @@ function AINudgeDisplay({ recommendations, onClose, settings, activeSession, onS
                     </div>
                 </div>
 
+                {/* Additional Response Section */}
+                {recommendations.additionalResponse && recommendations.additionalResponse.trim() && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
+                        <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2 flex items-center">
+                            <Target size={16} className="mr-2" />
+                            Additional Insight
+                        </h4>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                            {recommendations.additionalResponse}
+                        </p>
+                    </div>
+                )}
+
                 {/* Footer */}
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
                     <p className="text-xs text-gray-500 dark:text-gray-400">

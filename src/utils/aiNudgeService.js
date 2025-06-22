@@ -102,9 +102,10 @@ export function prepareDataForAI(projects, tasks) {
  * @param {string} apiKey - API key for the chosen provider
  * @param {string} provider - AI provider ('openai', 'gemini', 'anthropic')
  * @param {Object} projectData - Prepared project/task data
+ * @param {string} additionalRequest - Optional additional request from user
  * @returns {Promise<Object>} Structured analysis data
  */
-export async function getDataAnalysis(apiKey, provider, projectData) {
+export async function getDataAnalysis(apiKey, provider, projectData, additionalRequest = '') {
     if (!apiKey) {
         throw new Error('API key is required');
     }
@@ -117,7 +118,8 @@ export async function getDataAnalysis(apiKey, provider, projectData) {
         throw new Error('Valid Anthropic API key is required (starts with sk-ant-)');
     }
 
-    const systemPrompt = `You are a data analysis engine. Your only function is to analyze the provided project and task data and populate a specific JSON schema. You must not deviate from this schema. Your entire response must be ONLY the raw JSON object, with no extra text or markdown.
+    // Build system prompt with optional additional request
+    let systemPrompt = `You are a data analysis engine. Your only function is to analyze the provided project and task data and populate a specific JSON schema. You must not deviate from this schema. Your entire response must be ONLY the raw JSON object, with no extra text or markdown.
 
 **Output Schema (Strict):**
 
@@ -126,7 +128,8 @@ export async function getDataAnalysis(apiKey, provider, projectData) {
   "nearCompletionProjects": ["string"],
   "neglectedProjects": ["string"],
   "recommendedFocus": "string",
-  "nudgeIntensity": "string"
+  "nudgeIntensity": "string",
+  "additionalResponse": "string"
 }
 
 **Rules (Mandatory):**
@@ -134,7 +137,8 @@ export async function getDataAnalysis(apiKey, provider, projectData) {
 2. DO NOT use markdown code blocks (\`\`\`json ... \`\`\`).
 3. Base all recommendations strictly on the user's data.
 4. Populate all fields in the schema, even if they are empty arrays \`[]\`.
-5. nudgeIntensity must be "low", "medium", or "high".`;
+5. nudgeIntensity must be "low", "medium", or "high".
+6. For additionalResponse: If no additional request is provided, set to empty string "". If additional request is provided, respond to it briefly.`;
 
     try {
         let response;
@@ -155,7 +159,7 @@ export async function getDataAnalysis(apiKey, provider, projectData) {
                         },
                         {
                             role: 'user',
-                            content: JSON.stringify(projectData, null, 2)
+                            content: `${JSON.stringify(projectData, null, 2)}${additionalRequest ? `\n\nAdditional Request: ${additionalRequest}` : ''}`
                         }
                     ],
                     max_tokens: 400,
@@ -171,7 +175,7 @@ export async function getDataAnalysis(apiKey, provider, projectData) {
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `${systemPrompt}\n\nData to analyze:\n${JSON.stringify(projectData, null, 2)}`
+                            text: `${systemPrompt}\n\nData to analyze:\n${JSON.stringify(projectData, null, 2)}${additionalRequest ? `\n\nAdditional Request: ${additionalRequest}` : ''}`
                         }]
                     }],
                     generationConfig: {
@@ -196,7 +200,7 @@ export async function getDataAnalysis(apiKey, provider, projectData) {
                     messages: [
                         {
                             role: 'user',
-                            content: JSON.stringify(projectData, null, 2)
+                            content: `${JSON.stringify(projectData, null, 2)}${additionalRequest ? `\n\nAdditional Request: ${additionalRequest}` : ''}`
                         }
                     ]
                 })
@@ -248,7 +252,7 @@ export async function getDataAnalysis(apiKey, provider, projectData) {
         }
 
         // Validate required fields
-        const requiredFields = ['urgentTasks', 'nearCompletionProjects', 'neglectedProjects', 'recommendedFocus', 'nudgeIntensity'];
+        const requiredFields = ['urgentTasks', 'nearCompletionProjects', 'neglectedProjects', 'recommendedFocus', 'nudgeIntensity', 'additionalResponse'];
         const missingFields = requiredFields.filter(field => !(field in analysis));
         
         if (missingFields.length > 0) {
@@ -259,7 +263,8 @@ export async function getDataAnalysis(apiKey, provider, projectData) {
                 nearCompletionProjects: [],
                 neglectedProjects: [],
                 recommendedFocus: 'Focus on completing your highest priority tasks.',
-                nudgeIntensity: 'medium'
+                nudgeIntensity: 'medium',
+                additionalResponse: ''
             };
             analysis = { ...defaults, ...analysis };
         }
@@ -390,9 +395,10 @@ export async function getRobotPersonality(apiKey, provider, robotCharacter, reco
  * @param {string} apiKey - API key for the chosen provider
  * @param {string} provider - AI provider ('openai', 'gemini', 'anthropic')
  * @param {Object} projectData - Prepared project/task data
+ * @param {string} additionalRequest - Optional additional request from user
  * @returns {Promise<Object>} Complete AI recommendations
  */
-export async function getAINudgeRecommendations(apiKey, provider, projectData) {
+export async function getAINudgeRecommendations(apiKey, provider, projectData, additionalRequest = '') {
     // Select random robot character
     const robotCharacters = [
         'R2-D2', 'C-3PO', 'HAL 9000', 'Data', 'Terminator', 
@@ -405,7 +411,7 @@ export async function getAINudgeRecommendations(apiKey, provider, projectData) {
     try {
         // Call 1: Get data analysis
         console.log('🤖 Making Call 1: Data Analysis...');
-        const analysis = await getDataAnalysis(apiKey, provider, projectData);
+        const analysis = await getDataAnalysis(apiKey, provider, projectData, additionalRequest);
         
         // Call 2: Get robot personality (with fallback)
         let robotRecommendation;
@@ -487,11 +493,15 @@ export async function generateAINudge(settings, projects, tasks, activeSession =
         console.log('Project data prepared:', projectData.summary);
         
         console.log(`🤖 Calling ${provider} API...`);
+        // Get additional request from settings with default
+        const additionalRequest = settings.aiAdditionalRequest || 'Suggest a 5-minute activity to prevent repetitive stress injury during breaks';
+        
         // Get AI recommendations using two-call strategy
         const recommendations = await getAINudgeRecommendations(
             apiKey,
             provider,
-            projectData
+            projectData,
+            additionalRequest
         );
 
         console.log('🤖 AI recommendations received:', recommendations);
@@ -531,6 +541,7 @@ export async function generateAINudge(settings, projects, tasks, activeSession =
             neglectedProjects: [],
             recommendedFocus: 'Unable to generate AI recommendations. Please check your settings.',
             nudgeIntensity: 'low',
+            additionalResponse: '',
             robotRecommendation: 'INITIATING PRODUCTIVITY PROTOCOL. FOCUS ON YOUR HIGHEST PRIORITY TASKS, HUMAN.',
             robotCharacter: 'Generic Robot',
             error: error.message,

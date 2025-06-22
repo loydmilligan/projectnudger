@@ -236,34 +236,16 @@ function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, 
                                 )}
 
                                 <div>
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Prompt Template</label>
-                                    <textarea 
-                                        value={localSettings.aiPromptTemplate || `You are {ROBOT_CHARACTER}, a robot productivity coach analyzing task data.
-
-Return ONLY valid JSON (no markdown, no extra text) in this EXACT format:
-
-{
-  "urgentTasks": [],
-  "nearCompletionProjects": [],
-  "neglectedProjects": [],
-  "recommendedFocus": "Brief recommendation based on the data",
-  "robotRecommendation": "Same recommendation in {ROBOT_CHARACTER}'s voice with their personality",
-  "robotCharacter": "{ROBOT_CHARACTER}",
-  "nudgeIntensity": "low"
-}
-
-Rules:
-1. Return ONLY the JSON object above
-2. Keep "robotRecommendation" under 200 characters
-3. Use {ROBOT_CHARACTER}'s speech patterns and personality
-4. Base recommendations on actual project data provided
-5. NO markdown formatting, NO code blocks, NO extra text`} 
-                                        onChange={e => setLocalSettings({...localSettings, aiPromptTemplate: e.target.value})} 
-                                        rows={8}
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Additional Request</label>
+                                    <input 
+                                        type="text"
+                                        value={localSettings.aiAdditionalRequest || ''} 
+                                        onChange={e => setLocalSettings({...localSettings, aiAdditionalRequest: e.target.value})} 
+                                        placeholder="Suggest a 5-minute activity to prevent repetitive stress injury during breaks"
                                         className="w-full mt-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     />
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        Customize how the AI analyzes your projects and generates recommendations
+                                        Optional request for the AI assistant (e.g., inspirational quotes, break activities, productivity tips)
                                     </p>
                                 </div>
                             </div>
