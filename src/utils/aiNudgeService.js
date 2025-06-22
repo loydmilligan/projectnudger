@@ -99,13 +99,22 @@ export function prepareDataForAI(projects, tasks) {
 
 /**
  * Call 1: Pure data analysis with strict JSON schema
- * @param {string} apiKey - OpenAI API key
+ * @param {string} apiKey - API key for the chosen provider
+ * @param {string} provider - AI provider ('openai', 'gemini', 'anthropic')
  * @param {Object} projectData - Prepared project/task data
  * @returns {Promise<Object>} Structured analysis data
  */
-export async function getDataAnalysis(apiKey, projectData) {
-    if (!apiKey || !apiKey.startsWith('sk-')) {
-        throw new Error('Valid OpenAI API key is required');
+export async function getDataAnalysis(apiKey, provider, projectData) {
+    if (!apiKey) {
+        throw new Error('API key is required');
+    }
+
+    // Validate API key format based on provider
+    if (provider === 'openai' && !apiKey.startsWith('sk-')) {
+        throw new Error('Valid OpenAI API key is required (starts with sk-)');
+    }
+    if (provider === 'anthropic' && !apiKey.startsWith('sk-ant-')) {
+        throw new Error('Valid Anthropic API key is required (starts with sk-ant-)');
     }
 
     const systemPrompt = `You are a data analysis engine. Your only function is to analyze the provided project and task data and populate a specific JSON schema. You must not deviate from this schema. Your entire response must be ONLY the raw JSON object, with no extra text or markdown.
@@ -128,39 +137,92 @@ export async function getDataAnalysis(apiKey, projectData) {
 5. nudgeIntensity must be "low", "medium", or "high".`;
 
     try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    {
-                        role: 'system',
-                        content: systemPrompt
-                    },
-                    {
-                        role: 'user',
-                        content: JSON.stringify(projectData, null, 2)
+        let response;
+        
+        if (provider === 'openai') {
+            response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: JSON.stringify(projectData, null, 2)
+                        }
+                    ],
+                    max_tokens: 400,
+                    temperature: 0.1
+                })
+            });
+        } else if (provider === 'gemini') {
+            response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: `${systemPrompt}\n\nData to analyze:\n${JSON.stringify(projectData, null, 2)}`
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.1,
+                        maxOutputTokens: 400
                     }
-                ],
-                max_tokens: 400,
-                temperature: 0.1
-            })
-        });
+                })
+            });
+        } else if (provider === 'anthropic') {
+            response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: 'claude-3-haiku-20240307',
+                    max_tokens: 400,
+                    temperature: 0.1,
+                    system: systemPrompt,
+                    messages: [
+                        {
+                            role: 'user',
+                            content: JSON.stringify(projectData, null, 2)
+                        }
+                    ]
+                })
+            });
+        } else {
+            throw new Error(`Unsupported AI provider: ${provider}`);
+        }
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+            throw new Error(`${provider} API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
         }
 
         const data = await response.json();
-        const aiResponse = data.choices[0]?.message?.content;
+        let aiResponse;
+
+        if (provider === 'openai') {
+            aiResponse = data.choices[0]?.message?.content;
+        } else if (provider === 'gemini') {
+            aiResponse = data.candidates[0]?.content?.parts[0]?.text;
+        } else if (provider === 'anthropic') {
+            aiResponse = data.content[0]?.text;
+        }
 
         if (!aiResponse) {
-            throw new Error('No response received from OpenAI');
+            throw new Error(`No response received from ${provider}`);
         }
 
         console.log('🤖 Call 1 - Raw analysis response:', aiResponse);
@@ -212,52 +274,106 @@ export async function getDataAnalysis(apiKey, projectData) {
 
 /**
  * Call 2: Robot personality generation
- * @param {string} apiKey - OpenAI API key
+ * @param {string} apiKey - API key for the chosen provider
+ * @param {string} provider - AI provider ('openai', 'gemini', 'anthropic')
  * @param {string} robotCharacter - Selected robot character
  * @param {string} recommendedFocus - Text from Call 1 to rephrase
  * @returns {Promise<string>} Robot personality response
  */
-export async function getRobotPersonality(apiKey, robotCharacter, recommendedFocus) {
-    if (!apiKey || !apiKey.startsWith('sk-')) {
-        throw new Error('Valid OpenAI API key is required');
+export async function getRobotPersonality(apiKey, provider, robotCharacter, recommendedFocus) {
+    if (!apiKey) {
+        throw new Error('API key is required');
     }
 
     const systemPrompt = `You are a robot character actor. Adopt the persona of ${robotCharacter}. Rephrase the following user-provided text in your character's voice and personality. Keep your response under 200 characters.`;
 
     try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    {
-                        role: 'system',
-                        content: systemPrompt
-                    },
-                    {
-                        role: 'user',
-                        content: `Here is the text to rephrase:\n\n"${recommendedFocus}"`
+        let response;
+        
+        if (provider === 'openai') {
+            response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: `Here is the text to rephrase:\n\n"${recommendedFocus}"`
+                        }
+                    ],
+                    max_tokens: 100,
+                    temperature: 0.7
+                })
+            });
+        } else if (provider === 'gemini') {
+            response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: `${systemPrompt}\n\nHere is the text to rephrase:\n\n"${recommendedFocus}"`
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 100
                     }
-                ],
-                max_tokens: 100,
-                temperature: 0.7
-            })
-        });
+                })
+            });
+        } else if (provider === 'anthropic') {
+            response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: 'claude-3-haiku-20240307',
+                    max_tokens: 100,
+                    temperature: 0.7,
+                    system: systemPrompt,
+                    messages: [
+                        {
+                            role: 'user',
+                            content: `Here is the text to rephrase:\n\n"${recommendedFocus}"`
+                        }
+                    ]
+                })
+            });
+        } else {
+            throw new Error(`Unsupported AI provider: ${provider}`);
+        }
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+            throw new Error(`${provider} API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
         }
 
         const data = await response.json();
-        const robotResponse = data.choices[0]?.message?.content;
+        let robotResponse;
+
+        if (provider === 'openai') {
+            robotResponse = data.choices[0]?.message?.content;
+        } else if (provider === 'gemini') {
+            robotResponse = data.candidates[0]?.content?.parts[0]?.text;
+        } else if (provider === 'anthropic') {
+            robotResponse = data.content[0]?.text;
+        }
 
         if (!robotResponse) {
-            throw new Error('No robot response received from OpenAI');
+            throw new Error(`No robot response received from ${provider}`);
         }
 
         console.log('🤖 Call 2 - Robot personality response:', robotResponse);
@@ -271,11 +387,12 @@ export async function getRobotPersonality(apiKey, robotCharacter, recommendedFoc
 
 /**
  * Orchestrate both AI calls to get complete recommendations
- * @param {string} apiKey - OpenAI API key
+ * @param {string} apiKey - API key for the chosen provider
+ * @param {string} provider - AI provider ('openai', 'gemini', 'anthropic')
  * @param {Object} projectData - Prepared project/task data
  * @returns {Promise<Object>} Complete AI recommendations
  */
-export async function getAINudgeRecommendations(apiKey, projectData) {
+export async function getAINudgeRecommendations(apiKey, provider, projectData) {
     // Select random robot character
     const robotCharacters = [
         'R2-D2', 'C-3PO', 'HAL 9000', 'Data', 'Terminator', 
@@ -288,13 +405,13 @@ export async function getAINudgeRecommendations(apiKey, projectData) {
     try {
         // Call 1: Get data analysis
         console.log('🤖 Making Call 1: Data Analysis...');
-        const analysis = await getDataAnalysis(apiKey, projectData);
+        const analysis = await getDataAnalysis(apiKey, provider, projectData);
         
         // Call 2: Get robot personality (with fallback)
         let robotRecommendation;
         try {
             console.log('🤖 Making Call 2: Robot Personality...');
-            robotRecommendation = await getRobotPersonality(apiKey, selectedRobot, analysis.recommendedFocus);
+            robotRecommendation = await getRobotPersonality(apiKey, provider, selectedRobot, analysis.recommendedFocus);
         } catch (robotError) {
             console.warn('🤖 Call 2 failed, using fallback robot message:', robotError.message);
             robotRecommendation = `INITIATING PRODUCTIVITY PROTOCOL. ${analysis.recommendedFocus.toUpperCase()}`;
@@ -322,9 +439,10 @@ export async function getAINudgeRecommendations(apiKey, projectData) {
  * @param {Object} settings - User settings including AI configuration
  * @param {Array} projects - User projects
  * @param {Array} tasks - User tasks
+ * @param {Object} activeSession - Current active session (to prevent generation during sessions)
  * @returns {Promise<Object>} AI recommendations or null if disabled/error
  */
-export async function generateAINudge(settings, projects, tasks) {
+export async function generateAINudge(settings, projects, tasks, activeSession = null) {
     console.log('🤖 AI Nudge Service: Starting generation');
     console.log('Settings:', { 
         aiNudgeEnabled: settings.aiNudgeEnabled, 
@@ -333,15 +451,32 @@ export async function generateAINudge(settings, projects, tasks) {
         apiKeyStart: settings.openaiApiKey?.substring(0, 10) + '...'
     });
     
+    // Check if there's an active session (prevent during active work/break)
+    if (activeSession) {
+        console.log('🤖 Skipping AI nudge - session is active:', activeSession.type);
+        return null;
+    }
+    
     // Check if AI nudges are enabled
     if (!settings.aiNudgeEnabled) {
         console.log('AI nudges are disabled');
         return null;
     }
 
-    // Check if API key is available
-    if (!settings.openaiApiKey) {
-        console.warn('AI nudges enabled but no OpenAI API key provided');
+    // Determine provider and get API key
+    const provider = settings.aiProvider || 'openai';
+    let apiKey;
+    
+    if (provider === 'openai') {
+        apiKey = settings.openaiApiKey;
+    } else if (provider === 'gemini') {
+        apiKey = settings.geminiApiKey;
+    } else if (provider === 'anthropic') {
+        apiKey = settings.anthropicApiKey;
+    }
+    
+    if (!apiKey) {
+        console.warn(`AI nudges enabled but no ${provider} API key provided`);
         return null;
     }
 
@@ -351,14 +486,39 @@ export async function generateAINudge(settings, projects, tasks) {
         const projectData = prepareDataForAI(projects, tasks);
         console.log('Project data prepared:', projectData.summary);
         
-        console.log('🤖 Calling OpenAI API...');
+        console.log(`🤖 Calling ${provider} API...`);
         // Get AI recommendations using two-call strategy
         const recommendations = await getAINudgeRecommendations(
-            settings.openaiApiKey,
+            apiKey,
+            provider,
             projectData
         );
 
         console.log('🤖 AI recommendations received:', recommendations);
+        
+        // Trigger notifications at service level (only once per generation)
+        if (recommendations.robotRecommendation) {
+            console.log('🤖 Triggering notifications...');
+            
+            // TTS (check if enabled)
+            if (settings?.aiNudgeTtsEnabled !== false && 'speechSynthesis' in window) {
+                console.log('🤖 Playing TTS...');
+                const utterance = new SpeechSynthesisUtterance(recommendations.robotRecommendation);
+                speechSynthesis.speak(utterance);
+            }
+
+            // ntfy notification (check if both enabled and URL configured)
+            if (settings?.aiNudgeNtfyEnabled !== false && settings?.ntfyUrl && recommendations.robotCharacter) {
+                console.log('🤖 Sending ntfy notification...');
+                const message = `🤖 ${recommendations.robotCharacter}: ${recommendations.robotRecommendation}`;
+                fetch(settings.ntfyUrl, { 
+                    method: 'POST', 
+                    body: message, 
+                    headers: { 'Title': 'AI Nudge Alert' } 
+                }).catch(err => console.warn('Failed to send ntfy notification:', err));
+            }
+        }
+        
         return recommendations;
 
     } catch (error) {

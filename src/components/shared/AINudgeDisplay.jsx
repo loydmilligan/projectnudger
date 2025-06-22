@@ -1,33 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Brain, AlertCircle, CheckCircle, Clock, Target, X, Volume2 } from 'lucide-react';
 
 function AINudgeDisplay({ recommendations, onClose, settings, activeSession, onStartTaskAfterRest }) {
-    const hasTriggeredRef = useRef(false);
-    
     if (!recommendations) return null;
 
-    // Trigger TTS and ntfy notification when component mounts (only once)
-    useEffect(() => {
-        if (!hasTriggeredRef.current && recommendations.robotRecommendation) {
-            // TTS
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(recommendations.robotRecommendation);
-                speechSynthesis.speak(utterance);
-            }
-
-            // ntfy notification (only one notification)
-            if (settings?.ntfyUrl && recommendations.robotCharacter) {
-                const message = `🤖 ${recommendations.robotCharacter}: ${recommendations.robotRecommendation}`;
-                fetch(settings.ntfyUrl, { 
-                    method: 'POST', 
-                    body: message, 
-                    headers: { 'Title': 'AI Nudge Alert' } 
-                }).catch(err => console.warn('Failed to send ntfy notification:', err));
-            }
-            
-            hasTriggeredRef.current = true;
-        }
-    }, [recommendations, settings]);
+    // Notifications are now handled at the AI service level to prevent duplicates
     
     // Auto-hide modal when rest session ends
     useEffect(() => {
@@ -83,7 +60,7 @@ function AINudgeDisplay({ recommendations, onClose, settings, activeSession, onS
                         </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                        {recommendations.robotRecommendation && 'speechSynthesis' in window && (
+                        {recommendations.robotRecommendation && 'speechSynthesis' in window && settings?.aiNudgeTtsEnabled !== false && (
                             <button
                                 onClick={replayTTS}
                                 className="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
@@ -168,66 +145,71 @@ function AINudgeDisplay({ recommendations, onClose, settings, activeSession, onS
                 </div>
 
                 {/* Insights Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    {/* Near Completion Projects */}
-                    {recommendations.nearCompletionProjects && recommendations.nearCompletionProjects.length > 0 && (
-                        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                            <h4 className="font-medium text-green-800 dark:text-green-200 mb-2 flex items-center">
-                                <CheckCircle size={16} className="mr-2" />
-                                Almost Done
-                            </h4>
-                            <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                                {recommendations.nearCompletionProjects.slice(0, 3).map((project, idx) => (
-                                    <li key={idx} className="truncate">• {project}</li>
-                                ))}
-                                {recommendations.nearCompletionProjects.length > 3 && (
-                                    <li className="text-xs opacity-70">
-                                        +{recommendations.nearCompletionProjects.length - 3} more
-                                    </li>
-                                )}
-                            </ul>
-                        </div>
-                    )}
-
-                    {/* Urgent Tasks */}
+                <div className="space-y-4 mb-6">
+                    {/* Urgent Tasks - Full Width Priority */}
                     {recommendations.urgentTasks && recommendations.urgentTasks.length > 0 && (
                         <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-                            <h4 className="font-medium text-red-800 dark:text-red-200 mb-2 flex items-center">
+                            <h4 className="font-medium text-red-800 dark:text-red-200 mb-3 flex items-center">
                                 <AlertCircle size={16} className="mr-2" />
                                 Urgent Tasks
                             </h4>
-                            <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
-                                {recommendations.urgentTasks.slice(0, 3).map((taskId, idx) => (
-                                    <li key={idx} className="truncate">• Task {taskId}</li>
+                            <ul className="text-sm text-red-700 dark:text-red-300 space-y-2">
+                                {recommendations.urgentTasks.slice(0, 5).map((task, idx) => (
+                                    <li key={idx} className="break-words">
+                                        • {typeof task === 'string' ? task : task.title || task.name || `Task ${task.id || task}`}
+                                    </li>
                                 ))}
-                                {recommendations.urgentTasks.length > 3 && (
+                                {recommendations.urgentTasks.length > 5 && (
                                     <li className="text-xs opacity-70">
-                                        +{recommendations.urgentTasks.length - 3} more
+                                        +{recommendations.urgentTasks.length - 5} more urgent tasks
                                     </li>
                                 )}
                             </ul>
                         </div>
                     )}
 
-                    {/* Neglected Projects */}
-                    {recommendations.neglectedProjects && recommendations.neglectedProjects.length > 0 && (
-                        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                            <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2 flex items-center">
-                                <Clock size={16} className="mr-2" />
-                                Needs Attention
-                            </h4>
-                            <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                                {recommendations.neglectedProjects.slice(0, 3).map((project, idx) => (
-                                    <li key={idx} className="truncate">• {project}</li>
-                                ))}
-                                {recommendations.neglectedProjects.length > 3 && (
-                                    <li className="text-xs opacity-70">
-                                        +{recommendations.neglectedProjects.length - 3} more
-                                    </li>
-                                )}
-                            </ul>
-                        </div>
-                    )}
+                    {/* Other insights in two columns */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Near Completion Projects */}
+                        {recommendations.nearCompletionProjects && recommendations.nearCompletionProjects.length > 0 && (
+                            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                                <h4 className="font-medium text-green-800 dark:text-green-200 mb-2 flex items-center">
+                                    <CheckCircle size={16} className="mr-2" />
+                                    Almost Done
+                                </h4>
+                                <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                                    {recommendations.nearCompletionProjects.slice(0, 4).map((project, idx) => (
+                                        <li key={idx} className="break-words">• {project}</li>
+                                    ))}
+                                    {recommendations.nearCompletionProjects.length > 4 && (
+                                        <li className="text-xs opacity-70">
+                                            +{recommendations.nearCompletionProjects.length - 4} more
+                                        </li>
+                                    )}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* Neglected Projects */}
+                        {recommendations.neglectedProjects && recommendations.neglectedProjects.length > 0 && (
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                                <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2 flex items-center">
+                                    <Clock size={16} className="mr-2" />
+                                    Needs Attention
+                                </h4>
+                                <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                                    {recommendations.neglectedProjects.slice(0, 4).map((project, idx) => (
+                                        <li key={idx} className="break-words">• {project}</li>
+                                    ))}
+                                    {recommendations.neglectedProjects.length > 4 && (
+                                        <li className="text-xs opacity-70">
+                                            +{recommendations.neglectedProjects.length - 4} more
+                                        </li>
+                                    )}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Footer */}

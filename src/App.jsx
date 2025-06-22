@@ -228,11 +228,30 @@ export default function App() {
 
     const handleResetSession = async () => {
         if (!activeSession) return;
+        
+        const wasWorkSession = activeSession.type === 'work';
+        
         await setDoc(doc(db, basePath, 'tracking', 'activeSession'), { active: false }, { merge: true });
         
         // Reset task status if it was in progress
-        if (activeSession.taskId && activeSession.type === 'work') {
+        if (activeSession.taskId && wasWorkSession) {
             await updateDoc(doc(db, basePath, 'tasks', activeSession.taskId), { status: 'idle' });
+        }
+        
+        // Generate AI nudge for manually stopped work sessions
+        if (wasWorkSession) {
+            try {
+                console.log('🍅 Work session manually stopped - generating AI nudge...');
+                const aiRecommendations = await generateAINudge(settings, projects, tasks, null);
+                if (aiRecommendations) {
+                    setAiNudgeRecommendations(aiRecommendations);
+                    setTimeout(() => {
+                        setIsAiNudgeDisplayOpen(true);
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('Failed to generate AI nudge after manual stop:', error);
+            }
         }
     };
 
@@ -245,7 +264,8 @@ export default function App() {
         // Trigger AI nudge for work sessions only
         if (activeSession.type === 'work') {
             try {
-                const aiRecommendations = await generateAINudge(settings, projects, tasks);
+                // Session is ending, so pass null for activeSession
+                const aiRecommendations = await generateAINudge(settings, projects, tasks, null);
                 if (aiRecommendations) {
                     setAiNudgeRecommendations(aiRecommendations);
                     // Show AI nudge after a short delay to let the session completion modal appear first
@@ -444,14 +464,18 @@ export default function App() {
                 setSettings={setSettings}
                 projects={projects}
                 tasks={tasks}
+                activeSession={activeSession}
                 onTestAINudge={async () => {
                     try {
-                        const aiRecommendations = await generateAINudge(settings, projects, tasks);
+                        const aiRecommendations = await generateAINudge(settings, projects, tasks, activeSession);
                         if (aiRecommendations) {
                             setAiNudgeRecommendations(aiRecommendations);
                             setIsAiNudgeDisplayOpen(true);
+                            console.log('AI Nudge Test Result:', aiRecommendations);
+                        } else {
+                            console.log('AI Nudge Test Skipped - session is active or feature disabled');
+                            alert('AI nudge test skipped - either a session is active or the feature is disabled.');
                         }
-                        console.log('AI Nudge Test Result:', aiRecommendations);
                     } catch (error) {
                         console.error('AI nudge test failed:', error);
                         alert(`AI nudge test failed: ${error.message}`);

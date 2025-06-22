@@ -4,7 +4,7 @@ import { Download, Upload, Beaker, Sun, Moon, X, Brain } from 'lucide-react';
 import { db, basePath } from '../../config/firebase';
 import { NUDGE_CONFIG } from '../../config/constants';
 
-function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, onGenerateDummyData, owners, setSettings, projects, tasks, onTestAINudge }) {
+function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, onGenerateDummyData, owners, setSettings, projects, tasks, onTestAINudge, activeSession }) {
     const fileInputRef = useRef(null);
     const handleImportClick = () => fileInputRef.current.click();
     const [localSettings, setLocalSettings] = useState(currentSettings);
@@ -131,19 +131,109 @@ function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, 
                                     </p>
                                 </div>
 
+                                {/* AI Nudge Output Options */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="flex items-center">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={localSettings.aiNudgeTtsEnabled !== false} 
+                                                onChange={e => setLocalSettings({...localSettings, aiNudgeTtsEnabled: e.target.checked})}
+                                                className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                            />
+                                            <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Enable Text-to-Speech
+                                            </span>
+                                        </label>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Speak robot recommendations aloud
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label className="flex items-center">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={localSettings.aiNudgeNtfyEnabled !== false} 
+                                                onChange={e => setLocalSettings({...localSettings, aiNudgeNtfyEnabled: e.target.checked})}
+                                                className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                            />
+                                            <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Enable Push Notifications
+                                            </span>
+                                        </label>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Send notifications via ntfy
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">OpenAI API Key</label>
-                                    <input 
-                                        type="password" 
-                                        value={localSettings.openaiApiKey || ''} 
-                                        onChange={e => setLocalSettings({...localSettings, openaiApiKey: e.target.value})} 
-                                        placeholder="sk-..."
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Provider</label>
+                                    <select 
+                                        value={localSettings.aiProvider || 'openai'} 
+                                        onChange={e => setLocalSettings({...localSettings, aiProvider: e.target.value})} 
                                         className="w-full mt-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                    />
+                                    >
+                                        <option value="openai">OpenAI (GPT-4o-mini) ✓ Browser Compatible</option>
+                                        <option value="gemini">Google Gemini (2.0 Flash) ✓ Browser Compatible</option>
+                                        <option value="anthropic">Anthropic Claude (Haiku) ⚠️ Server Required</option>
+                                    </select>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        Your OpenAI API key for generating intelligent nudges
+                                        Choose your preferred AI provider. Note: Anthropic requires server-side proxy due to CORS restrictions.
                                     </p>
                                 </div>
+
+                                {/* OpenAI API Key */}
+                                {(localSettings.aiProvider || 'openai') === 'openai' && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">OpenAI API Key</label>
+                                        <input 
+                                            type="password" 
+                                            value={localSettings.openaiApiKey || ''} 
+                                            onChange={e => setLocalSettings({...localSettings, openaiApiKey: e.target.value})} 
+                                            placeholder="sk-..."
+                                            className="w-full mt-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        />
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Your OpenAI API key for generating intelligent nudges
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Gemini API Key */}
+                                {localSettings.aiProvider === 'gemini' && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Google Gemini API Key</label>
+                                        <input 
+                                            type="password" 
+                                            value={localSettings.geminiApiKey || ''} 
+                                            onChange={e => setLocalSettings({...localSettings, geminiApiKey: e.target.value})} 
+                                            placeholder="AI..."
+                                            className="w-full mt-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        />
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Your Google AI Studio API key for Gemini
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Anthropic API Key */}
+                                {localSettings.aiProvider === 'anthropic' && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Anthropic API Key</label>
+                                        <input 
+                                            type="password" 
+                                            value={localSettings.anthropicApiKey || ''} 
+                                            onChange={e => setLocalSettings({...localSettings, anthropicApiKey: e.target.value})} 
+                                            placeholder="sk-ant-..."
+                                            className="w-full mt-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        />
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Your Anthropic API key for Claude models
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div>
                                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Prompt Template</label>
@@ -217,9 +307,14 @@ Rules:
                                         onClick={onTestAINudge || (async () => {
                                             try {
                                                 const { generateAINudge } = await import('../../utils/aiNudgeService');
-                                                const aiRecommendations = await generateAINudge(localSettings, projects || [], tasks || []);
-                                                console.log('AI Nudge Test Result:', aiRecommendations);
-                                                alert('AI nudge test complete! Check console for detailed results.');
+                                                const aiRecommendations = await generateAINudge(localSettings, projects || [], tasks || [], activeSession);
+                                                if (aiRecommendations) {
+                                                    console.log('AI Nudge Test Result:', aiRecommendations);
+                                                    alert('AI nudge test complete! Check console for detailed results.');
+                                                } else {
+                                                    console.log('AI Nudge Test Skipped - session is active or feature disabled');
+                                                    alert('AI nudge test skipped - either a session is active or the feature is disabled.');
+                                                }
                                             } catch (error) {
                                                 console.error('AI nudge test failed:', error);
                                                 alert(`AI nudge test failed: ${error.message}`);
