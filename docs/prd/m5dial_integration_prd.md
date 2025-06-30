@@ -15,6 +15,7 @@ Integrate the M5Stack Dial hardware with Project Nudger web app to create a seam
 ### Technical Requirements
 
 #### Connection Management
+*Note: Project Nudger may be hosted remotely (e.g., Vercel/Netlify). BLE communication happens **entirely** within the user's local browser; therefore only the client must support Web Bluetooth and be served over HTTPS (localhost is allowed). The remote server requires **no** direct Bluetooth access.*
 - Manual BLE connection initiation from web app
 - Long-press (5-10s) hardware button to enter "pairing mode"
 - Connection status clearly displayed on both devices  

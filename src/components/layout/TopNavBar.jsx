@@ -1,9 +1,18 @@
 import React from 'react';
+import useM5Dial from '../../hooks/useM5Dial';
+import { Bluetooth, BluetoothConnected, BluetoothSearching } from 'lucide-react';
 import ObsidianSyncStatus from '../shared/ObsidianSyncStatus';
 import { Plus, Settings, LayoutDashboard, Briefcase, ListChecks, Archive, Timer as TimerIcon } from 'lucide-react';
 import NudgerLogo from './NudgerLogo';
 
 function TopNavBar({ activeView, setActiveView, onNewProject, hasActiveSession, setSelectedProjectId, syncState, lastSync, onSyncNow }) {
+    const {
+        connected: dialConnected,
+        connecting: dialConnecting,
+        connect: connectDial,
+        disconnect: disconnectDial,
+        error: dialError,
+    } = useM5Dial();
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'projects', label: 'Projects', icon: Briefcase },
@@ -43,6 +52,16 @@ function TopNavBar({ activeView, setActiveView, onNewProject, hasActiveSession, 
                     </div>
                     <div className="flex items-center space-x-4">
                         <ObsidianSyncStatus state={syncState} lastSync={lastSync} />
+                        {/* M5 Dial connection button */}
+                        <button
+                            onClick={dialConnected ? disconnectDial : connectDial}
+                            className={`flex items-center px-2 py-2 rounded-md text-xs transition-colors ${
+                                dialConnected ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+                            }`}
+                            title={dialConnected ? 'Disconnect M5 Dial' : 'Connect M5 Dial'}
+                        >
+                            {dialConnected ? <BluetoothConnected size={16} /> : dialConnecting ? <BluetoothSearching size={16} /> : <Bluetooth size={16} />}
+                        </button>
                         {syncState !== 'syncing' && syncState !== 'error' && (
                             <button onClick={onSyncNow} className="hidden sm:flex items-center px-3 py-2 rounded-md text-xs bg-indigo-500 hover:bg-indigo-600 text-white">
                             <img src="/obsidian-light.svg" alt="Obsidian" className="w-4 h-4 mr-2" />
