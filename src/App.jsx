@@ -35,6 +35,8 @@ import SettingsView from './components/views/SettingsView';
 // Import shared components
 import SessionCompletionModal from './components/shared/SessionCompletionModal';
 import AINudgeDisplay from './components/shared/AINudgeDisplay';
+import ObsidianSyncProgressModal from './components/shared/ObsidianSyncProgressModal';
+import useObsidianSync from './hooks/useObsidianSync';
 
 // Import AI nudge service
 import { generateAINudge } from './utils/aiNudgeService';
@@ -58,6 +60,9 @@ export default function App() {
     const [sessionEndData, setSessionEndData] = useState(null);
     const [isImportConfirmModalOpen, setIsImportConfirmModalOpen] = useState(false);
     const [fileToImport, setFileToImport] = useState(null);
+
+    // Obsidian Sync
+    const { state: obsidianSyncState, lastSync: obsidianLastSync, result: obsidianSyncResult, error: obsidianSyncError, reset: resetObsidianSync, syncNow } = useObsidianSync(settings);
     const [isSessionCompletionModalOpen, setIsSessionCompletionModalOpen] = useState(false);
     const [completedSessionType, setCompletedSessionType] = useState(null);
     const [aiNudgeRecommendations, setAiNudgeRecommendations] = useState(null);
@@ -488,9 +493,26 @@ export default function App() {
 
     return (
         <div className="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col">
-            <TopNavBar activeView={activeView} setActiveView={setActiveView} onNewProject={openNewProjectModal} hasActiveSession={!!activeSession} setSelectedProjectId={setSelectedProjectId} />
+            <TopNavBar
+                activeView={activeView}
+                setActiveView={setActiveView}
+                onNewProject={openNewProjectModal}
+                hasActiveSession={!!activeSession}
+                setSelectedProjectId={setSelectedProjectId}
+                syncState={obsidianSyncState}
+                lastSync={obsidianLastSync}
+                onSyncNow={() => syncNow({ projects, tasks })}
+            />
             <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{renderView()}</main>
             {isImportConfirmModalOpen && <ImportConfirmModal onClose={() => setIsImportConfirmModalOpen(false)} onConfirm={executeImport} />}
+            {obsidianSyncState !== 'idle' && (
+                <ObsidianSyncProgressModal
+                    state={obsidianSyncState}
+                    result={obsidianSyncResult}
+                    error={obsidianSyncError}
+                    onClose={resetObsidianSync}
+                />
+            )}
             {isProjectModalOpen && <ProjectModal onClose={() => {setIsProjectModalOpen(false); setEditingProject(null);}} onSave={handleSaveProject} existingProject={editingProject} categories={Object.keys(categories)} owners={owners} />}
             {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} />}
             {isSessionEndModalOpen && <SessionEndModal onClose={() => setIsSessionEndModalOpen(false)} onSave={handleSaveSessionNotes} />}

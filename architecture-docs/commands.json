@@ -1,0 +1,1064 @@
+{
+  "commands": [
+    {
+      "id": "editor:save-file",
+      "name": "Save current file"
+    },
+    {
+      "id": "editor:download-attachments",
+      "name": "Download attachments for current file"
+    },
+    {
+      "id": "editor:follow-link",
+      "name": "Follow link under cursor"
+    },
+    {
+      "id": "editor:open-link-in-new-leaf",
+      "name": "Open link under cursor in new tab"
+    },
+    {
+      "id": "editor:open-link-in-new-window",
+      "name": "Open link under cursor in new window"
+    },
+    {
+      "id": "workspace:toggle-pin",
+      "name": "Toggle pin"
+    },
+    {
+      "id": "editor:open-link-in-new-split",
+      "name": "Open link under cursor to the right"
+    },
+    {
+      "id": "editor:focus-top",
+      "name": "Focus on tab group above"
+    },
+    {
+      "id": "editor:focus-bottom",
+      "name": "Focus on tab group below"
+    },
+    {
+      "id": "editor:focus-left",
+      "name": "Focus on tab group to the left"
+    },
+    {
+      "id": "editor:focus-right",
+      "name": "Focus on tab group to the right"
+    },
+    {
+      "id": "workspace:split-vertical",
+      "name": "Split right"
+    },
+    {
+      "id": "workspace:split-horizontal",
+      "name": "Split down"
+    },
+    {
+      "id": "workspace:toggle-stacked-tabs",
+      "name": "Toggle stacked tabs"
+    },
+    {
+      "id": "workspace:edit-file-title",
+      "name": "Rename file"
+    },
+    {
+      "id": "workspace:copy-path",
+      "name": "Copy file path"
+    },
+    {
+      "id": "workspace:copy-url",
+      "name": "Copy Obsidian URL"
+    },
+    {
+      "id": "workspace:undo-close-pane",
+      "name": "Undo close tab"
+    },
+    {
+      "id": "workspace:export-pdf",
+      "name": "Export to PDF..."
+    },
+    {
+      "id": "editor:rename-heading",
+      "name": "Rename this heading..."
+    },
+    {
+      "id": "workspace:open-in-new-window",
+      "name": "Open current tab in new window"
+    },
+    {
+      "id": "workspace:move-to-new-window",
+      "name": "Move current tab to new window"
+    },
+    {
+      "id": "workspace:next-tab",
+      "name": "Go to next tab"
+    },
+    {
+      "id": "workspace:goto-tab-1",
+      "name": "Go to tab #1"
+    },
+    {
+      "id": "workspace:goto-tab-2",
+      "name": "Go to tab #2"
+    },
+    {
+      "id": "workspace:goto-tab-3",
+      "name": "Go to tab #3"
+    },
+    {
+      "id": "workspace:goto-tab-4",
+      "name": "Go to tab #4"
+    },
+    {
+      "id": "workspace:goto-tab-5",
+      "name": "Go to tab #5"
+    },
+    {
+      "id": "workspace:goto-tab-6",
+      "name": "Go to tab #6"
+    },
+    {
+      "id": "workspace:goto-tab-7",
+      "name": "Go to tab #7"
+    },
+    {
+      "id": "workspace:goto-tab-8",
+      "name": "Go to tab #8"
+    },
+    {
+      "id": "workspace:goto-last-tab",
+      "name": "Go to last tab"
+    },
+    {
+      "id": "workspace:previous-tab",
+      "name": "Go to previous tab"
+    },
+    {
+      "id": "workspace:new-tab",
+      "name": "New tab"
+    },
+    {
+      "id": "workspace:close",
+      "name": "Close current tab"
+    },
+    {
+      "id": "workspace:close-window",
+      "name": "Close window"
+    },
+    {
+      "id": "workspace:close-others",
+      "name": "Close all other tabs"
+    },
+    {
+      "id": "workspace:close-tab-group",
+      "name": "Close this tab group"
+    },
+    {
+      "id": "workspace:close-others-tab-group",
+      "name": "Close others in tab group"
+    },
+    {
+      "id": "workspace:show-trash",
+      "name": "Show trash"
+    },
+    {
+      "id": "app:go-back",
+      "name": "Navigate back"
+    },
+    {
+      "id": "app:go-forward",
+      "name": "Navigate forward"
+    },
+    {
+      "id": "app:open-vault",
+      "name": "Open another vault"
+    },
+    {
+      "id": "theme:use-dark",
+      "name": "Use dark mode"
+    },
+    {
+      "id": "theme:use-light",
+      "name": "Use light mode"
+    },
+    {
+      "id": "theme:switch",
+      "name": "Change theme"
+    },
+    {
+      "id": "app:open-settings",
+      "name": "Open settings"
+    },
+    {
+      "id": "app:show-release-notes",
+      "name": "Show release notes"
+    },
+    {
+      "id": "markdown:toggle-preview",
+      "name": "Toggle reading view"
+    },
+    {
+      "id": "markdown:add-metadata-property",
+      "name": "Add file property"
+    },
+    {
+      "id": "markdown:add-alias",
+      "name": "Add alias"
+    },
+    {
+      "id": "markdown:edit-metadata-property",
+      "name": "Edit file property"
+    },
+    {
+      "id": "markdown:clear-metadata-properties",
+      "name": "Clear file properties"
+    },
+    {
+      "id": "app:delete-file",
+      "name": "Delete current file"
+    },
+    {
+      "id": "app:toggle-ribbon",
+      "name": "Toggle ribbon"
+    },
+    {
+      "id": "app:toggle-left-sidebar",
+      "name": "Toggle left sidebar"
+    },
+    {
+      "id": "app:toggle-right-sidebar",
+      "name": "Toggle right sidebar"
+    },
+    {
+      "id": "app:toggle-default-new-pane-mode",
+      "name": "Toggle default mode for new tabs"
+    },
+    {
+      "id": "app:open-help",
+      "name": "Open help"
+    },
+    {
+      "id": "app:reload",
+      "name": "Reload app without saving"
+    },
+    {
+      "id": "app:show-debug-info",
+      "name": "Show debug info"
+    },
+    {
+      "id": "app:open-sandbox-vault",
+      "name": "Open sandbox vault"
+    },
+    {
+      "id": "window:toggle-always-on-top",
+      "name": "Toggle window always on top"
+    },
+    {
+      "id": "window:zoom-in",
+      "name": "Zoom in"
+    },
+    {
+      "id": "window:zoom-out",
+      "name": "Zoom out"
+    },
+    {
+      "id": "window:reset-zoom",
+      "name": "Reset zoom"
+    },
+    {
+      "id": "file-explorer:new-file",
+      "name": "Create new note"
+    },
+    {
+      "id": "file-explorer:new-file-in-current-tab",
+      "name": "Create new note in current tab"
+    },
+    {
+      "id": "file-explorer:new-file-in-new-pane",
+      "name": "Create note to the right"
+    },
+    {
+      "id": "open-with-default-app:open",
+      "name": "Open in default app"
+    },
+    {
+      "id": "file-explorer:move-file",
+      "name": "Move current file to another folder"
+    },
+    {
+      "id": "file-explorer:duplicate-file",
+      "name": "Make a copy of the current file"
+    },
+    {
+      "id": "open-with-default-app:show",
+      "name": "Show in system explorer"
+    },
+    {
+      "id": "editor:toggle-source",
+      "name": "Toggle Live Preview/Source mode"
+    },
+    {
+      "id": "editor:open-search",
+      "name": "Search current file"
+    },
+    {
+      "id": "editor:open-search-replace",
+      "name": "Search & replace in current file"
+    },
+    {
+      "id": "editor:focus",
+      "name": "Focus on last note"
+    },
+    {
+      "id": "editor:toggle-fold-properties",
+      "name": "Toggle fold properties in current file"
+    },
+    {
+      "id": "editor:toggle-fold",
+      "name": "Toggle fold on the current line"
+    },
+    {
+      "id": "editor:fold-all",
+      "name": "Fold all headings and lists"
+    },
+    {
+      "id": "editor:unfold-all",
+      "name": "Unfold all headings and lists"
+    },
+    {
+      "id": "editor:fold-less",
+      "name": "Fold less"
+    },
+    {
+      "id": "editor:fold-more",
+      "name": "Fold more"
+    },
+    {
+      "id": "editor:insert-wikilink",
+      "name": "Add internal link"
+    },
+    {
+      "id": "editor:insert-embed",
+      "name": "Add embed"
+    },
+    {
+      "id": "editor:insert-link",
+      "name": "Insert Markdown link"
+    },
+    {
+      "id": "editor:insert-tag",
+      "name": "Add tag"
+    },
+    {
+      "id": "editor:set-heading",
+      "name": "Toggle heading"
+    },
+    {
+      "id": "editor:set-heading-0",
+      "name": "Remove heading"
+    },
+    {
+      "id": "editor:set-heading-1",
+      "name": "Set as heading 1"
+    },
+    {
+      "id": "editor:set-heading-2",
+      "name": "Set as heading 2"
+    },
+    {
+      "id": "editor:set-heading-3",
+      "name": "Set as heading 3"
+    },
+    {
+      "id": "editor:set-heading-4",
+      "name": "Set as heading 4"
+    },
+    {
+      "id": "editor:set-heading-5",
+      "name": "Set as heading 5"
+    },
+    {
+      "id": "editor:set-heading-6",
+      "name": "Set as heading 6"
+    },
+    {
+      "id": "editor:toggle-bold",
+      "name": "Toggle bold"
+    },
+    {
+      "id": "editor:toggle-italics",
+      "name": "Toggle italic"
+    },
+    {
+      "id": "editor:toggle-strikethrough",
+      "name": "Toggle strikethrough"
+    },
+    {
+      "id": "editor:toggle-highlight",
+      "name": "Toggle highlight"
+    },
+    {
+      "id": "editor:toggle-code",
+      "name": "Toggle code"
+    },
+    {
+      "id": "editor:toggle-inline-math",
+      "name": "Toggle inline math"
+    },
+    {
+      "id": "editor:toggle-blockquote",
+      "name": "Toggle blockquote"
+    },
+    {
+      "id": "editor:toggle-comments",
+      "name": "Toggle comment"
+    },
+    {
+      "id": "editor:clear-formatting",
+      "name": "Clear formatting"
+    },
+    {
+      "id": "editor:toggle-bullet-list",
+      "name": "Toggle bullet list"
+    },
+    {
+      "id": "editor:toggle-numbered-list",
+      "name": "Toggle numbered list"
+    },
+    {
+      "id": "editor:toggle-checklist-status",
+      "name": "Toggle checkbox status"
+    },
+    {
+      "id": "editor:cycle-list-checklist",
+      "name": "Cycle bullet/checkbox"
+    },
+    {
+      "id": "editor:insert-callout",
+      "name": "Insert callout"
+    },
+    {
+      "id": "editor:insert-codeblock",
+      "name": "Insert code block"
+    },
+    {
+      "id": "editor:insert-horizontal-rule",
+      "name": "Insert horizontal rule"
+    },
+    {
+      "id": "editor:insert-mathblock",
+      "name": "Insert math block"
+    },
+    {
+      "id": "editor:insert-table",
+      "name": "Insert table"
+    },
+    {
+      "id": "editor:insert-footnote",
+      "name": "Insert footnote"
+    },
+    {
+      "id": "editor:swap-line-up",
+      "name": "Move line up"
+    },
+    {
+      "id": "editor:swap-line-down",
+      "name": "Move line down"
+    },
+    {
+      "id": "editor:attach-file",
+      "name": "Insert attachment"
+    },
+    {
+      "id": "editor:delete-paragraph",
+      "name": "Delete paragraph"
+    },
+    {
+      "id": "editor:add-cursor-below",
+      "name": "Add cursor below"
+    },
+    {
+      "id": "editor:add-cursor-above",
+      "name": "Add cursor above"
+    },
+    {
+      "id": "editor:toggle-spellcheck",
+      "name": "Toggle spellcheck"
+    },
+    {
+      "id": "editor:table-row-before",
+      "name": "Table: Add row before"
+    },
+    {
+      "id": "editor:table-row-after",
+      "name": "Table: Add row after"
+    },
+    {
+      "id": "editor:table-row-up",
+      "name": "Table: Move row up"
+    },
+    {
+      "id": "editor:table-row-down",
+      "name": "Table: Move row down"
+    },
+    {
+      "id": "editor:table-row-copy",
+      "name": "Table: Duplicate row"
+    },
+    {
+      "id": "editor:table-row-delete",
+      "name": "Table: Delete row"
+    },
+    {
+      "id": "editor:table-col-before",
+      "name": "Table: Add column before"
+    },
+    {
+      "id": "editor:table-col-after",
+      "name": "Table: Add column after"
+    },
+    {
+      "id": "editor:table-col-left",
+      "name": "Table: Move column left"
+    },
+    {
+      "id": "editor:table-col-right",
+      "name": "Table: Move column right"
+    },
+    {
+      "id": "editor:table-col-copy",
+      "name": "Table: Duplicate column"
+    },
+    {
+      "id": "editor:table-col-delete",
+      "name": "Table: Delete column"
+    },
+    {
+      "id": "editor:table-col-align-left",
+      "name": "Table: Align left"
+    },
+    {
+      "id": "editor:table-col-align-center",
+      "name": "Table: Align center"
+    },
+    {
+      "id": "editor:table-col-align-right",
+      "name": "Table: Align right"
+    },
+    {
+      "id": "editor:context-menu",
+      "name": "Show context menu under cursor"
+    },
+    {
+      "id": "file-explorer:open",
+      "name": "Files: Show file explorer"
+    },
+    {
+      "id": "file-explorer:reveal-active-file",
+      "name": "Files: Reveal current file in navigation"
+    },
+    {
+      "id": "file-explorer:new-folder",
+      "name": "Files: Create new folder"
+    },
+    {
+      "id": "global-search:open",
+      "name": "Search: Search in all files"
+    },
+    {
+      "id": "switcher:open",
+      "name": "Quick switcher: Open quick switcher"
+    },
+    {
+      "id": "graph:open",
+      "name": "Graph view: Open graph view"
+    },
+    {
+      "id": "graph:open-local",
+      "name": "Graph view: Open local graph"
+    },
+    {
+      "id": "graph:animate",
+      "name": "Graph view: Start graph timelapse animation"
+    },
+    {
+      "id": "backlink:open",
+      "name": "Backlinks: Show backlinks"
+    },
+    {
+      "id": "backlink:open-backlinks",
+      "name": "Backlinks: Open backlinks for the current note"
+    },
+    {
+      "id": "backlink:toggle-backlinks-in-document",
+      "name": "Backlinks: Toggle backlinks in document"
+    },
+    {
+      "id": "canvas:new-file",
+      "name": "Canvas: Create new canvas"
+    },
+    {
+      "id": "canvas:export-as-image",
+      "name": "Canvas: Export as image"
+    },
+    {
+      "id": "canvas:jump-to-group",
+      "name": "Canvas: Jump to group"
+    },
+    {
+      "id": "canvas:convert-to-file",
+      "name": "Canvas: Convert to file..."
+    },
+    {
+      "id": "outgoing-links:open",
+      "name": "Outgoing links: Show outgoing links"
+    },
+    {
+      "id": "outgoing-links:open-for-current",
+      "name": "Outgoing links: Open outgoing links for the current file"
+    },
+    {
+      "id": "tag-pane:open",
+      "name": "Tags view: Show tags"
+    },
+    {
+      "id": "daily-notes",
+      "name": "Daily notes: Open today's daily note"
+    },
+    {
+      "id": "daily-notes:goto-prev",
+      "name": "Daily notes: Open previous daily note"
+    },
+    {
+      "id": "daily-notes:goto-next",
+      "name": "Daily notes: Open next daily note"
+    },
+    {
+      "id": "note-composer:merge-file",
+      "name": "Note composer: Merge current file with another file..."
+    },
+    {
+      "id": "note-composer:split-file",
+      "name": "Note composer: Extract current selection..."
+    },
+    {
+      "id": "note-composer:extract-heading",
+      "name": "Note composer: Extract this heading..."
+    },
+    {
+      "id": "command-palette:open",
+      "name": "Command palette: Open command palette"
+    },
+    {
+      "id": "bookmarks:open",
+      "name": "Bookmarks: Show bookmarks"
+    },
+    {
+      "id": "bookmarks:bookmark-current-view",
+      "name": "Bookmarks: Bookmark..."
+    },
+    {
+      "id": "bookmarks:bookmark-current-search",
+      "name": "Bookmarks: Bookmark current search..."
+    },
+    {
+      "id": "bookmarks:unbookmark-current-view",
+      "name": "Bookmarks: Remove bookmark for the current file"
+    },
+    {
+      "id": "bookmarks:bookmark-current-section",
+      "name": "Bookmarks: Bookmark block under cursor..."
+    },
+    {
+      "id": "bookmarks:bookmark-current-heading",
+      "name": "Bookmarks: Bookmark heading under cursor..."
+    },
+    {
+      "id": "bookmarks:bookmark-all-tabs",
+      "name": "Bookmarks: Bookmark all tabs..."
+    },
+    {
+      "id": "outline:open",
+      "name": "Outline: Show outline"
+    },
+    {
+      "id": "outline:open-for-current",
+      "name": "Outline: Open outline of the current file"
+    },
+    {
+      "id": "file-recovery:open",
+      "name": "File recovery: Open saved snapshots"
+    },
+    {
+      "id": "sync:setup",
+      "name": "Sync: Set up Sync"
+    },
+    {
+      "id": "sync:view-version-history",
+      "name": "Sync: Open version history for the current file"
+    },
+    {
+      "id": "sync:open-sync-view",
+      "name": "Sync: Show Sync history"
+    },
+    {
+      "id": "sync:open-sync-log",
+      "name": "Sync: Open activity log"
+    },
+    {
+      "id": "obsidian-livesync:livesync-export-config",
+      "name": "Self-hosted LiveSync: Write setting markdown manually"
+    },
+    {
+      "id": "obsidian-livesync:livesync-import-config",
+      "name": "Self-hosted LiveSync: Parse setting file"
+    },
+    {
+      "id": "obsidian-livesync:view-log",
+      "name": "Self-hosted LiveSync: Show log"
+    },
+    {
+      "id": "obsidian-livesync:livesync-replicate",
+      "name": "Self-hosted LiveSync: Replicate now"
+    },
+    {
+      "id": "obsidian-livesync:livesync-dump",
+      "name": "Self-hosted LiveSync: Dump information of this doc "
+    },
+    {
+      "id": "obsidian-livesync:livesync-checkdoc-conflicted",
+      "name": "Self-hosted LiveSync: Resolve if conflicted."
+    },
+    {
+      "id": "obsidian-livesync:livesync-toggle",
+      "name": "Self-hosted LiveSync: Toggle LiveSync"
+    },
+    {
+      "id": "obsidian-livesync:livesync-suspendall",
+      "name": "Self-hosted LiveSync: Toggle All Sync."
+    },
+    {
+      "id": "obsidian-livesync:livesync-scan-files",
+      "name": "Self-hosted LiveSync: Scan storage and database again"
+    },
+    {
+      "id": "obsidian-livesync:livesync-runbatch",
+      "name": "Self-hosted LiveSync: Run pended batch processes"
+    },
+    {
+      "id": "obsidian-livesync:livesync-abortsync",
+      "name": "Self-hosted LiveSync: Abort synchronization immediately"
+    },
+    {
+      "id": "obsidian-livesync:livesync-history",
+      "name": "Self-hosted LiveSync: Show history"
+    },
+    {
+      "id": "obsidian-livesync:livesync-filehistory",
+      "name": "Self-hosted LiveSync: Pick a file to show history"
+    },
+    {
+      "id": "obsidian-livesync:livesync-conflictcheck",
+      "name": "Self-hosted LiveSync: Pick a file to resolve conflict"
+    },
+    {
+      "id": "obsidian-livesync:livesync-all-conflictcheck",
+      "name": "Self-hosted LiveSync: Resolve all conflicted files"
+    },
+    {
+      "id": "obsidian-livesync:livesync-global-history",
+      "name": "Self-hosted LiveSync: Show vault history"
+    },
+    {
+      "id": "obsidian-livesync:open-p2p-replicator",
+      "name": "Self-hosted LiveSync: P2P Sync : Open P2P Replicator"
+    },
+    {
+      "id": "obsidian-livesync:p2p-establish-connection",
+      "name": "Self-hosted LiveSync: P2P Sync : Connect to the Signalling Server"
+    },
+    {
+      "id": "obsidian-livesync:p2p-close-connection",
+      "name": "Self-hosted LiveSync: P2P Sync : Disconnect from the Signalling Server"
+    },
+    {
+      "id": "obsidian-livesync:replicate-now-by-p2p",
+      "name": "Self-hosted LiveSync: Replicate now by P2P"
+    },
+    {
+      "id": "obsidian42-brat:AddBetaPlugin",
+      "name": "BRAT: Plugins: Add a beta plugin for testing (with or without version)"
+    },
+    {
+      "id": "obsidian42-brat:checkForUpdatesAndUpdate",
+      "name": "BRAT: Plugins: Check for updates to all beta plugins and UPDATE"
+    },
+    {
+      "id": "obsidian42-brat:checkForUpdatesAndDontUpdate",
+      "name": "BRAT: Plugins: Only check for updates to beta plugins, but don't Update"
+    },
+    {
+      "id": "obsidian42-brat:updateOnePlugin",
+      "name": "BRAT: Plugins: Choose a single plugin version to update"
+    },
+    {
+      "id": "obsidian42-brat:reinstallOnePlugin",
+      "name": "BRAT: Plugins: Choose a single plugin to reinstall"
+    },
+    {
+      "id": "obsidian42-brat:restartPlugin",
+      "name": "BRAT: Plugins: Restart a plugin that is already installed"
+    },
+    {
+      "id": "obsidian42-brat:disablePlugin",
+      "name": "BRAT: Plugins: Disable a plugin - toggle it off"
+    },
+    {
+      "id": "obsidian42-brat:enablePlugin",
+      "name": "BRAT: Plugins: Enable a plugin - toggle it on"
+    },
+    {
+      "id": "obsidian42-brat:openGitHubZRepository",
+      "name": "BRAT: Plugins: Open the GitHub repository for a plugin"
+    },
+    {
+      "id": "obsidian42-brat:openGitHubRepoTheme",
+      "name": "BRAT: Themes: Open the GitHub repository for a theme (appearance)"
+    },
+    {
+      "id": "obsidian42-brat:opentPluginSettings",
+      "name": "BRAT: Plugins: Open Plugin Settings Tab"
+    },
+    {
+      "id": "obsidian42-brat:GrabBetaTheme",
+      "name": "BRAT: Themes: Grab a beta theme for testing from a Github repository"
+    },
+    {
+      "id": "obsidian42-brat:updateBetaThemes",
+      "name": "BRAT: Themes: Update beta themes"
+    },
+    {
+      "id": "obsidian42-brat:allCommands",
+      "name": "BRAT: All Commands list"
+    },
+    {
+      "id": "obsidian-livesync:livesync-setting-qr",
+      "name": "Self-hosted LiveSync: Show settings as a QR code"
+    },
+    {
+      "id": "obsidian-livesync:livesync-copysetupuri",
+      "name": "Self-hosted LiveSync: Copy settings as a new setup URI"
+    },
+    {
+      "id": "obsidian-livesync:livesync-copysetupuri-short",
+      "name": "Self-hosted LiveSync: Copy settings as a new setup URI (With customization sync)"
+    },
+    {
+      "id": "obsidian-livesync:livesync-copysetupurifull",
+      "name": "Self-hosted LiveSync: Copy settings as a new setup URI (Full)"
+    },
+    {
+      "id": "obsidian-livesync:livesync-opensetupuri",
+      "name": "Self-hosted LiveSync: Use the copied setup URI (Formerly Open setup URI)"
+    },
+    {
+      "id": "obsidian-livesync:livesync-plugin-dialog-ex",
+      "name": "Self-hosted LiveSync: Show customization sync dialog"
+    },
+    {
+      "id": "obsidian-livesync:livesync-sync-internal",
+      "name": "Self-hosted LiveSync: (re)initialise hidden files between storage and database"
+    },
+    {
+      "id": "obsidian-livesync:livesync-scaninternal-storage",
+      "name": "Self-hosted LiveSync: Scan hidden file changes on the storage"
+    },
+    {
+      "id": "obsidian-livesync:livesync-scaninternal-database",
+      "name": "Self-hosted LiveSync: Scan hidden file changes on the local database"
+    },
+    {
+      "id": "obsidian-livesync:livesync-internal-scan-offline-changes",
+      "name": "Self-hosted LiveSync: Scan and apply all offline hidden-file changes"
+    },
+    {
+      "id": "obsidian-tasks-plugin:edit-task",
+      "name": "Tasks: Create or edit task"
+    },
+    {
+      "id": "obsidian-tasks-plugin:toggle-done",
+      "name": "Tasks: Toggle task done"
+    },
+    {
+      "id": "obsidian-tasks-plugin:add-query-file-defaults-properties",
+      "name": "Tasks: Add all Query File Defaults properties"
+    },
+    {
+      "id": "dataview:dataview-force-refresh-views",
+      "name": "Dataview: Force refresh all views and blocks"
+    },
+    {
+      "id": "dataview:dataview-drop-cache",
+      "name": "Dataview: Drop all cached file metadata"
+    },
+    {
+      "id": "dataview:dataview-rebuild-current-view",
+      "name": "Dataview: Rebuild current view"
+    },
+    {
+      "id": "obsidian-icon-folder:iconize:set-icon-for-file",
+      "name": "Iconize: Set icon for file"
+    },
+    {
+      "id": "quickadd:runQuickAdd",
+      "name": "QuickAdd: Run QuickAdd"
+    },
+    {
+      "id": "quickadd:reloadQuickAdd",
+      "name": "QuickAdd: Reload QuickAdd (dev)"
+    },
+    {
+      "id": "quickadd:testQuickAdd",
+      "name": "QuickAdd: Test QuickAdd (dev)"
+    },
+    {
+      "id": "quickadd:choice:171f4d4d-0ed5-468e-ba92-05138087119b",
+      "name": "QuickAdd: New AI note"
+    },
+    {
+      "id": "obsidian-projects:show-projects",
+      "name": "Projects: Show projects"
+    },
+    {
+      "id": "obsidian-projects:create-project",
+      "name": "Projects: Create new project"
+    },
+    {
+      "id": "obsidian-projects:create-note",
+      "name": "Projects: Create new note"
+    },
+    {
+      "id": "buttons:button-maker",
+      "name": "Buttons: Button Maker"
+    },
+    {
+      "id": "buttons:inline-button",
+      "name": "Buttons: Insert Inline Button"
+    },
+    {
+      "id": "obsidian-meta-bind-plugin:open-docs",
+      "name": "Meta Bind: Open docs"
+    },
+    {
+      "id": "obsidian-meta-bind-plugin:open-playground",
+      "name": "Meta Bind: Open playground"
+    },
+    {
+      "id": "obsidian-meta-bind-plugin:open-help",
+      "name": "Meta Bind: Open Help"
+    },
+    {
+      "id": "obsidian-meta-bind-plugin:open-button-builder",
+      "name": "Meta Bind: Open button builder"
+    },
+    {
+      "id": "obsidian-meta-bind-plugin:copy-command-id",
+      "name": "Meta Bind: Select and copy command id"
+    },
+    {
+      "id": "shortcut-edit-mode:switch-mode",
+      "name": "Edit mode switch: Switch mode"
+    },
+    {
+      "id": "yt-video-summarizer:summarize-youtube-video",
+      "name": "YouTube Video Summarizer: Summarize youtube video"
+    },
+    {
+      "id": "yt-video-summarizer:summarize-youtube-video-prompt",
+      "name": "YouTube Video Summarizer: Summarize youtube video (with prompt)"
+    },
+    {
+      "id": "templater-obsidian:insert-templater",
+      "name": "Templater: Open insert template modal"
+    },
+    {
+      "id": "templater-obsidian:replace-in-file-templater",
+      "name": "Templater: Replace templates in the active file"
+    },
+    {
+      "id": "templater-obsidian:jump-to-next-cursor-location",
+      "name": "Templater: Jump to next cursor location"
+    },
+    {
+      "id": "templater-obsidian:create-new-note-from-template",
+      "name": "Templater: Create new note from template"
+    },
+    {
+      "id": "templater-obsidian:_Supporting/Templates/templater/template-callout-info-dynamic.md",
+      "name": "Templater: Insert _Supporting/Templates/templater/template-callout-info-dynamic.md"
+    },
+    {
+      "id": "templater-obsidian:create-_Supporting/Templates/templater/template-callout-info-dynamic.md",
+      "name": "Templater: Create _Supporting/Templates/templater/template-callout-info-dynamic.md"
+    },
+    {
+      "id": "templater-obsidian:_Supporting/Template/templater/template-callout-from-clipboard.md",
+      "name": "Templater: Insert _Supporting/Template/templater/template-callout-from-clipboard.md"
+    },
+    {
+      "id": "templater-obsidian:create-_Supporting/Template/templater/template-callout-from-clipboard.md",
+      "name": "Templater: Create _Supporting/Template/templater/template-callout-from-clipboard.md"
+    },
+    {
+      "id": "templater-obsidian:_Supporting/Templates/Daily Note Template.md",
+      "name": "Templater: Insert _Supporting/Templates/Daily Note Template.md"
+    },
+    {
+      "id": "templater-obsidian:create-_Supporting/Templates/Daily Note Template.md",
+      "name": "Templater: Create _Supporting/Templates/Daily Note Template.md"
+    },
+    {
+      "id": "templater-obsidian:_Supporting/Templates/templater/🤖 INTERACTIVE - AI Text Enhancer (Select Text First).md",
+      "name": "Templater: Insert _Supporting/Templates/templater/🤖 INTERACTIVE - AI Text Enhancer (Select Text First).md"
+    },
+    {
+      "id": "templater-obsidian:create-_Supporting/Templates/templater/🤖 INTERACTIVE - AI Text Enhancer (Select Text First).md",
+      "name": "Templater: Create _Supporting/Templates/templater/🤖 INTERACTIVE - AI Text Enhancer (Select Text First).md"
+    },
+    {
+      "id": "chat-with-bard:gemini-new-chat",
+      "name": "Gemini AI Assistant: New Gemini Chat"
+    },
+    {
+      "id": "chat-with-bard:gemini-open-chat",
+      "name": "Gemini AI Assistant: Open Gemini Chat"
+    },
+    {
+      "id": "inlineai:show-cursor-tooltip",
+      "name": "InlineAI: Show cursor tooltip"
+    },
+    {
+      "id": "inlineai:accept-tooltip",
+      "name": "InlineAI: Accept tooltip suggestion"
+    },
+    {
+      "id": "inlineai:discard-tooltip",
+      "name": "InlineAI: Discard tooltip suggestion"
+    },
+    {
+      "id": "mermaid-tools:open-toolbar",
+      "name": "Mermaid Tools: Open Toolbar View"
+    },
+    {
+      "id": "calendar:show-calendar-view",
+      "name": "Calendar: Open view"
+    },
+    {
+      "id": "calendar:open-weekly-note",
+      "name": "Calendar: Open Weekly Note"
+    },
+    {
+      "id": "calendar:reveal-active-note",
+      "name": "Calendar: Reveal active note"
+    }
+  ]
+}

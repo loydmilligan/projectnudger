@@ -318,6 +318,67 @@ function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, 
                     </div>
                 </div>
 
+                {/* Obsidian Sync */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                    <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Obsidian Sync</h2>
+                    
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Obsidian Sync</label>
+                            <input
+                                type="checkbox"
+                                checked={localSettings.obsidianSyncEnabled || false}
+                                onChange={e => setLocalSettings({...localSettings, obsidianSyncEnabled: e.target.checked})}
+                                className="h-5 w-5 text-indigo-600 rounded-md"
+                            />
+                        </div>
+                        {localSettings.obsidianSyncEnabled && (
+                            <>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">REST API Endpoint</label>
+                                    <input
+                                        type="text"
+                                        value={localSettings.obsidianEndpoint || ''}
+                                        onChange={e => setLocalSettings({...localSettings, obsidianEndpoint: e.target.value})}
+                                        placeholder="http://localhost:27123"
+                                        className="mt-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">API Key</label>
+                                    <input
+                                        type="password"
+                                        value={localSettings.obsidianApiKey || ''}
+                                        onChange={e => setLocalSettings({...localSettings, obsidianApiKey: e.target.value})}
+                                        className="mt-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Vault Sub-folder</label>
+                                    <input
+                                        type="text"
+                                        value={localSettings.obsidianVaultPath || 'Nudger'}
+                                        onChange={e => setLocalSettings({...localSettings, obsidianVaultPath: e.target.value})}
+                                        className="mt-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-sync</label>
+                                    <select
+                                        value={localSettings.obsidianAutoSync || 'manual'}
+                                        onChange={e => setLocalSettings({...localSettings, obsidianAutoSync: e.target.value})}
+                                        className="mt-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md p-2 text-sm"
+                                    >
+                                        <option value="manual">Manual</option>
+                                        <option value="onChange">On Change</option>
+                                        <option value="timer">Every 15 min</option>
+                                    </select>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+
                 {/* Data Management */}
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                     <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Data Management</h2>

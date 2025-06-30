@@ -1,0 +1,47 @@
+# Obsidian Integration PRD
+
+## Objective
+Implement one-way synchronization from Project Nudger to a user's Obsidian vault via the Local REST API plugin.
+
+## Functional Requirements
+1. **Configuration & Settings**
+   - User can enable/disable Obsidian sync.
+   - User can enter REST endpoint, API key, and vault sub-folder (default `Nudger/`).
+   - Settings are validated and stored in Firebase with other user settings.
+2. **REST API Client**
+   - Base HTTP client with timeout/retry and detailed error handling.
+   - Methods: `createNote`, `updateNote`, `deleteNote`, `listNotes`, `getNote`.
+   - Connection test utility.
+3. **Markdown Template System**
+   - Project template with front-matter, task list, stats, links back to web app.
+   - Task template with details, tags, due date, session notes links.
+   - Dashboard templates for master task list and project overview.
+4. **Sync Orchestrator**
+   - Export data from Firebase, generate markdown, send to API.
+   - Queue operations, handle rollback on failure.
+   - File cleanup for deleted/archived items.
+5. **UI Components**
+   - Sync status indicator (green/yellow/red) in top nav.
+   - Progress modal with preview & confirmation.
+   - Detailed error messages & troubleshooting links.
+6. **Auto-Sync Triggers**
+   - After task completion.
+   - After project creation/update.
+   - Manual "Sync Now" button.
+7. **Logging & History**
+   - Store last sync timestamp & result.
+   - Sync history list in settings view.
+8. **Documentation & Testing**
+   - User setup guide & troubleshooting doc.
+   - Unit tests for templates & REST client.
+   - End-to-end test for a sample vault.
+
+## Non-Functional Requirements
+- Sync operation under 30 s for 100 projects / 1000 tasks.
+- Zero data loss; rollback on partial failure.
+- Works with existing LiveSync setups.
+
+## Success Metrics
+- 95 % of sync attempts succeed without error.
+- Setup completed in < 5 minutes by a new user.
+- Positive user feedback score for Obsidian integration.

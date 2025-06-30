@@ -23,7 +23,23 @@ Project Nudger's core differentiator is its intelligent nudging system that acti
 - **Stay on Target:** Moderate nudging every 5 tasks, warns on new project creation
 - **Lazy:** Aggressive intervention every 2 tasks, blocks new project creation
 
+**AI-Powered Nudge System (Recently Added):**
+- **Multi-LLM Support:** OpenAI GPT-4o-mini, Google Gemini 2.0 Flash, Anthropic Claude Haiku
+- **Two-Call Strategy:** Structured data analysis + robot personality generation for reliable output
+- **Robot Character Personalities:** Random selection from R2-D2, C-3PO, HAL 9000, Data, Terminator, WALL-E, Bender, Optimus Prime, Johnny 5, Marvin
+- **Customizable Output:** TTS and ntfy notification toggles, additional request system for user customization
+- **Smart Timing:** Prevents nudges during active Pomodoro sessions, generates nudges when manually stopping work sessions
+- **Structured Recommendations:** Urgent tasks, near-completion projects, neglected projects analysis with visual insights
+
 The roadmap below focuses heavily on expanding this nudging system as the application's key competitive advantage.
+
+## Recently Completed (December 2024)
+
+*   **✅ AI-Powered Nudge System:** Implemented comprehensive AI integration with multi-LLM support (OpenAI, Gemini, Anthropic), structured two-call strategy for reliable JSON parsing, and robot character personalities. *(Effort: 5, Benefit: 5)*
+*   **✅ AI Nudge Customization:** Added TTS and ntfy notification toggles, replaced complex prompt template with simple additional request system for safe user customization. *(Effort: 3, Benefit: 4)*
+*   **✅ Smart Session Management:** Fixed notification spam by preventing AI nudges during active Pomodoro sessions and generating nudges when manually stopping work sessions. *(Effort: 2, Benefit: 4)*
+*   **✅ Enhanced AI Display:** Improved urgent tasks layout with full-width display, added conditional "Additional Insight" section, and better visual hierarchy. *(Effort: 2, Benefit: 3)*
+*   **✅ Dedicated Settings Screen:** Migrated all settings from modal to full-screen view with organized sections for better UX and expandability. *(Effort: 2, Benefit: 3)*
 
 ## Core Nudge System Features
 
@@ -38,11 +54,18 @@ The roadmap below focuses heavily on expanding this nudging system as the applic
 
 ## Advanced Nudge System
 
+*   **Enhanced AI Nudge Intelligence:** Expand the current AI system with more sophisticated analysis:
+    *   Historical pattern recognition for optimal nudge timing based on user behavior
+    *   Project completion prediction models to surface at-risk projects before they stall
+    *   Personalized robot character selection based on user preferences and response rates
+    *   Context-aware additional requests (different suggestions for work vs break periods)
+    *(Effort: 4, Benefit: 4)*
 *   **Nudge Dashboard:** Create a dedicated "Nudge Insights" view with KPIs specifically designed to highlight project staleness:
     *   Stale project timeline with aging indicators and nudge history
     *   "Project Neglect Score" ranking showing which projects need immediate attention
     *   Overdue task heat map highlighting tasks past their due dates
     *   Near-completion project alerts (e.g., "3 projects are 90%+ complete but haven't been touched in 2 weeks")
+    *   AI nudge effectiveness metrics and response tracking
     *(Effort: 4, Benefit: 3)*
 *   **Adaptive Visual Nudging:** Implement progressive visual changes to the entire interface based on project staleness:
     *   Gradually shift color palette from pleasant to more jarring/attention-grabbing colors when projects exceed staleness thresholds
@@ -53,11 +76,11 @@ The roadmap below focuses heavily on expanding this nudging system as the applic
     *   Different nudge strategies for different times of day/week
     *   Integration with user's work patterns (less aggressive nudging during known busy periods)
     *   Escalating nudge sequences that adapt based on user response patterns
+    *   AI-driven optimal nudge timing recommendations
     *(Effort: 5, Benefit: 4)*
 
 ## User Interface & Experience
 
-*   **Dedicated Settings Screen:** Migrate all settings from the modal to a full-screen, dedicated "Settings" view for a less-cramped user experience and to make room for future options. *(Effort: 2, Benefit: 3)*
 *   **Project View Polish:** Refine the "Projects" view cards to show more detail at a glance, such as task counts (e.g., "5/12 complete") and a visual indicator for the project's age or priority. *(Effort: 2, Benefit: 4)*
 *   **Visual Timer States:** Add more distinct visual cues to the Pomodoro timer, such as a color shift or pulsing animation when the timer is close to finishing. *(Effort: 2, Benefit: 2)*
 *   **Empty State Improvements:** Enhance the "empty" views (e.g., no projects, no tasks) with more helpful text and clear calls-to-action to guide new users. *(Effort: 1, Benefit: 2)*
