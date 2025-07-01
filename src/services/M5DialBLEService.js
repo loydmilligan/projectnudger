@@ -1,8 +1,8 @@
 // M5DialBLEService - handles Web Bluetooth connection to M5Stack Dial Pomodoro timer
 // Uses the same UUIDs as Arduino sketch & Python demo
-const SERVICE_UUID = '19B10000-E8F2-537E-4F6C-D104768A1214';
-const COMMAND_CHAR_UUID = '19B10001-E8F2-537E-4F6C-D104768A1214';
-const STATUS_CHAR_UUID = '19B10002-E8F2-537E-4F6C-D104768A1214';
+const SERVICE_UUID = '19b10000-e8f2-537e-4f6c-d104768a1214';
+const COMMAND_CHAR_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
+const STATUS_CHAR_UUID = '19b10002-e8f2-537e-4f6c-d104768a1214';
 
 /**
  * Lightweight singleton BLE helper using EventTarget for events: 'connected', 'disconnected', 'status'.
