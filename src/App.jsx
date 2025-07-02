@@ -34,6 +34,8 @@ import SettingsView from './components/views/SettingsView';
 
 // Import shared components
 import SessionCompletionModal from './components/shared/SessionCompletionModal';
+// BLE service for M5 Dial
+import { m5DialBLEService } from './services/M5DialBLEService';
 import AINudgeDisplay from './components/shared/AINudgeDisplay';
 import ObsidianSyncProgressModal from './components/shared/ObsidianSyncProgressModal';
 import useObsidianSync from './hooks/useObsidianSync';
@@ -203,11 +205,39 @@ export default function App() {
         const session = { taskId: task.id, startTime: new Date(), duration: POMODORO_CONFIG.WORK_SESSION, isDouble: false, active: true, type: 'work' };
         await setDoc(doc(db, basePath, 'tracking', 'activeSession'), session);
         await updateDoc(doc(db, basePath, 'tasks', task.id), { status: 'in-progress' });
+        // Inform Dial of new task start
+        if (m5DialBLEService.connected) {
+            try {
+                await m5DialBLEService.sendCommand({
+                    command: 'SET_TASK',
+                    payload: { task_name: task.title || 'Task' }
+                });
+                await m5DialBLEService.sendCommand({ command: 'START' });
+            } catch (e) {
+                console.warn('Failed to send START to Dial', e);
+            }
+        }
         setActiveView('tracking');
     };
 
     // Enhanced timer functions for the new dashboard widget
     const handleStartSession = async (task, sessionType, duration) => {
+        // Firestore / state logic remains, but also inform the Dial if connected
+        const sendToDial = async () => {
+            if (!m5DialBLEService.connected) return;
+            try {
+                if (task && sessionType === 'work') {
+                    await m5DialBLEService.sendCommand({
+                        command: 'SET_TASK',
+                        payload: { task_name: task.title || 'Task' }
+                    });
+                }
+                await m5DialBLEService.sendCommand({ command: 'START' });
+            } catch (e) {
+                console.warn('Failed to send START to Dial', e);
+            }
+        };
+
         if (activeSession) return;
         
         const session = {
@@ -220,6 +250,8 @@ export default function App() {
         };
         
         await setDoc(doc(db, basePath, 'tracking', 'activeSession'), session);
+        // Notify Dial
+        sendToDial();
         
         if (task && sessionType === 'work') {
             await updateDoc(doc(db, basePath, 'tasks', task.id), { status: 'in-progress' });
@@ -229,6 +261,10 @@ export default function App() {
     const handlePauseSession = async () => {
         if (!activeSession) return;
         await setDoc(doc(db, basePath, 'tracking', 'activeSession'), { active: false }, { merge: true });
+        // Pause hardware timer
+        if (m5DialBLEService.connected) {
+            m5DialBLEService.sendCommand({ command: 'PAUSE' }).catch(console.warn);
+        }
     };
 
     const handleResetSession = async () => {
@@ -238,6 +274,10 @@ export default function App() {
         
         await setDoc(doc(db, basePath, 'tracking', 'activeSession'), { active: false }, { merge: true });
         
+        // Reset hardware timer if connected
+        if (m5DialBLEService.connected) {
+            m5DialBLEService.sendCommand({ command: 'RESET' }).catch(console.warn);
+        }
         // Reset task status if it was in progress
         if (activeSession.taskId && wasWorkSession) {
             await updateDoc(doc(db, basePath, 'tasks', activeSession.taskId), { status: 'idle' });

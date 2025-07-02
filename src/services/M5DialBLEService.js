@@ -22,24 +22,13 @@ class M5DialBLEService extends EventTarget {
     try {
       if (!navigator.bluetooth) throw new Error('Web Bluetooth not supported in this browser');
       this.dispatchEvent(new CustomEvent('connecting'));
-      let device;
-      try {
-        device = await navigator.bluetooth.requestDevice({
-          filters: [{ name: 'M5Dial-Pomodoro' }],
-          optionalServices: [SERVICE_UUID],
-        });
-      } catch (err) {
-        if (err.name === 'NotFoundError') {
-          // fallback: broader scan by name prefix
-          console.warn('Specific name not found, falling back to namePrefix');
-          device = await navigator.bluetooth.requestDevice({
-            filters: [{ namePrefix: 'M5Dial' }],
-            optionalServices: [SERVICE_UUID],
-          });
-        } else {
-          throw err;
-        }
-      }
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [
+          { name: 'M5Dial-Pomodoro' },
+          { namePrefix: 'M5Dial' }
+        ],
+        optionalServices: [SERVICE_UUID],
+      });
       this.device = device;
       this.device.addEventListener('gattserverdisconnected', this._handleDisconnect.bind(this));
       this.server = await this.device.gatt.connect();
