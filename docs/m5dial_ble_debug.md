@@ -1,0 +1,164 @@
+# M5Stack Dial × Project Nudger
+### Debug notebook — BLE connection keeps failing with `GATT Server is disconnected`
+
+---
+
+## 1. Project at a glance
+
+| Layer | Stack / Details |
+|-------|-----------------|
+| Hardware | • M5Stack Dial (ESP32-S3, rotary encoder, touch ring, BtnA under knob, speaker, display) |
+| Firmware | • Arduino framework, board `esp32:esp32:m5stack_dial` (ESP32 Arduino core 3.2.0)<br>• Sketch: `pomodoro_test.ino` (≈ 500 LOC) |
+| Web client | • React 18 + Vite dev server (`http://localhost:5173`)<br>• Production: static build deployed to Netlify → Cloudflare proxied custom domain `https://nudger.mattmariani.com` |
+| BLE service UUIDs | `19b10000-e8f2-537e-4f6c-d104768a1214` (Pomodoro service)<br>  • `01` cmd characteristic (write)<br>  • `02` status characteristic (notify) |
+| Browsers used | Chrome 124 (Web Bluetooth OK), Vivaldi (no Web BT) |
+| Goal | Reliable Dial ↔ browser pairing, read status notifications & send commands |
+
+---
+
+## 2. Repo / file tree (BLE-related only)
+
+```text
+ProjectNudger/
+├─ src/
+│  ├─ services/
+│  │  └─ M5DialBLEService.js      ← Web-BT wrapper (singleton)
+│  ├─ hooks/
+│  │  └─ useM5Dial.js             ← React hook around the service
+│  └─ components/
+│     └─ layout/
+│        └─ TopNavBar.jsx         ← Bluetooth button in UI
+├─ vite.config.js                 ← dev server (HTTP, localhost)
+└─ netlify.toml                   ← static deploy config (HTTPS)
+
+pomodorotimer/
+└─ Arduino/
+   └─ pomodoro_test.ino/
+      └─ pomodoro_test.ino.ino    ← Firmware running on Dial
+```
+
+---
+
+## 3. Key firmware excerpts (Dial)
+
+### 3.1 BLE setup
+```cpp
+void setupBLE() {
+  BLEDevice::init("M5Dial-Pomodoro");
+  BLEServer *pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+
+  BLEService *pService =
+      pServer->createService("19b10000-e8f2-537e-4f6c-d104768a1214");
+
+  pCommandCharacteristic = pService->createCharacteristic(
+      "19b10001-e8f2-537e-4f6c-d104768a1214",
+      BLECharacteristic::PROPERTY_WRITE);
+  pCommandCharacteristic->setCallbacks(new MyCallbacks());
+
+  pStatusCharacteristic = pService->createCharacteristic(
+      "19b10002-e8f2-537e-4f6c-d104768a1214",
+      BLECharacteristic::PROPERTY_NOTIFY);
+  pStatusCharacteristic->addDescriptor(new BLE2902());
+
+  pService->start();
+  BLEDevice::startAdvertising(); // Advertises right after boot
+}
+```
+
+### 3.2 Advertising auto-restart
+```cpp
+// in loop()
+if (!deviceConnected && currentSystemMode == MODE_TIMER) {
+  BLEDevice::startAdvertising();
+}
+
+// long-press handler (BtnA)
+if (M5Dial.BtnA.wasHold()) {
+  ...
+  BLEDevice::startAdvertising();
+  return;
+}
+```
+
+---
+
+## 4. Key web-app code
+
+### 4.1 `src/services/M5DialBLEService.js`
+```javascript
+[see file in repo – full listing included in commit]
+```
+
+### 4.2 `src/hooks/useM5Dial.js`
+```javascript
+[see file in repo]
+```
+
+### 4.3 UI trigger (`TopNavBar.jsx`)
+```jsx
+const { connect, disconnect, connected, connecting } = useM5Dial();
+
+<Button
+  startIcon={connected ? <BluetoothConnectedIcon/> : <BluetoothIcon/>}
+  color={connected ? 'success' : 'inherit'}
+  onClick={connected ? disconnect : connect}
+  disabled={connecting}
+/>
+```
+
+---
+
+## 5. What we observe
+
+1. Picker empty until Dial knob long-pressed; then device appears as “Paired”.
+2. Icon next to name flips between Bluetooth and signal bars while highlighted.
+3. Clicking **Pair/Connect** → console:
+   ```
+   NetworkError: GATT Server is disconnected. Cannot retrieve services.
+   ```
+
+---
+
+## 6. Troubleshooting to date
+| # | Action | Result |
+|---|--------|--------|
+| 1 | Confirm Web Bluetooth presence | Supported |
+| 2 | Combined two picker calls into one | SecurityError gone |
+| 3 | Lower-cased UUIDs | No change |
+| 4 | Auto advertising restart in `loop()` | Discoverable |
+| 5 | Manual restart on long-press | Picker refreshes |
+| 6 | Localhost vs HTTPS | Same failure |
+| 7 | Power-cycle Dial each attempt | Still fails |
+| 8 | `chrome://bluetooth-internals` logs | Status 62 (0x3e) |
+
+---
+
+## 7. Hypotheses / next ideas
+1. Adjust connection interval & timeout on ESP32 advertising.
+2. Remove saved pairing in Chrome (`chrome://bluetooth-internals`).
+3. Use `device.watchAdvertisements()` before connect.
+4. One-shot retry on `gatt.connect()`.
+5. Use nRF Connect to verify services stay after attempt.
+6. Update / downgrade ESP32 Arduino core.
+7. Extra console logs pre- and post-`gatt.connect()`.
+8. Confirm experimental-web-platform flag enabled.
+
+---
+
+## 8. Current status
+* Single picker call inside button click.
+* Dial advertises continuously when not connected.
+* `device.gatt.connect()` immediately fails with NetworkError above.
+
+---
+
+## 9. Planned next steps
+1. Tweak ESP32 advertising intervals (`adv->setMinInterval/MaxInterval`).
+2. JS reconnect attempt on first failure.
+3. Capture BT Snoop / HCI logs.
+4. Test with different ESP32 core version.
+
+---
+
+*Document generated by Cascade AI assistant, 2025-07-01.*

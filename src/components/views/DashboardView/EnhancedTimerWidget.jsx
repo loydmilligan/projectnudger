@@ -219,10 +219,12 @@ function EnhancedTimerWidget({
 function TaskSelectionModal({ tasks, onSelectTask, onClose, duration }) {
     const [searchTerm, setSearchTerm] = useState('');
     
-    const filteredTasks = tasks.filter(task => 
-        !task.isComplete && 
-        task.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const safeTasks = Array.isArray(tasks) ? tasks : [];
+    const filteredTasks = safeTasks.filter(t => {
+        if (!t || t.isComplete) return false;
+        const title = typeof t.title === 'string' ? t.title : '';
+        return title.toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in-fast">
