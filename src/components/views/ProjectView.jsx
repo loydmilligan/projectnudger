@@ -5,7 +5,7 @@ import { db, basePath } from '../../config/firebase';
 import { getAnalogousColor } from '../../utils/helpers';
 import TaskItem from '../shared/TaskItem';
 
-function ProjectView({ project, tasks, settings, categoryColor, onCompleteTask, onEditTask, onOpenNewTaskDetail, nudgeState, onBack, onStartTask, onEditProject }) {
+function ProjectView({ project, tasks, settings, categoryColor, onCompleteTask, onEditTask, onOpenNewTaskDetail, nudgeState, onBack, onStartTask, onEditProject, aiNudgeRecommendations }) {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const projectTasks = useMemo(() => tasks.filter(t => t.projectId === project.id).sort((a, b) => (a.isComplete - b.isComplete) || (a.createdAt || 0) - (b.createdAt || 0)), [tasks, project.id]);
     
@@ -43,7 +43,7 @@ function ProjectView({ project, tasks, settings, categoryColor, onCompleteTask, 
                     <button onClick={handleOpenAddModal} className="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md text-sm font-semibold text-white">Add Details...</button>
                 </div>
                 <ul className="space-y-2">
-                    {projectTasks.map(task => <TaskItem key={task.id} task={task} onToggle={onCompleteTask} onOpenDetail={onEditTask} onStartTask={onStartTask}/>)}
+                    {projectTasks.map(task => <TaskItem key={task.id} task={task} onToggle={onCompleteTask} onOpenDetail={onEditTask} onStartTask={onStartTask} aiNudgeRecommendations={aiNudgeRecommendations}/>)}
                 </ul>
             </div>
         </div>

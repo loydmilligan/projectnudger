@@ -592,7 +592,7 @@ export default function App() {
         if (activeView === 'archived') { return <ArchivedProjectsView allProjects={projects} onSaveProject={handleSaveProject}/>; }
         if (activeView === 'tracking') { return <TrackingView session={activeSession} tasks={tasks} onSessionEnd={handleSessionEnd} />; }
         if (selectedProjectId) {
-            return <ProjectView project={selectedProject} tasks={tasks.filter(t => t.projectId === selectedProjectId)} settings={settings} categoryColor={categories[selectedProject.category]} onCompleteTask={handleCompleteTask} onEditTask={handleEditTask} onOpenNewTaskDetail={openTaskDetailForNew} onStartTask={handleStartTask} onEditProject={openEditProjectModal} nudgeState={nudgeState} onBack={() => setSelectedProjectId(null)} />;
+            return <ProjectView project={selectedProject} tasks={tasks.filter(t => t.projectId === selectedProjectId)} settings={settings} categoryColor={categories[selectedProject.category]} onCompleteTask={handleCompleteTask} onEditTask={handleEditTask} onOpenNewTaskDetail={openTaskDetailForNew} onStartTask={handleStartTask} onEditProject={openEditProjectModal} nudgeState={nudgeState} onBack={() => setSelectedProjectId(null)} aiNudgeRecommendations={aiNudgeRecommendations} />;
         }
         switch (activeView) {
             case 'dashboard': return <DashboardView 

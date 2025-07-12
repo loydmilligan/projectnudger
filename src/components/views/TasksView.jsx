@@ -42,7 +42,7 @@ function TasksView({ tasks, projects, onStartTask, onCompleteTask, onEditTask, a
                 </div>
             </div>
             <ul className="space-y-3">
-                {filteredTasks.map(task => <TaskItem key={task.id} task={task} onToggle={onCompleteTask} onOpenDetail={onEditTask} onStartTask={onStartTask} isTaskActive={activeSession?.taskId === task.id}/>)}
+                {filteredTasks.map(task => <TaskItem key={task.id} task={task} onToggle={onCompleteTask} onOpenDetail={onEditTask} onStartTask={onStartTask} isTaskActive={activeSession?.taskId === task.id} aiNudgeRecommendations={aiNudgeRecommendations}/>)}
             </ul>
         </div>
     );

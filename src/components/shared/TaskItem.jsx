@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { PlayCircle, TimerIcon, Calendar, Loader2 } from 'lucide-react';
+import { PlayCircle, TimerIcon, Calendar, Loader2, AlertTriangle, Bell } from 'lucide-react';
+import { isPastDue, isNudgedTask } from '../../utils/taskFilters';
 
 function TaskItem({ 
     task = {}, 
     onToggle = null, 
     onOpenDetail = null, 
     onStartTask = null, 
-    isTaskActive = false 
+    isTaskActive = false,
+    aiNudgeRecommendations = null
 }) {
     const [isToggling, setIsToggling] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
@@ -34,6 +36,44 @@ function TaskItem({
         status: task?.status || 'idle',
         dueDate: task?.dueDate || null,
         tags: Array.isArray(task?.tags) ? task.tags : []
+    };
+
+    // Calculate visual indicator states
+    const isPastDueTask = isPastDue(safeTask);
+    const isNudgedTaskIndicator = isNudgedTask(safeTask, aiNudgeRecommendations);
+
+    // Determine container styling based on urgency
+    const getContainerClasses = () => {
+        let baseClasses = 'flex items-center p-2.5 rounded-md text-sm transition-colors group relative';
+        
+        // Background and border styling based on urgency (past due takes precedence)
+        if (isPastDueTask) {
+            baseClasses += ' bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border-l-4 border-red-500';
+        } else if (isNudgedTaskIndicator) {
+            baseClasses += ' bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border-l-4 border-orange-500';
+        } else {
+            baseClasses += ' bg-gray-100 dark:bg-gray-900/40 hover:bg-gray-200 dark:hover:bg-gray-900/60';
+        }
+        
+        // Active task border (only if not past due or nudged)
+        if (isTaskActive && !isPastDueTask && !isNudgedTaskIndicator) {
+            baseClasses += ' border-l-4 border-indigo-500';
+        }
+        
+        // In-progress opacity
+        if (safeTask.status === 'in-progress') {
+            baseClasses += ' opacity-70';
+        }
+        
+        return baseClasses;
+    };
+
+    // Determine due date styling
+    const getDueDateClasses = () => {
+        if (isPastDueTask) {
+            return 'text-xs flex items-center text-red-600 dark:text-red-400 font-semibold';
+        }
+        return 'text-xs flex items-center text-gray-500';
     };
 
     // Safe event handlers that check for existence before calling
@@ -68,8 +108,9 @@ function TaskItem({
 
     return (
         <li 
-            className={`flex items-center bg-gray-100 dark:bg-gray-900/40 hover:bg-gray-200 dark:hover:bg-gray-900/60 p-2.5 rounded-md text-sm transition-colors group ${isTaskActive ? 'border-l-4 border-indigo-500' : ''} ${safeTask.status === 'in-progress' ? 'opacity-70' : ''}`}
+            className={getContainerClasses()}
             data-testid={`task-item-${safeTask.id}`}
+            aria-label={`${isPastDueTask && isNudgedTaskIndicator ? 'Past due and nudged task - urgent attention required' : isPastDueTask ? 'Past due task' : isNudgedTaskIndicator ? 'Nudged task - requires attention' : 'Task'}`}
         >
             <div className="relative mr-3 flex-shrink-0">
                 {isToggling ? (
@@ -99,9 +140,10 @@ function TaskItem({
                 <div className="flex items-center space-x-2 mt-1">
                     {safeTask.dueDate && (
                         <span 
-                            className={`text-xs flex items-center ${new Date() > new Date(safeTask.dueDate) ? 'text-red-500' : 'text-gray-500'}`}
+                            className={getDueDateClasses()}
                             data-testid={`task-due-date-${safeTask.id}`}
                         >
+                            {isPastDueTask && <AlertTriangle size={12} className="mr-1 text-red-600 dark:text-red-400"/>}
                             <Calendar size={12} className="mr-1"/>
                             {new Date(safeTask.dueDate).toLocaleDateString()}
                         </span>
@@ -137,6 +179,17 @@ function TaskItem({
                     className="ml-2 text-indigo-500 animate-pulse" 
                     data-testid={`task-active-timer-${safeTask.id}`}
                 />
+            )}
+            
+            {/* Nudged task notification badge */}
+            {isNudgedTaskIndicator && (
+                <div 
+                    className="absolute top-1 right-1 bg-orange-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs z-10"
+                    data-testid={`task-nudged-badge-${safeTask.id}`}
+                    aria-label="Nudged task indicator"
+                >
+                    <Bell size={10} />
+                </div>
             )}
         </li>
     );
