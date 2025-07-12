@@ -38,3 +38,39 @@ export const formatTime = (seconds) => {
     const secs = seconds % 60;
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 };
+
+/**
+ * Determines if a task's due date has passed the current date/time
+ * @param {Object} task - Task object containing dueDate property
+ * @returns {boolean} - true if task is past due, false otherwise
+ */
+export const isPastDue = (task) => {
+    // Handle null/undefined task object
+    if (!task || typeof task !== 'object') {
+        return false;
+    }
+
+    // Handle null/undefined dueDate
+    if (!task.dueDate) {
+        return false;
+    }
+
+    try {
+        // Convert dueDate to Date object for comparison
+        const dueDate = new Date(task.dueDate);
+        
+        // Check if dueDate is a valid date
+        if (isNaN(dueDate.getTime())) {
+            return false;
+        }
+
+        // Get current date/time for timezone-aware comparison
+        const currentDate = new Date();
+
+        // Return true if due date is before current date/time
+        return dueDate < currentDate;
+    } catch (error) {
+        // Handle any unexpected errors gracefully
+        return false;
+    }
+};
