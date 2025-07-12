@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import TaskItem from '../shared/TaskItem';
 
-function TasksView({ tasks, projects, onStartTask, activeSession }) {
+function TasksView({ tasks, projects, onStartTask, onToggle, onOpenDetail, activeSession }) {
     const [filters, setFilters] = useState({ project: 'All', tag: '', dueDate: 'All' });
     const projectMap = useMemo(() => projects.reduce((acc, p) => ({...acc, [p.id]: p.name}), {}), [projects]);
 
@@ -44,7 +44,7 @@ function TasksView({ tasks, projects, onStartTask, activeSession }) {
                 </div>
             </div>
             <ul className="space-y-3">
-                {filteredTasks.map(task => <TaskItem key={task.id} task={task} onStartTask={onStartTask} isTaskActive={activeSession?.taskId === task.id}/>)}
+                {filteredTasks.map(task => <TaskItem key={task.id} task={task} onToggle={onToggle} onOpenDetail={onOpenDetail} onStartTask={onStartTask} isTaskActive={activeSession?.taskId === task.id}/>)}
             </ul>
         </div>
     );

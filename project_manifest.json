@@ -1,0 +1,270 @@
+{
+  "project": {
+    "name": "project-nudger",
+    "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications",
+    "version": "0.0.0",
+    "generated": "2025-07-07T21:45:00.000Z",
+    "last_commit": "47ce6b55da406c71d3d97d414b12e6ce7b9742f3",
+    "last_commit_date": "2025-07-01T19:18:13-07:00",
+    "last_commit_message": "Add BLE PAUSE sync and ensure full two-way M5Stack Dial communication"
+  },
+  "technology_stack": {
+    "frontend": "React 19.1.0",
+    "build_tool": "Vite 6.3.5",
+    "database": "Firebase Firestore",
+    "styling": "Tailwind CSS",
+    "icons": "Lucide React",
+    "hardware": "Web Bluetooth API",
+    "ai_providers": ["OpenAI", "Google Gemini", "Anthropic Claude"],
+    "external_sync": "Obsidian Local REST API"
+  },
+  "directory_structure": {
+    "root_config": {
+      "README.md": "Project overview and setup instructions",
+      "package.json": "Dependencies and npm scripts",
+      "package-lock.json": "Locked dependency versions",
+      "index.html": "Main HTML entry point",
+      "netlify.toml": "Netlify deployment configuration",
+      "eslint.config.js": "ESLint configuration for code quality",
+      "tailwind.config.js": "Tailwind CSS configuration",
+      "postcss.config.js": "PostCSS configuration",
+      "vite.config.js": "Vite build tool configuration",
+      ".env.example": "Environment variables template",
+      ".env.local": "Local environment variables (not in git)",
+      ".gitignore": "Git ignore rules"
+    },
+    "src": {
+      "main.jsx": "Application entry point",
+      "App.jsx": "Main application component with state management",
+      "index.css": "Global styles and Tailwind imports",
+      "assets": {
+        "react.svg": "React logo asset"
+      },
+      "components": {
+        "layout": {
+          "NudgerLogo.jsx": "Application logo component",
+          "TopNavBar.jsx": "Main navigation with BLE and sync controls"
+        },
+        "shared": {
+          "AINudgeDisplay.jsx": "AI nudge recommendation modal",
+          "ObsidianSyncProgressModal.jsx": "Obsidian sync status modal",
+          "ObsidianSyncStatus.jsx": "Sync status indicator",
+          "ProjectFilters.jsx": "Project filtering controls",
+          "SessionCompletionModal.jsx": "Session end modal",
+          "TaskItem.jsx": "Individual task component"
+        },
+        "views": {
+          "ArchivedProjectsView.jsx": "Archived projects interface",
+          "DashboardView": {
+            "index.jsx": "Main dashboard layout",
+            "ActiveTimerWidget.jsx": "Basic timer widget",
+            "EnhancedTimerWidget.jsx": "Advanced timer with session controls",
+            "NudgeStatus.jsx": "Nudge system status display",
+            "RecommendationEngine.jsx": "Task recommendation logic"
+          },
+          "ProjectView.jsx": "Individual project details",
+          "ProjectsView.jsx": "All projects overview",
+          "SettingsView.jsx": "Application settings",
+          "TasksView.jsx": "All tasks list view",
+          "TrackingView.jsx": "Active session tracking"
+        }
+      },
+      "config": {
+        "constants.js": "App constants (nudge config, timer settings)",
+        "firebase.js": "Firebase configuration and initialization",
+        "obsidian.js": "Obsidian integration configuration"
+      },
+      "hooks": {
+        "useM5Dial.js": "React hook for M5Stack Dial BLE integration",
+        "useObsidianSync.js": "React hook for Obsidian synchronization"
+      },
+      "services": {
+        "M5DialBLEService.js": "Web Bluetooth service for M5Stack Dial"
+      },
+      "utils": {
+        "aiNudgeService.js": "AI-powered nudging with multi-LLM support",
+        "dummyData.js": "Development dummy data generation",
+        "helpers.js": "Utility functions (time, colors, formatting)",
+        "markdownTemplates.js": "Obsidian markdown template generation",
+        "obsidianApi.js": "Obsidian Local REST API client"
+      }
+    },
+    "public": {
+      "vite.svg": "Vite logo",
+      "obsidian-dark.svg": "Obsidian dark mode icon",
+      "obsidian-light.svg": "Obsidian light mode icon",
+      "obsidian.svg": "Obsidian default icon",
+      "images": {
+        "nudge_simp.svg": "Simplified nudge icon",
+        "nudger_logo_text.png": "Logo with text",
+        "nudger_simple_pips.png": "Simple pips logo variant"
+      }
+    },
+    "docs": {
+      "ROADMAP.md": "Product roadmap and future features",
+      "prd": {
+        "m5dial_integration_prd.md": "M5Stack Dial integration requirements",
+        "obsidian_sync_plan.md": "Obsidian sync implementation plan"
+      },
+      "archive": {
+        "ai": {
+          "AGENTS.md": "AI agent documentation",
+          "CLAUDE.md": "Claude Code integration guide",
+          "CURRENT_API_CALL_EXAMPLE.md": "API call examples",
+          "LLM_TESTING_INSTRUCTIONS.md": "LLM testing procedures"
+        },
+        "architecture": {
+          "api_strat.md": "API strategy documentation",
+          "refactor_guide.md": "Code refactoring guidelines",
+          "architecture-docs": {
+            "analysis-prompt.md": "Architecture analysis prompts",
+            "commands.json": "Command specifications",
+            "obsidian_api_endpoints.md": "Obsidian API documentation",
+            "openapi.yaml": "OpenAPI specification",
+            "option1-file-based-json.md": "File-based sync option",
+            "option2-direct-firebase.md": "Direct Firebase option",
+            "option3a-livesync-virtual-device.md": "LiveSync option A",
+            "option3b-direct-couchdb.md": "CouchDB option"
+          }
+        },
+        "debug": {
+          "m5dial_ble_debug.md": "M5Stack Dial BLE debugging guide"
+        },
+        "reference": {
+          "obsidian_rest_api.txt": "Obsidian REST API reference"
+        }
+      }
+    },
+    "tests": {
+      "markdownTemplates.spec.js": "Tests for markdown template generation"
+    },
+    "backups": {
+      "backup_codebase_manifest.json": "Generated codebase analysis backup",
+      "nudger-export-2025-06-19.json": "User data export backup"
+    },
+    "development_tools": {
+      ".claude": {
+        "commands": {
+          "generate_directory_manifest.md": "Directory manifest generation command",
+          "generate_json_manifest.md": "JSON manifest generation command"
+        },
+        "settings.local.json": "Claude Code permissions and settings"
+      },
+      ".taskmaster": {
+        "config.json": "AI models and settings",
+        "state.json": "Task management state",
+        "docs": {
+          "prd.txt": "Product requirements document"
+        },
+        "templates": {
+          "example_prd.txt": "Example PRD template"
+        }
+      },
+      ".cursor": {
+        "mcp.json": "MCP server configuration",
+        "rules": "Cursor-specific development rules"
+      },
+      ".windsurf": {
+        "mcp.json": "MCP server configuration", 
+        "rules": "Windsurf-specific development rules"
+      },
+      ".vscode": {
+        "mcp.json": "MCP server configuration"
+      },
+      ".roo": {
+        "mcp.json": "MCP server configuration",
+        "rules": "Roo-specific development rules",
+        ".roomodes": "Roo operation modes"
+      },
+      ".github": {
+        "instructions": "Development workflow instructions"
+      },
+      ".clinerules": "Cline AI assistant rules",
+      ".trae": "Trae AI assistant configuration"
+    }
+  },
+  "key_features": {
+    "core_functionality": [
+      "Task and project management with real-time Firebase sync",
+      "AI-powered nudging with multi-LLM support (OpenAI, Gemini, Anthropic)",
+      "Pomodoro timer with session tracking",
+      "M5Stack Dial BLE hardware integration",
+      "Obsidian note synchronization",
+      "Dark/light theme support"
+    ],
+    "ai_integration": {
+      "providers": ["OpenAI GPT-4o-mini", "Google Gemini 2.0 Flash", "Anthropic Claude Haiku"],
+      "features": ["Two-call AI strategy", "Robot personality generation", "TTS integration", "ntfy notifications"],
+      "robot_characters": ["R2-D2", "C-3PO", "HAL 9000", "Data", "Terminator", "WALL-E", "Bender", "Optimus Prime", "Johnny 5", "Marvin"]
+    },
+    "hardware_integration": {
+      "device": "M5Stack Dial",
+      "connection": "Web Bluetooth API",
+      "features": ["Bidirectional session sync", "Hardware timer controls", "Connection status display"],
+      "current_status": "Active development - basic BLE communication implemented"
+    },
+    "external_integrations": [
+      "Firebase Firestore for data persistence",
+      "Obsidian Local REST API for note sync",
+      "ntfy.sh for external notifications",
+      "Web Speech API for text-to-speech"
+    ]
+  },
+  "development_status": {
+    "completed": [
+      "Core task and project management",
+      "Firebase real-time synchronization", 
+      "AI-powered nudging system",
+      "Basic M5Stack Dial BLE integration",
+      "Obsidian synchronization",
+      "Pomodoro timer functionality"
+    ],
+    "in_progress": [
+      "Enhanced M5 Dial session synchronization",
+      "Bidirectional hardware communication",
+      "Hardware mode switching"
+    ],
+    "planned": [
+      "Multiple hardware timer modes",
+      "Hardware-delivered AI nudges",
+      "Battery level monitoring",
+      "Advanced offline operation"
+    ]
+  },
+  "build_configuration": {
+    "scripts": {
+      "dev": "vite --force",
+      "build": "vite build", 
+      "preview": "vite preview",
+      "lint": "eslint ."
+    },
+    "environment_variables": [
+      "VITE_FIREBASE_API_KEY",
+      "VITE_FIREBASE_AUTH_DOMAIN",
+      "VITE_PROJECT_ID",
+      "VITE_STORAGE_BUCKET", 
+      "VITE_MESSAGING_SENDER_ID",
+      "VITE_APP_ID"
+    ],
+    "requirements": [
+      "Node.js with npm",
+      "Firebase project with Firestore",
+      "HTTPS or localhost for Web Bluetooth",
+      "Chrome-based browser for BLE support"
+    ]
+  },
+  "architecture_patterns": {
+    "state_management": "React hooks with Firebase real-time subscriptions",
+    "component_architecture": "Functional components with view-based organization",
+    "integration_patterns": "Service classes with custom hooks for external integrations",
+    "communication": "Event-driven for hardware, Promise-based for APIs"
+  },
+  "file_count": {
+    "total_files": 95,
+    "source_files": 31,
+    "config_files": 12,
+    "documentation_files": 23,
+    "asset_files": 7,
+    "development_tool_files": 22
+  }
+}

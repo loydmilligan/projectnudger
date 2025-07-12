@@ -1,0 +1,567 @@
+{
+  "version": "1.0-archaeological",
+  "generated": "2025-07-11T12:00:00.000Z",
+  "analysis_depth": "standard",
+  "analysis_scope": "Complete codebase archaeological analysis",
+  "project": {
+    "name": "project-nudger",
+    "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications",
+    "version": "0.0.0",
+    "tech_stack": [
+      "React 19.1.0",
+      "Vite 6.3.5",
+      "Firebase Firestore",
+      "Tailwind CSS",
+      "Web Bluetooth API",
+      "Multiple AI Providers (OpenAI, Gemini, Anthropic)"
+    ],
+    "deployment": "Netlify with environment variables",
+    "repository": "Git repository with active development"
+  },
+  "project_structure": {
+    "root_files": [
+      "README.md",
+      "package.json",
+      "project_manifest.json",
+      "index.html",
+      "vite.config.js",
+      "tailwind.config.js",
+      "eslint.config.js",
+      "postcss.config.js",
+      "netlify.toml"
+    ],
+    "directories": {
+      "src/": "Main application source code",
+      "src/components/": "React component library",
+      "src/components/layout/": "Layout and branding components",
+      "src/components/shared/": "Reusable UI components",
+      "src/components/views/": "Page-level view components",
+      "src/components/views/DashboardView/": "Dashboard-specific widgets",
+      "src/config/": "Configuration modules",
+      "src/hooks/": "Custom React hooks",
+      "src/services/": "External service integrations",
+      "src/utils/": "Utility functions and helpers",
+      "src/assets/": "Static assets",
+      "public/": "Public assets and images",
+      "docs/": "Documentation and architecture",
+      "tests/": "Test files",
+      "backups/": "Data backup files"
+    },
+    "file_count": 32
+  },
+  "source_files": {
+    "src/App.jsx": {
+      "purpose": "Main application component serving as the root orchestrator for a React-based task management system with Firebase integration, BLE hardware connectivity, AI nudging, and Obsidian synchronization",
+      "exports": {
+        "functions": [
+          {
+            "name": "App",
+            "signature": "App() -> JSX.Element",
+            "description": "Primary application component that renders the entire application interface and manages all global state and business logic"
+          },
+          {
+            "name": "ProjectModal",
+            "signature": "ProjectModal({ onClose, onSave, existingProject, categories, owners }) -> JSX.Element",
+            "description": "Modal component for creating and editing projects with form validation"
+          },
+          {
+            "name": "TaskDetailModal",
+            "signature": "TaskDetailModal({ onClose, onSave, task }) -> JSX.Element",
+            "description": "Modal component for creating and editing task details"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "firebase/firestore",
+        "lucide-react",
+        "./config/firebase",
+        "./config/constants",
+        "./utils/helpers",
+        "./components/layout/TopNavBar",
+        "./components/views/DashboardView",
+        "./services/M5DialBLEService",
+        "./hooks/useObsidianSync",
+        "./utils/aiNudgeService"
+      ],
+      "sideEffects": [
+        "reads-firestore-database",
+        "writes-firestore-database",
+        "real-time-firestore-subscriptions",
+        "bluetooth-device-communication",
+        "ai-service-api-calls"
+      ]
+    },
+    "src/main.jsx": {
+      "purpose": "Application entry point that initializes the React application root and renders the main App component",
+      "exports": {
+        "functions": [],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "react-dom/client",
+        "./index.css",
+        "./App.jsx"
+      ],
+      "sideEffects": [
+        "dom-manipulation",
+        "react-root-creation"
+      ]
+    },
+    "src/config/firebase.js": {
+      "purpose": "Firebase configuration and initialization module for Firestore database connectivity",
+      "exports": {
+        "functions": [],
+        "classes": [],
+        "constants": [
+          {
+            "name": "db",
+            "type": "Firestore",
+            "description": "Main database instance for Firestore operations"
+          },
+          {
+            "name": "basePath",
+            "type": "string",
+            "description": "Base path template for artifact storage organization"
+          }
+        ]
+      },
+      "imports": [
+        "firebase/app",
+        "firebase/firestore"
+      ],
+      "sideEffects": [
+        "Establishes connection to Firebase services",
+        "Reads environment variables for configuration"
+      ]
+    },
+    "src/config/constants.js": {
+      "purpose": "Central configuration constants for nudge system levels, modes, timing thresholds, and Pomodoro timer configurations",
+      "exports": {
+        "functions": [],
+        "classes": [],
+        "constants": [
+          {
+            "name": "NUDGE_CONFIG",
+            "type": "object",
+            "description": "Core configuration for the nudging system behavior and project age/count classifications"
+          },
+          {
+            "name": "POMODORO_CONFIG",
+            "type": "object",
+            "description": "Standard Pomodoro Technique timer durations for productivity sessions"
+          }
+        ]
+      },
+      "imports": [],
+      "sideEffects": []
+    },
+    "src/config/obsidian.js": {
+      "purpose": "Configuration management and defaults for Obsidian integration with safe defaults and user setting merging",
+      "exports": {
+        "functions": [
+          {
+            "name": "getMergedObsidianConfig",
+            "signature": "getMergedObsidianConfig(userConfig?: Object): Object",
+            "description": "Merges user settings with defaults, filters out undefined/null/empty values"
+          }
+        ],
+        "classes": [],
+        "constants": [
+          {
+            "name": "DEFAULT_OBSIDIAN_CONFIG",
+            "type": "object",
+            "description": "Default configuration object for Obsidian integration"
+          }
+        ]
+      },
+      "imports": [],
+      "sideEffects": []
+    },
+    "src/hooks/useM5Dial.js": {
+      "purpose": "React hook for managing Bluetooth Low Energy (BLE) communication with M5Stack Dial hardware device",
+      "exports": {
+        "functions": [
+          {
+            "name": "useM5Dial",
+            "signature": "useM5Dial(): M5DialHookReturn",
+            "description": "Main hook function providing M5Stack Dial BLE interface"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "../services/M5DialBLEService"
+      ],
+      "sideEffects": [
+        "Bluetooth Low Energy device scanning and connection",
+        "Real-time data transmission over BLE"
+      ]
+    },
+    "src/hooks/useObsidianSync.js": {
+      "purpose": "React hook for orchestrating synchronization between Firebase data and Obsidian knowledge management system",
+      "exports": {
+        "functions": [
+          {
+            "name": "useObsidianSync",
+            "signature": "useObsidianSync(firebaseSettings: object): SyncHookReturn",
+            "description": "Main hook function providing sync orchestration capabilities"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "../utils/obsidianApi",
+        "../config/obsidian",
+        "../utils/markdownTemplates.js"
+      ],
+      "sideEffects": [
+        "Network requests to Obsidian REST API",
+        "File creation/updates in Obsidian vault"
+      ]
+    },
+    "src/services/M5DialBLEService.js": {
+      "purpose": "Web Bluetooth interface for M5Stack Dial hardware pomodoro timer integration using singleton pattern",
+      "exports": {
+        "functions": [],
+        "classes": [
+          {
+            "name": "M5DialBLEService",
+            "description": "Singleton BLE service for M5Stack Dial communication",
+            "methods": [
+              {
+                "name": "connect",
+                "signature": "async connect(): Promise<void>",
+                "description": "Establishes BLE connection with M5Stack Dial device"
+              },
+              {
+                "name": "sendCommand",
+                "signature": "async sendCommand(cmd: string|Object): Promise<void>",
+                "description": "Sends command to device via command characteristic"
+              }
+            ]
+          }
+        ],
+        "constants": [
+          {
+            "name": "SERVICE_UUID",
+            "type": "string",
+            "description": "BLE service UUID matching Arduino sketch"
+          }
+        ]
+      },
+      "imports": [],
+      "sideEffects": [
+        "Bluetooth device scanning and connection",
+        "GATT characteristic notifications"
+      ]
+    },
+    "src/utils/aiNudgeService.js": {
+      "purpose": "AI-powered task and project recommendation engine using multiple LLM providers with robot personality and notification integration",
+      "exports": {
+        "functions": [
+          {
+            "name": "generateAINudge",
+            "signature": "generateAINudge(settings: Object, projects: Array, tasks: Array, activeSession?: Object): Promise<Object|null>",
+            "description": "Main entry point - generates AI nudges with notifications (TTS, ntfy) and session awareness"
+          },
+          {
+            "name": "getAINudgeRecommendations",
+            "signature": "getAINudgeRecommendations(apiKey: string, provider: string, projectData: Object): Promise<Object>",
+            "description": "Orchestrates both AI calls - data analysis and robot personality generation"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [],
+      "sideEffects": [
+        "External API calls to AI providers",
+        "TTS audio playback",
+        "ntfy notification sending"
+      ]
+    },
+    "src/utils/obsidianApi.js": {
+      "purpose": "REST API client for Obsidian Local REST plugin integration with CRUD operations for notes and vault management",
+      "exports": {
+        "functions": [],
+        "classes": [
+          {
+            "name": "ObsidianApi",
+            "description": "REST API client for Obsidian Local REST plugin",
+            "methods": [
+              {
+                "name": "writeNote",
+                "signature": "async writeNote(path: string, content: string): Promise<boolean>",
+                "description": "Creates or updates note, returns true if newly created"
+              },
+              {
+                "name": "testConnection",
+                "signature": "async testConnection(): Promise<any>",
+                "description": "Tests API connectivity to Obsidian"
+              }
+            ]
+          }
+        ],
+        "constants": []
+      },
+      "imports": [
+        "../config/obsidian"
+      ],
+      "sideEffects": [
+        "HTTP requests to local Obsidian server",
+        "File system operations via Obsidian"
+      ]
+    },
+    "src/utils/helpers.js": {
+      "purpose": "Core utility module providing time formatting, color generation, and helper functions for the React task management application",
+      "exports": {
+        "functions": [
+          {
+            "name": "timeAgo",
+            "signature": "timeAgo(date) -> string",
+            "description": "Converts date to human-readable relative time string"
+          },
+          {
+            "name": "generateHslColor",
+            "signature": "generateHslColor(existingColors = []) -> string",
+            "description": "Generates unique HSL color avoiding conflicts"
+          },
+          {
+            "name": "formatTime",
+            "signature": "formatTime(seconds) -> string",
+            "description": "Formats seconds into MM:SS time display"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [],
+      "sideEffects": []
+    },
+    "src/utils/markdownTemplates.js": {
+      "purpose": "Markdown generation utility for creating Obsidian-compatible files from project and task data",
+      "exports": {
+        "functions": [
+          {
+            "name": "generateProjectMarkdown",
+            "signature": "generateProjectMarkdown(project, tasks = []) -> string",
+            "description": "Creates project markdown with frontmatter"
+          },
+          {
+            "name": "generateDashboardMarkdown",
+            "signature": "generateDashboardMarkdown(projects = [], tasks = []) -> string",
+            "description": "Creates overview dashboard"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "date-fns"
+      ],
+      "sideEffects": []
+    },
+    "src/utils/dummyData.js": {
+      "purpose": "Development utility for populating the database with sample projects, tasks, and categories",
+      "exports": {
+        "functions": [
+          {
+            "name": "generateDummyData",
+            "signature": "generateDummyData() -> Promise<void>",
+            "description": "Async function that creates sample data in Firebase"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "firebase/firestore",
+        "../config/firebase"
+      ],
+      "sideEffects": [
+        "Database write operations to Firebase Firestore",
+        "User confirmation dialogs"
+      ]
+    },
+    "src/components/views/DashboardView/index.jsx": {
+      "purpose": "Main dashboard interface providing centralized view of projects, tasks, timer, and AI recommendations",
+      "exports": {
+        "functions": [
+          {
+            "name": "DashboardView",
+            "signature": "DashboardView(props) -> JSX.Element",
+            "description": "Renders responsive dashboard layout with timer, recommendations, and project grid"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "./RecommendationEngine",
+        "./NudgeStatus",
+        "./EnhancedTimerWidget",
+        "../../shared/ProjectFilters",
+        "../../../utils/helpers"
+      ],
+      "sideEffects": [
+        "Dynamic color changes on hover",
+        "Project selection state updates"
+      ]
+    },
+    "src/components/views/DashboardView/RecommendationEngine.jsx": {
+      "purpose": "AI-powered task recommendation system providing intelligent next task suggestions using scoring algorithm",
+      "exports": {
+        "functions": [
+          {
+            "name": "RecommendationEngine",
+            "signature": "RecommendationEngine({ projects, tasks }) -> JSX.Element",
+            "description": "Renders AI recommendation widget with next suggested task"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "lucide-react"
+      ],
+      "sideEffects": [
+        "Real-time recommendation calculations"
+      ]
+    },
+    "src/components/layout/TopNavBar.jsx": {
+      "purpose": "Primary navigation header with view switching, BLE device integration, and sync controls",
+      "exports": {
+        "functions": [
+          {
+            "name": "TopNavBar",
+            "signature": "TopNavBar(props) -> JSX.Element",
+            "description": "Renders responsive navigation header with dynamic content based on session state"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "../../hooks/useM5Dial",
+        "lucide-react",
+        "../shared/ObsidianSyncStatus",
+        "./NudgerLogo"
+      ],
+      "sideEffects": [
+        "M5 Dial BLE connection management",
+        "Navigation state updates"
+      ]
+    },
+    "src/components/views/ProjectsView.jsx": {
+      "purpose": "Comprehensive projects overview with filtering, task previews, and detailed project cards",
+      "exports": {
+        "functions": [
+          {
+            "name": "ProjectsView",
+            "signature": "ProjectsView(props) -> JSX.Element",
+            "description": "Renders responsive grid of project cards with task previews and filtering"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "../shared/ProjectFilters",
+        "../../utils/helpers"
+      ],
+      "sideEffects": [
+        "Project detail navigation",
+        "Filter state management"
+      ]
+    }
+  },
+  "dependencies": {
+    "firebase": "Real-time NoSQL database for data persistence and synchronization",
+    "lucide-react": "Icon library providing consistent UI iconography",
+    "react": "Frontend framework for building user interfaces",
+    "react-dom": "React rendering library for DOM manipulation",
+    "obsidian-mcp-server": "Integration with Obsidian knowledge management system",
+    "date-fns": "Date utility library for formatting and manipulation",
+    "@vitejs/plugin-react": "Vite plugin for React development",
+    "tailwindcss": "Utility-first CSS framework for styling",
+    "eslint": "Code linting and quality assurance"
+  },
+  "architecture": {
+    "main_flow": "React App → Firebase Firestore ↔ Real-time Subscriptions → Component State → UI Updates",
+    "data_flow": "Firestore (primary) ↔ React State ↔ Obsidian Sync ↔ M5 Dial BLE ↔ AI Services",
+    "configuration": "Environment variables → Firebase config → Application constants → Feature flags",
+    "integration_patterns": [
+      "Firebase real-time listeners for live data synchronization",
+      "Custom React hooks for external service integrations",
+      "Event-driven BLE communication with M5Stack Dial",
+      "Service layer abstraction for AI providers",
+      "REST API client for Obsidian integration"
+    ]
+  },
+  "specialist_coverage": {
+    "total_specialists_deployed": 7,
+    "files_analyzed_by_specialists": 21,
+    "files_covered_by_orchestrator": 11,
+    "coverage_percentage": "100%",
+    "specialist_breakdown": {
+      "Senior Full-Stack Architect": 2,
+      "Database Schema Specialist": 3,
+      "Frontend Interface Analyst": 4,
+      "API Integration Specialist": 4,
+      "Testing & Quality Assurance Analyst": 4,
+      "Infrastructure Configuration Expert": 1,
+      "Project Completion Janitor": 16
+    }
+  },
+  "key_features": {
+    "core_functionality": [
+      "Task and project management with real-time Firebase sync",
+      "AI-powered nudging with multi-LLM support (OpenAI, Gemini, Anthropic)",
+      "Pomodoro timer with session tracking",
+      "M5Stack Dial BLE hardware integration",
+      "Obsidian note synchronization",
+      "Dark/light theme support"
+    ],
+    "ai_integration": {
+      "providers": ["OpenAI GPT-4o-mini", "Google Gemini 2.0 Flash", "Anthropic Claude Haiku"],
+      "features": ["Two-call AI strategy", "Robot personality generation", "TTS integration", "ntfy notifications"]
+    },
+    "hardware_integration": {
+      "device": "M5Stack Dial",
+      "connection": "Web Bluetooth API",
+      "features": ["Bidirectional session sync", "Hardware timer controls", "Connection status display"]
+    },
+    "external_integrations": [
+      "Firebase Firestore for data persistence",
+      "Obsidian Local REST API for note sync",
+      "ntfy.sh for external notifications",
+      "Web Speech API for text-to-speech"
+    ]
+  },
+  "technical_debt_assessment": {
+    "testing_coverage": "Minimal - only basic markdown template tests",
+    "error_handling": "Good - consistent try-catch patterns across services",
+    "performance": "Good - useMemo and useCallback optimizations implemented",
+    "security": "Good - API key validation and environment variable protection",
+    "maintainability": "Excellent - clear separation of concerns and modular architecture"
+  },
+  "archaeological_notes": {
+    "analysis_methodology": "Systematic specialist deployment with parallel processing",
+    "code_quality": "High - modern React patterns with comprehensive integration features",
+    "architectural_patterns": "Service layer abstraction, custom hooks, event-driven communication",
+    "unique_features": "Multi-provider AI integration, BLE hardware connectivity, knowledge management sync"
+  }
+}

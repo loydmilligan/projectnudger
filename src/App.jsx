@@ -376,6 +376,51 @@ export default function App() {
         
         console.log('🍅 Queued task for after rest session:', bestTask.title);
     };
+
+    // Universal task action handlers for consistent behavior across all views
+    const handleToggleTask = async (task) => {
+        try {
+            const isCompleting = !task.isComplete;
+            await updateDoc(doc(db, basePath, 'tasks', task.id), { 
+                isComplete: isCompleting, 
+                completedAt: isCompleting ? new Date() : null,
+                status: 'idle'
+            });
+            if (isCompleting) {
+                const settingsRef = doc(db, basePath, 'settings', 'config');
+                await setDoc(settingsRef, { totalTasksCompleted: increment(1) }, {merge: true});
+                // Send nudge notification using the same logic as ProjectView
+                const { THRESHOLDS, LEVELS } = NUDGE_CONFIG;
+                const totalCompleted = settings.totalTasksCompleted || 0;
+                let shouldNudge = false;
+                let message = `Remember what's important. Some of your projects are getting old.`;
+                if (nudgeState.level === LEVELS.LAZY && (totalCompleted + 1) % THRESHOLDS.TASK_INTERVAL_LEVEL_3 === 0) { 
+                    shouldNudge = true; 
+                    message = `Hey look something shiny! Don't get distracted from your older, important projects.`; 
+                }
+                else if (nudgeState.level === LEVELS.STAY_ON_TARGET && (totalCompleted + 1) % THRESHOLDS.TASK_INTERVAL_LEVEL_2 === 0) { 
+                    shouldNudge = true; 
+                    message = `Stay on target. You've got some old projects that need attention.`; 
+                }
+                else if (nudgeState.level === LEVELS.REMEMBER && (totalCompleted + 1) % THRESHOLDS.TASK_INTERVAL_LEVEL_1 === 0) { 
+                    shouldNudge = true; 
+                }
+                if (shouldNudge) { 
+                    if (settings.ntfyUrl) fetch(settings.ntfyUrl, { method: 'POST', body: message, headers: { 'Title': 'Project Nudger Alert' } }); 
+                    if ('Notification' in window && Notification.permission === 'granted') new Notification('Project Nudger', { body: message }); 
+                    if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance(message)); 
+                }
+            }
+        } catch (error) {
+            console.error("Error toggling task:", error);
+            alert("Failed to update task. Please try again.");
+        }
+    };
+
+    const handleOpenTaskDetail = (task) => {
+        setEditingTask(task);
+        setIsTaskDetailModalOpen(true);
+    };
     
     const handleExportData = async () => {
         try {
@@ -499,7 +544,7 @@ export default function App() {
                 onSessionComplete={handleSessionComplete}
             />;
             case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} />;
-            case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} activeSession={activeSession}/>;
+            case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} onToggle={handleToggleTask} onOpenDetail={handleOpenTaskDetail} activeSession={activeSession}/>;
             case 'settings': return <SettingsView 
                 currentSettings={settings} 
                 onExportData={handleExportData} 
