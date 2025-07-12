@@ -1,0 +1,196 @@
+{
+  "task_id": "Task-1.4",
+  "task_description": "Test task interactions across all contexts - Test task completion in Dashboard, Projects, and Tasks views; Test timer start functionality in all locations; Test edit functionality from all task display contexts",
+  "current_manifest": {
+    "version": "1.0-archaeological",
+    "source_files": {
+      "src/components/shared/TaskItem.jsx": {
+        "purpose": "Reusable task component with defensive prop handling and three main interactions",
+        "exports": {
+          "functions": [
+            {
+              "name": "TaskItem",
+              "signature": "TaskItem({ task, onToggle, onOpenDetail, onStartTask, isTaskActive }) -> JSX.Element",
+              "description": "Task component with completion checkbox, edit click, and timer start button"
+            }
+          ]
+        },
+        "current_interactions": {
+          "onToggle": "Task completion handler - calls handleCompleteTask in App.jsx",
+          "onStartTask": "Timer start handler - calls handleStartTask in App.jsx", 
+          "onOpenDetail": "Edit handler - calls handleEditTask in App.jsx"
+        }
+      },
+      "src/components/views/TasksView.jsx": {
+        "purpose": "Master task list view with filtering",
+        "task_interaction_status": "FULLY_FUNCTIONAL - TaskItem with all handlers passed correctly"
+      },
+      "src/components/views/ProjectView.jsx": {
+        "purpose": "Single project detail view with task list",
+        "task_interaction_status": "FULLY_FUNCTIONAL - TaskItem with all handlers passed correctly"
+      },
+      "src/components/views/DashboardView/index.jsx": {
+        "purpose": "Dashboard showing project cards and widgets",
+        "task_interaction_status": "NO_DIRECT_TASKS - Only shows project cards, no TaskItem components"
+      },
+      "src/components/views/ProjectsView.jsx": {
+        "purpose": "Projects overview with task previews",
+        "task_interaction_status": "READ_ONLY_PREVIEWS - Shows task titles as text, no TaskItem components"
+      },
+      "src/App.jsx": {
+        "purpose": "Main app with task handlers",
+        "task_handlers": {
+          "handleCompleteTask": "Updates Firebase, increments counters, triggers nudges",
+          "handleStartTask": "Creates session, updates task status, sends BLE commands",
+          "handleEditTask": "Opens task detail modal"
+        }
+      }
+    }
+  },
+  "expected_manifest": {
+    "version": "1.0-tested",
+    "source_files": {
+      "tests/task-interactions-test.spec.js": {
+        "purpose": "Comprehensive test suite for task interactions across all views",
+        "exports": {
+          "test_suites": [
+            "TasksView interaction tests",
+            "ProjectView interaction tests", 
+            "TaskItem component tests",
+            "Task handler integration tests"
+          ]
+        }
+      },
+      "src/components/shared/TaskItem.jsx": {
+        "purpose": "Enhanced with better error handling and testing hooks",
+        "enhancements": [
+          "Add data-testid attributes for testing",
+          "Enhanced error boundary handling",
+          "Better console warnings for missing props"
+        ]
+      }
+    },
+    "testing_coverage": {
+      "unit_tests": "TaskItem component prop handling and event firing",
+      "integration_tests": "Handler functions in App.jsx with mocked Firebase",
+      "end_to_end_tests": "Cross-view task interactions with real data flow"
+    }
+  },
+  "implementation_notes": {
+    "approach": [
+      "1. Create comprehensive test suite covering all task interaction scenarios",
+      "2. Add testing hooks (data-testid) to TaskItem component without breaking functionality",
+      "3. Test task completion, timer start, and edit across all views that support them",
+      "4. Verify that views without task interactions (Dashboard, ProjectsView previews) behave correctly",
+      "5. Test error scenarios like missing handlers or malformed tasks",
+      "6. Document current interaction capabilities and limitations"
+    ],
+    "files_to_create": [
+      {
+        "file": "tests/task-interactions-test.spec.js",
+        "purpose": "Main test suite for comprehensive task interaction testing",
+        "key_exports": ["TasksView tests", "ProjectView tests", "TaskItem tests", "Error handling tests"]
+      },
+      {
+        "file": "tests/test-utils.js", 
+        "purpose": "Helper utilities for testing React components with Firebase mocks",
+        "key_exports": ["renderWithProviders", "mockFirebase", "createMockTask", "createMockProject"]
+      }
+    ],
+    "files_to_modify": [
+      {
+        "file": "src/components/shared/TaskItem.jsx",
+        "changes": "Add data-testid attributes for testing, enhance development warnings"
+      }
+    ],
+    "dependencies": [
+      "@testing-library/react",
+      "@testing-library/jest-dom", 
+      "@testing-library/user-event",
+      "vitest"
+    ],
+    "integration_points": [
+      "TaskItem component prop validation and event handling",
+      "App.jsx task handler functions (handleCompleteTask, handleStartTask, handleEditTask)",
+      "Firebase Firestore mocking for handler testing",
+      "TasksView and ProjectView component prop passing",
+      "BLE service integration in handleStartTask"
+    ],
+    "testing_approach": [
+      "Use React Testing Library for component testing",
+      "Mock Firebase Firestore operations",
+      "Mock BLE service for timer start tests", 
+      "Test both happy path and error scenarios",
+      "Verify console warnings in development mode",
+      "Test accessibility and keyboard interactions"
+    ],
+    "test_scenarios": {
+      "TasksView": [
+        "Task completion checkbox functionality",
+        "Timer start button interaction",
+        "Edit task by clicking on task content",
+        "Proper handler prop passing to TaskItem",
+        "Filtered task list interactions"
+      ],
+      "ProjectView": [
+        "Task completion in project context",
+        "Timer start from project task list", 
+        "Edit task from project view",
+        "Quick task creation functionality"
+      ],
+      "TaskItem": [
+        "Defensive prop handling with missing handlers",
+        "Proper event propagation and stopping",
+        "Visual state changes (loading, disabled states)",
+        "Development warning console output",
+        "Accessibility features"
+      ],
+      "App.jsx_handlers": [
+        "handleCompleteTask Firebase operations",
+        "handleStartTask session creation and BLE integration",
+        "handleEditTask modal opening",
+        "Error handling for failed operations"
+      ],
+      "Cross_view_consistency": [
+        "Same task behaves identically across TasksView and ProjectView",
+        "Active session state properly reflected in all views",
+        "Task status updates propagate correctly"
+      ]
+    }
+  },
+  "acceptance_criteria": [
+    "All task interactions (complete, start timer, edit) work correctly in TasksView",
+    "All task interactions work correctly in ProjectView",
+    "TaskItem component handles missing props gracefully with appropriate warnings",
+    "Task handlers in App.jsx properly update Firebase and trigger side effects",
+    "BLE integration works correctly when starting tasks",
+    "Error scenarios are handled gracefully with user feedback",
+    "Active session state is properly reflected across all views",
+    "Console warnings appear in development mode for missing critical props",
+    "Test suite achieves >90% coverage of task interaction scenarios",
+    "No regressions in existing functionality"
+  ],
+  "estimated_complexity": "Medium",
+  "prerequisites": [],
+  "testing_strategy": {
+    "unit_tests": "Focus on TaskItem component isolation and prop handling",
+    "integration_tests": "Test task handlers with mocked Firebase and BLE services",
+    "end_to_end_tests": "Cross-view task interaction workflows",
+    "error_handling_tests": "Missing props, failed Firebase operations, BLE connection issues"
+  },
+  "risk_assessment": {
+    "low_risk": [
+      "Adding test coverage for existing functionality",
+      "Adding data-testid attributes for testing"
+    ],
+    "medium_risk": [
+      "Firebase mocking complexity",
+      "BLE service testing challenges"
+    ],
+    "mitigation": [
+      "Use well-established Firebase testing patterns",
+      "Mock BLE service calls rather than testing actual Bluetooth",
+      "Focus on functional testing rather than implementation details"
+    ]
+  }
+}

@@ -1,0 +1,760 @@
+// Comprehensive test suite for task interactions across all views
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import React from 'react';
+
+import { 
+  renderWithProviders,
+  createMockTask, 
+  createMockProject, 
+  createMockActiveSession,
+  createMockHandlers,
+  mockConsole,
+  setNodeEnv,
+  mockFirebase,
+  mockM5DialBLEService
+} from './test-utils.js';
+
+// Import components to test
+import TaskItem from '../src/components/shared/TaskItem.jsx';
+import TasksView from '../src/components/views/TasksView.jsx';
+import ProjectView from '../src/components/views/ProjectView.jsx';
+
+// Mock Firebase and BLE services
+vi.mock('../src/config/firebase', () => ({
+  db: mockFirebase.db,
+  basePath: mockFirebase.basePath
+}));
+
+vi.mock('../src/services/M5DialBLEService', () => ({
+  m5DialBLEService: mockM5DialBLEService
+}));
+
+describe('Task Interactions Across All Views', () => {
+  let user;
+  let restoreConsole;
+  let restoreEnv;
+  
+  beforeEach(() => {
+    user = userEvent.setup();
+    vi.clearAllMocks();
+    restoreConsole = mockConsole();
+    restoreEnv = setNodeEnv('development');
+  });
+  
+  afterEach(() => {
+    restoreConsole.restore();
+    restoreEnv();
+  });
+
+  describe('TaskItem Component Interactions', () => {
+    it('renders task with all interactive elements', () => {
+      const task = createMockTask({
+        id: 'test-task',
+        title: 'Test Task',
+        isComplete: false,
+        status: 'idle'
+      });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      // Check all elements are present
+      expect(screen.getByTestId('task-item-test-task')).toBeInTheDocument();
+      expect(screen.getByTestId('task-checkbox-test-task')).toBeInTheDocument();
+      expect(screen.getByTestId('task-content-test-task')).toBeInTheDocument();
+      expect(screen.getByTestId('task-title-test-task')).toBeInTheDocument();
+      expect(screen.getByTestId('task-start-button-test-task')).toBeInTheDocument();
+      
+      expect(screen.getByText('Test Task')).toBeInTheDocument();
+    });
+
+    it('handles task completion via checkbox click', async () => {
+      const task = createMockTask({ id: 'test-task', isComplete: false });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      const checkbox = screen.getByTestId('task-checkbox-test-task');
+      await user.click(checkbox);
+
+      expect(handlers.onToggle).toHaveBeenCalledWith(task);
+      expect(handlers.onToggle).toHaveBeenCalledTimes(1);
+    });
+
+    it('handles task edit via content click', async () => {
+      const task = createMockTask({ id: 'test-task' });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      const content = screen.getByTestId('task-content-test-task');
+      await user.click(content);
+
+      expect(handlers.onOpenDetail).toHaveBeenCalledWith(task);
+      expect(handlers.onOpenDetail).toHaveBeenCalledTimes(1);
+    });
+
+    it('handles timer start via button click', async () => {
+      const task = createMockTask({ id: 'test-task', isComplete: false, status: 'idle' });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      const startButton = screen.getByTestId('task-start-button-test-task');
+      await user.click(startButton);
+
+      expect(handlers.onStartTask).toHaveBeenCalledWith(task);
+      expect(handlers.onStartTask).toHaveBeenCalledTimes(1);
+    });
+
+    it('prevents event propagation on start button click', async () => {
+      const task = createMockTask({ id: 'test-task' });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      const startButton = screen.getByTestId('task-start-button-test-task');
+      await user.click(startButton);
+
+      // Start button should be called, but content click (onOpenDetail) should not
+      expect(handlers.onStartTask).toHaveBeenCalledTimes(1);
+      expect(handlers.onOpenDetail).not.toHaveBeenCalled();
+    });
+
+    it('shows active timer indicator when task is active', () => {
+      const task = createMockTask({ id: 'test-task' });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+          isTaskActive={true}
+        />
+      );
+
+      expect(screen.getByTestId('task-active-timer-test-task')).toBeInTheDocument();
+      expect(screen.queryByTestId('task-start-button-test-task')).not.toBeInTheDocument();
+    });
+
+    it('hides start button for completed tasks', () => {
+      const task = createMockTask({ id: 'test-task', isComplete: true });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      expect(screen.queryByTestId('task-start-button-test-task')).not.toBeInTheDocument();
+    });
+
+    it('hides start button for in-progress tasks', () => {
+      const task = createMockTask({ id: 'test-task', status: 'in-progress' });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      expect(screen.queryByTestId('task-start-button-test-task')).not.toBeInTheDocument();
+    });
+
+    it('disables checkbox for in-progress tasks', () => {
+      const task = createMockTask({ id: 'test-task', status: 'in-progress' });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      const checkbox = screen.getByTestId('task-checkbox-test-task');
+      expect(checkbox).toBeDisabled();
+    });
+
+    it('displays task tags correctly', () => {
+      const task = createMockTask({ 
+        id: 'test-task', 
+        tags: ['urgent', 'work'] 
+      });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      expect(screen.getByTestId('task-tag-urgent-test-task')).toBeInTheDocument();
+      expect(screen.getByTestId('task-tag-work-test-task')).toBeInTheDocument();
+      expect(screen.getByText('urgent')).toBeInTheDocument();
+      expect(screen.getByText('work')).toBeInTheDocument();
+    });
+
+    it('displays due date with correct styling', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      const task = createMockTask({ 
+        id: 'test-task', 
+        dueDate: yesterday.toISOString() 
+      });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task} 
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      const dueDateElement = screen.getByTestId('task-due-date-test-task');
+      expect(dueDateElement).toBeInTheDocument();
+      expect(dueDateElement).toHaveClass('text-red-500'); // Overdue styling
+    });
+  });
+
+  describe('TaskItem Defensive Programming', () => {
+    it('handles missing task prop gracefully', () => {
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={null}
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      expect(screen.getByText('Untitled Task')).toBeInTheDocument();
+      expect(restoreConsole.warn).toHaveBeenCalledWith(
+        'TaskItem: task prop is required and should be an object'
+      );
+    });
+
+    it('handles missing handlers gracefully with warnings', () => {
+      const task = createMockTask({ id: 'test-task' });
+
+      renderWithProviders(
+        <TaskItem task={task} />
+      );
+
+      expect(restoreConsole.warn).toHaveBeenCalledWith(
+        'TaskItem: onToggle handler is missing - checkbox functionality will be disabled'
+      );
+      expect(restoreConsole.warn).toHaveBeenCalledWith(
+        'TaskItem: onOpenDetail handler is missing - click to edit functionality will be disabled'
+      );
+      expect(restoreConsole.warn).toHaveBeenCalledWith(
+        'TaskItem: onStartTask handler is missing - start task button will be disabled'
+      );
+    });
+
+    it('safely handles clicks when handlers are missing', async () => {
+      const task = createMockTask({ id: 'test-task' });
+
+      renderWithProviders(
+        <TaskItem task={task} />
+      );
+
+      const checkbox = screen.getByTestId('task-checkbox-test-task');
+      const content = screen.getByTestId('task-content-test-task');
+
+      // Should not throw errors
+      await user.click(checkbox);
+      await user.click(content);
+
+      expect(checkbox).toBeDisabled(); // Disabled because no handler
+    });
+
+    it('handles malformed task properties with safe fallbacks', () => {
+      const malformedTask = { 
+        id: 'test', 
+        tags: 'not-an-array',
+        isComplete: 'not-a-boolean'
+      };
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={malformedTask}
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      expect(screen.getByText('Untitled Task')).toBeInTheDocument();
+      // Should not crash and should use safe defaults
+      const checkbox = screen.getByTestId('task-checkbox-test');
+      expect(checkbox).not.toBeChecked(); // Boolean conversion of 'not-a-boolean'
+    });
+  });
+
+  describe('TasksView Integration', () => {
+    it('renders task list with proper handlers', () => {
+      const tasks = [
+        createMockTask({ id: 'task-1', title: 'First Task', projectId: 'project-1' }),
+        createMockTask({ id: 'task-2', title: 'Second Task', projectId: 'project-1' })
+      ];
+      const projects = [
+        createMockProject({ id: 'project-1', name: 'Test Project' })
+      ];
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TasksView 
+          tasks={tasks}
+          projects={projects}
+          onStartTask={handlers.onStartTask}
+          onCompleteTask={handlers.onCompleteTask}
+          onEditTask={handlers.onEditTask}
+          activeSession={null}
+        />
+      );
+
+      expect(screen.getByText('Master Task List')).toBeInTheDocument();
+      expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
+      expect(screen.getByTestId('task-item-task-2')).toBeInTheDocument();
+    });
+
+    it('filters tasks by project correctly', async () => {
+      const tasks = [
+        createMockTask({ id: 'task-1', title: 'Project 1 Task', projectId: 'project-1' }),
+        createMockTask({ id: 'task-2', title: 'Project 2 Task', projectId: 'project-2' })
+      ];
+      const projects = [
+        createMockProject({ id: 'project-1', name: 'Project One' }),
+        createMockProject({ id: 'project-2', name: 'Project Two' })
+      ];
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TasksView 
+          tasks={tasks}
+          projects={projects}
+          onStartTask={handlers.onStartTask}
+          onCompleteTask={handlers.onCompleteTask}
+          onEditTask={handlers.onEditTask}
+          activeSession={null}
+        />
+      );
+
+      // Both tasks should be visible initially
+      expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
+      expect(screen.getByTestId('task-item-task-2')).toBeInTheDocument();
+
+      // Filter by Project One
+      const projectSelect = screen.getByDisplayValue('All Projects');
+      await user.selectOptions(projectSelect, 'project-1');
+
+      // Only task-1 should be visible
+      expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
+      expect(screen.queryByTestId('task-item-task-2')).not.toBeInTheDocument();
+    });
+
+    it('handles task interactions through TasksView', async () => {
+      const tasks = [
+        createMockTask({ id: 'task-1', title: 'Test Task', projectId: 'project-1' })
+      ];
+      const projects = [
+        createMockProject({ id: 'project-1', name: 'Test Project' })
+      ];
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TasksView 
+          tasks={tasks}
+          projects={projects}
+          onStartTask={handlers.onStartTask}
+          onCompleteTask={handlers.onCompleteTask}
+          onEditTask={handlers.onEditTask}
+          activeSession={null}
+        />
+      );
+
+      // Test completion
+      const checkbox = screen.getByTestId('task-checkbox-task-1');
+      await user.click(checkbox);
+      expect(handlers.onCompleteTask).toHaveBeenCalledWith(tasks[0]);
+
+      // Test edit
+      const content = screen.getByTestId('task-content-task-1');
+      await user.click(content);
+      expect(handlers.onEditTask).toHaveBeenCalledWith(tasks[0]);
+
+      // Test start
+      const startButton = screen.getByTestId('task-start-button-task-1');
+      await user.click(startButton);
+      expect(handlers.onStartTask).toHaveBeenCalledWith(tasks[0]);
+    });
+  });
+
+  describe('ProjectView Integration', () => {
+    it('renders project tasks with proper handlers', () => {
+      const project = createMockProject({ id: 'project-1', name: 'Test Project' });
+      const tasks = [
+        createMockTask({ id: 'task-1', title: 'Project Task', projectId: 'project-1' })
+      ];
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <ProjectView 
+          project={project}
+          tasks={tasks}
+          settings={{}}
+          categoryColor="#3B82F6"
+          onCompleteTask={handlers.onCompleteTask}
+          onEditTask={handlers.onEditTask}
+          onStartTask={handlers.onStartTask}
+          onOpenNewTaskDetail={vi.fn()}
+          onBack={vi.fn()}
+          onEditProject={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText('Test Project')).toBeInTheDocument();
+      expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
+    });
+
+    it('handles task interactions through ProjectView', async () => {
+      const project = createMockProject({ id: 'project-1', name: 'Test Project' });
+      const tasks = [
+        createMockTask({ id: 'task-1', title: 'Project Task', projectId: 'project-1' })
+      ];
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <ProjectView 
+          project={project}
+          tasks={tasks}
+          settings={{}}
+          categoryColor="#3B82F6"
+          onCompleteTask={handlers.onCompleteTask}
+          onEditTask={handlers.onEditTask}
+          onStartTask={handlers.onStartTask}
+          onOpenNewTaskDetail={vi.fn()}
+          onBack={vi.fn()}
+          onEditProject={vi.fn()}
+        />
+      );
+
+      // Test all interactions work the same as in TasksView
+      const checkbox = screen.getByTestId('task-checkbox-task-1');
+      await user.click(checkbox);
+      expect(handlers.onCompleteTask).toHaveBeenCalledWith(tasks[0]);
+
+      const content = screen.getByTestId('task-content-task-1');
+      await user.click(content);
+      expect(handlers.onEditTask).toHaveBeenCalledWith(tasks[0]);
+
+      const startButton = screen.getByTestId('task-start-button-task-1');
+      await user.click(startButton);
+      expect(handlers.onStartTask).toHaveBeenCalledWith(tasks[0]);
+    });
+
+    it('filters tasks to only show project tasks', () => {
+      const project = createMockProject({ id: 'project-1', name: 'Test Project' });
+      const tasks = [
+        createMockTask({ id: 'task-1', title: 'Project Task', projectId: 'project-1' }),
+        createMockTask({ id: 'task-2', title: 'Other Task', projectId: 'project-2' })
+      ];
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <ProjectView 
+          project={project}
+          tasks={tasks}
+          settings={{}}
+          categoryColor="#3B82F6"
+          onCompleteTask={handlers.onCompleteTask}
+          onEditTask={handlers.onEditTask}
+          onStartTask={handlers.onStartTask}
+          onOpenNewTaskDetail={vi.fn()}
+          onBack={vi.fn()}
+          onEditProject={vi.fn()}
+        />
+      );
+
+      // Only the project task should be visible
+      expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
+      expect(screen.queryByTestId('task-item-task-2')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Cross-View Consistency', () => {
+    it('maintains same task behavior across TasksView and ProjectView', async () => {
+      const task = createMockTask({ id: 'task-1', title: 'Consistent Task', projectId: 'project-1' });
+      const project = createMockProject({ id: 'project-1', name: 'Test Project' });
+      const handlersTasksView = createMockHandlers();
+      const handlersProjectView = createMockHandlers();
+
+      // Render in TasksView
+      const { unmount: unmountTasksView } = renderWithProviders(
+        <TasksView 
+          tasks={[task]}
+          projects={[project]}
+          onStartTask={handlersTasksView.onStartTask}
+          onCompleteTask={handlersTasksView.onCompleteTask}
+          onEditTask={handlersTasksView.onEditTask}
+          activeSession={null}
+        />
+      );
+
+      // Test task interaction in TasksView
+      let checkbox = screen.getByTestId('task-checkbox-task-1');
+      await user.click(checkbox);
+      expect(handlersTasksView.onCompleteTask).toHaveBeenCalledWith(task);
+
+      unmountTasksView();
+
+      // Render in ProjectView
+      renderWithProviders(
+        <ProjectView 
+          project={project}
+          tasks={[task]}
+          settings={{}}
+          categoryColor="#3B82F6"
+          onCompleteTask={handlersProjectView.onCompleteTask}
+          onEditTask={handlersProjectView.onEditTask}
+          onStartTask={handlersProjectView.onStartTask}
+          onOpenNewTaskDetail={vi.fn()}
+          onBack={vi.fn()}
+          onEditProject={vi.fn()}
+        />
+      );
+
+      // Test same interaction in ProjectView
+      checkbox = screen.getByTestId('task-checkbox-task-1');
+      await user.click(checkbox);
+      expect(handlersProjectView.onCompleteTask).toHaveBeenCalledWith(task);
+    });
+
+    it('shows active session state consistently across views', () => {
+      const task = createMockTask({ id: 'task-1', title: 'Active Task', projectId: 'project-1' });
+      const project = createMockProject({ id: 'project-1', name: 'Test Project' });
+      const activeSession = createMockActiveSession({ taskId: 'task-1' });
+      const handlers = createMockHandlers();
+
+      // Test in TasksView
+      const { unmount: unmountTasksView } = renderWithProviders(
+        <TasksView 
+          tasks={[task]}
+          projects={[project]}
+          onStartTask={handlers.onStartTask}
+          onCompleteTask={handlers.onCompleteTask}
+          onEditTask={handlers.onEditTask}
+          activeSession={activeSession}
+        />
+      );
+
+      expect(screen.getByTestId('task-active-timer-task-1')).toBeInTheDocument();
+      expect(screen.queryByTestId('task-start-button-task-1')).not.toBeInTheDocument();
+
+      unmountTasksView();
+
+      // Test in ProjectView
+      renderWithProviders(
+        <ProjectView 
+          project={project}
+          tasks={[task]}
+          settings={{}}
+          categoryColor="#3B82F6"
+          onCompleteTask={handlers.onCompleteTask}
+          onEditTask={handlers.onEditTask}
+          onStartTask={handlers.onStartTask}
+          onOpenNewTaskDetail={vi.fn()}
+          onBack={vi.fn()}
+          onEditProject={vi.fn()}
+        />
+      );
+
+      // Should show same active state in ProjectView
+      expect(screen.getByTestId('task-active-timer-task-1')).toBeInTheDocument();
+      expect(screen.queryByTestId('task-start-button-task-1')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Error Handling and Edge Cases', () => {
+    it('handles empty task lists gracefully', () => {
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TasksView 
+          tasks={[]}
+          projects={[]}
+          onStartTask={handlers.onStartTask}
+          onCompleteTask={handlers.onCompleteTask}
+          onEditTask={handlers.onEditTask}
+          activeSession={null}
+        />
+      );
+
+      expect(screen.getByText('Master Task List')).toBeInTheDocument();
+      // Should not throw errors with empty arrays
+    });
+
+    it('handles undefined props gracefully', () => {
+      const task = createMockTask({ id: 'task-1' });
+
+      // Should not crash with undefined props
+      expect(() => {
+        renderWithProviders(
+          <TaskItem 
+            task={task}
+            onToggle={undefined}
+            onOpenDetail={undefined}
+            onStartTask={undefined}
+          />
+        );
+      }).not.toThrow();
+
+      expect(screen.getByTestId('task-item-task-1')).toBeInTheDocument();
+    });
+
+    it('handles rapid successive clicks without errors', async () => {
+      const task = createMockTask({ id: 'task-1' });
+      const handlers = createMockHandlers();
+
+      renderWithProviders(
+        <TaskItem 
+          task={task}
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      const checkbox = screen.getByTestId('task-checkbox-task-1');
+      
+      // Rapid clicks should not cause errors
+      await user.click(checkbox);
+      await user.click(checkbox);
+      await user.click(checkbox);
+
+      expect(handlers.onToggle).toHaveBeenCalledTimes(3);
+    });
+
+    it('maintains component stability with prop changes', () => {
+      const task = createMockTask({ id: 'task-1', title: 'Original Title' });
+      const handlers = createMockHandlers();
+
+      const { rerender } = renderWithProviders(
+        <TaskItem 
+          task={task}
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      expect(screen.getByText('Original Title')).toBeInTheDocument();
+
+      // Update task props
+      const updatedTask = { ...task, title: 'Updated Title', isComplete: true };
+      rerender(
+        <TaskItem 
+          task={updatedTask}
+          onToggle={handlers.onToggle}
+          onOpenDetail={handlers.onOpenDetail}
+          onStartTask={handlers.onStartTask}
+        />
+      );
+
+      expect(screen.getByText('Updated Title')).toBeInTheDocument();
+      expect(screen.getByTestId('task-checkbox-task-1')).toBeChecked();
+    });
+  });
+
+  describe('Development Mode Warnings', () => {
+    it('produces appropriate warnings in development mode', () => {
+      setNodeEnv('development');
+      const task = createMockTask({ id: 'task-1' });
+
+      renderWithProviders(
+        <TaskItem task={task} />
+      );
+
+      expect(restoreConsole.warn).toHaveBeenCalledWith(
+        expect.stringContaining('onToggle handler is missing')
+      );
+      expect(restoreConsole.warn).toHaveBeenCalledWith(
+        expect.stringContaining('onOpenDetail handler is missing')
+      );
+      expect(restoreConsole.warn).toHaveBeenCalledWith(
+        expect.stringContaining('onStartTask handler is missing')
+      );
+    });
+
+    it('suppresses warnings in production mode', () => {
+      const restoreProd = setNodeEnv('production');
+      const task = createMockTask({ id: 'task-1' });
+
+      renderWithProviders(
+        <TaskItem task={task} />
+      );
+
+      expect(restoreConsole.warn).not.toHaveBeenCalled();
+      restoreProd();
+    });
+  });
+});
