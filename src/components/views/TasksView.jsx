@@ -1,18 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import TaskItem from '../shared/TaskItem';
+import { applyTaskFilters } from '../../utils/taskFilters';
 
-function TasksView({ tasks, projects, onStartTask, onCompleteTask, onEditTask, activeSession }) {
+function TasksView({ tasks, projects, onStartTask, onCompleteTask, onEditTask, activeSession, aiNudgeRecommendations }) {
     const [filters, setFilters] = useState({ project: 'All', tag: '', dueDate: 'All' });
-    const projectMap = useMemo(() => projects.reduce((acc, p) => ({...acc, [p.id]: p.name}), {}), [projects]);
 
     const filteredTasks = useMemo(() => {
-        return tasks.filter(task => {
-            const projectMatch = filters.project === 'All' || task.projectId === filters.project;
-            const tagMatch = !filters.tag || (task.tags && task.tags.includes(filters.tag));
-            const dateMatch = filters.dueDate === 'All' || (task.dueDate && new Date(task.dueDate) < new Date(new Date().setDate(new Date().getDate() + Number(filters.dueDate))));
-            return projectMatch && tagMatch && dateMatch;
-        }).sort((a,b) => (a.isComplete - b.isComplete) || (a.createdAt || 0) - (b.createdAt || 0));
-    }, [tasks, filters]);
+        const filtered = applyTaskFilters(tasks, filters, aiNudgeRecommendations);
+        return filtered.sort((a,b) => (a.isComplete - b.isComplete) || (a.createdAt || 0) - (b.createdAt || 0));
+    }, [tasks, filters, aiNudgeRecommendations]);
 
     const allTags = useMemo(() => [...new Set(tasks.flatMap(t => t.tags || []))], [tasks]);
 

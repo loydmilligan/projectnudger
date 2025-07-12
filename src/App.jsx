@@ -614,7 +614,7 @@ export default function App() {
                 onEditTask={handleEditTask}
             />;
             case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} onCompleteTask={handleCompleteTask} onStartTask={handleStartTask} onEditTask={handleEditTask} />;
-            case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} onCompleteTask={handleCompleteTask} onEditTask={handleEditTask} activeSession={activeSession}/>;
+            case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} onCompleteTask={handleCompleteTask} onEditTask={handleEditTask} activeSession={activeSession} aiNudgeRecommendations={aiNudgeRecommendations}/>;
             case 'settings': return <SettingsView 
                 currentSettings={settings} 
                 onExportData={handleExportData} 
