@@ -1,8 +1,14 @@
 import { writeBatch, doc, collection } from 'firebase/firestore';
 import { db, basePath } from '../config/firebase';
 
-export const generateDummyData = async () => {
-   if (!confirm("This will add several dummy projects and tasks to your database, replacing existing data. Are you sure?")) return;
+export const generateDummyData = async (skipConfirmation = false) => {
+   if (!skipConfirmation) {
+       // Return a confirmation request object for the calling component to handle
+       return { 
+           needsConfirmation: true, 
+           message: "This will add several dummy projects and tasks to your database, replacing existing data. Are you sure?" 
+       };
+   }
 
    try {
        const batch = writeBatch(db);
@@ -90,9 +96,9 @@ export const generateDummyData = async () => {
        );
 
        await batch.commit();
-       alert("Dummy data generated successfully!");
+       return { success: true, message: "Dummy data generated successfully!" };
    } catch (error) {
        console.error("Dummy data generation failed:", error);
-       alert("Failed to generate dummy data. Check console for details.");
+       return { success: false, message: "Failed to generate dummy data. Check console for details.", error };
    }
 };

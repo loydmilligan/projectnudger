@@ -3,11 +3,13 @@ import { doc, setDoc } from 'firebase/firestore';
 import { Download, Upload, Beaker, Sun, Moon, X, Brain } from 'lucide-react';
 import { db, basePath } from '../../config/firebase';
 import { NUDGE_CONFIG } from '../../config/constants';
+import useNotifications from '../../hooks/useNotifications';
 
 function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, onGenerateDummyData, owners, setSettings, projects, tasks, onTestAINudge, activeSession }) {
     const fileInputRef = useRef(null);
     const handleImportClick = () => fileInputRef.current.click();
     const [localSettings, setLocalSettings] = useState(currentSettings);
+    const { showSuccess, showError, showInfo, showFirebaseError } = useNotifications();
 
     const handleSave = async () => {
         console.log('Saving settings:', localSettings);
@@ -16,10 +18,10 @@ function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, 
             await setDoc(settingsRef, localSettings, { merge: true });
             setSettings(localSettings);
             console.log('Settings saved successfully');
-            alert('Settings saved successfully!');
+            showSuccess('Settings Saved', 'Your settings have been saved successfully!');
         } catch(e) { 
             console.error("Error saving settings:", e);
-            alert(`Error saving settings: ${e.message}`);
+            showFirebaseError(e);
         }
     };
     
@@ -292,14 +294,14 @@ function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, 
                                                 const aiRecommendations = await generateAINudge(localSettings, projects || [], tasks || [], activeSession);
                                                 if (aiRecommendations) {
                                                     console.log('AI Nudge Test Result:', aiRecommendations);
-                                                    alert('AI nudge test complete! Check console for detailed results.');
+                                                    showSuccess('AI Nudge Test Complete', 'Check console for detailed results.');
                                                 } else {
                                                     console.log('AI Nudge Test Skipped - session is active or feature disabled');
-                                                    alert('AI nudge test skipped - either a session is active or the feature is disabled.');
+                                                    showInfo('AI Nudge Test Skipped', 'Either a session is active or the feature is disabled.');
                                                 }
                                             } catch (error) {
                                                 console.error('AI nudge test failed:', error);
-                                                alert(`AI nudge test failed: ${error.message}`);
+                                                showError('AI Nudge Test Failed', error.message || 'An unexpected error occurred.');
                                             }
                                         })}
                                         className="w-full flex items-center justify-center px-4 py-3 rounded-md text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors"

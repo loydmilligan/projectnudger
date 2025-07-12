@@ -34,11 +34,14 @@ import SettingsView from './components/views/SettingsView';
 
 // Import shared components
 import SessionCompletionModal from './components/shared/SessionCompletionModal';
+import NotificationSystem from './components/shared/NotificationSystem';
+import LoadingButton from './components/shared/LoadingButton';
 // BLE service for M5 Dial
 import { m5DialBLEService } from './services/M5DialBLEService';
 import AINudgeDisplay from './components/shared/AINudgeDisplay';
 import ObsidianSyncProgressModal from './components/shared/ObsidianSyncProgressModal';
 import useObsidianSync from './hooks/useObsidianSync';
+import useNotifications from './hooks/useNotifications';
 
 // Import AI nudge service
 import { generateAINudge } from './utils/aiNudgeService';
@@ -65,6 +68,18 @@ export default function App() {
 
     // Obsidian Sync
     const { state: obsidianSyncState, lastSync: obsidianLastSync, result: obsidianSyncResult, error: obsidianSyncError, reset: resetObsidianSync, syncNow } = useObsidianSync(settings);
+    
+    // Notifications
+    const { notifications, showSuccess, showError, showWarning, showFirebaseError, dismissNotification } = useNotifications();
+    
+    // Loading states
+    const [loadingStates, setLoadingStates] = useState({
+        saveTask: false,
+        startTask: false,
+        completeTask: false,
+        exportData: false,
+        importData: false
+    });
     const [isSessionCompletionModalOpen, setIsSessionCompletionModalOpen] = useState(false);
     const [completedSessionType, setCompletedSessionType] = useState(null);
     const [aiNudgeRecommendations, setAiNudgeRecommendations] = useState(null);
@@ -178,6 +193,7 @@ export default function App() {
 
     const handleSaveTask = async (taskData) => {
         try {
+            setLoadingStates(prev => ({ ...prev, saveTask: true }));
             const { id, ...dataToSave } = taskData;
             
             // Remove undefined values to prevent Firestore errors
@@ -196,16 +212,20 @@ export default function App() {
             setEditingTask(null);
         } catch (error) {
             console.error("Error saving task:", error);
-            alert("Failed to save task. Please try again.");
+            showFirebaseError(error);
+        } finally {
+            setLoadingStates(prev => ({ ...prev, saveTask: false }));
         }
     };
 
     const handleStartTask = async (task) => {
         try {
             if (activeSession) {
-                alert('A session is already active. Please complete or stop the current session first.');
+                showWarning('Session Active', 'Please complete or stop the current session first.');
                 return;
             }
+            
+            setLoadingStates(prev => ({ ...prev, startTask: true }));
             const session = { taskId: task.id, startTime: new Date(), duration: POMODORO_CONFIG.WORK_SESSION, isDouble: false, active: true, type: 'work' };
             await setDoc(doc(db, basePath, 'tracking', 'activeSession'), session);
             await updateDoc(doc(db, basePath, 'tasks', task.id), { status: 'in-progress' });
@@ -224,7 +244,9 @@ export default function App() {
             setActiveView('tracking');
         } catch (error) {
             console.error('Error starting task:', error);
-            alert('Failed to start task. Please try again.');
+            showFirebaseError(error);
+        } finally {
+            setLoadingStates(prev => ({ ...prev, startTask: false }));
         }
     };
 
@@ -388,6 +410,7 @@ export default function App() {
     // Universal task action handlers for consistent behavior across all views
     const handleCompleteTask = async (task) => {
         try {
+            setLoadingStates(prev => ({ ...prev, completeTask: true }));
             const isCompleting = !task.isComplete;
             await updateDoc(doc(db, basePath, 'tasks', task.id), { 
                 isComplete: isCompleting, 
@@ -397,6 +420,9 @@ export default function App() {
             if (isCompleting) {
                 const settingsRef = doc(db, basePath, 'settings', 'config');
                 await setDoc(settingsRef, { totalTasksCompleted: increment(1) }, {merge: true});
+                
+                // Show success notification for task completion
+                showSuccess('Task Completed', `"${task.title}" has been marked as complete.`);
                 // Send nudge notification using the same logic as ProjectView
                 const { THRESHOLDS, LEVELS } = NUDGE_CONFIG;
                 const totalCompleted = settings.totalTasksCompleted || 0;
@@ -421,7 +447,9 @@ export default function App() {
             }
         } catch (error) {
             console.error("Error completing task:", error);
-            alert("Failed to update task. Please try again.");
+            showFirebaseError(error);
+        } finally {
+            setLoadingStates(prev => ({ ...prev, completeTask: false }));
         }
     };
 
@@ -432,6 +460,7 @@ export default function App() {
     
     const handleExportData = async () => {
         try {
+            setLoadingStates(prev => ({ ...prev, exportData: true }));
             const [projectsSnapshot, tasksSnapshot] = await Promise.all([
                 getDocs(query(collection(db, basePath, 'projects'))),
                 getDocs(query(collection(db, basePath, 'tasks')))
@@ -453,9 +482,12 @@ export default function App() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            showSuccess('Export Complete', 'Your data has been exported successfully.');
         } catch (error) {
             console.error("Error exporting data:", error);
-            alert("Data export failed. Check the console for details.");
+            showError('Export Failed', 'Data export failed. Please try again.');
+        } finally {
+            setLoadingStates(prev => ({ ...prev, exportData: false }));
         }
     };
 
@@ -471,9 +503,35 @@ export default function App() {
         event.target.value = null; 
     };
 
+    const handleGenerateDummyData = async () => {
+        try {
+            const result = await generateDummyData();
+            
+            if (result.needsConfirmation) {
+                const confirmed = confirm(result.message);
+                if (!confirmed) return;
+                
+                const finalResult = await generateDummyData(true);
+                if (finalResult.success) {
+                    showSuccess('Dummy Data Generated', finalResult.message);
+                } else {
+                    showError('Dummy Data Generation Failed', finalResult.message);
+                }
+            } else if (result.success) {
+                showSuccess('Dummy Data Generated', result.message);
+            } else {
+                showError('Dummy Data Generation Failed', result.message);
+            }
+        } catch (error) {
+            console.error('Error generating dummy data:', error);
+            showError('Dummy Data Generation Failed', 'An unexpected error occurred.');
+        }
+    };
+
     const executeImport = async () => {
         if (!fileToImport) return;
         try {
+            setLoadingStates(prev => ({ ...prev, importData: true }));
             const data = JSON.parse(fileToImport);
             if (!data.version || !data.projects || !data.settings || !data.categories) throw new Error("Invalid or malformed import file.");
             const batch = writeBatch(db);
@@ -495,11 +553,12 @@ export default function App() {
                 }
             });
             await batch.commit();
-            alert("Data imported successfully!");
+            showSuccess('Import Complete', 'Your data has been imported successfully.');
         } catch (error) {
             console.error("Import failed:", error);
-            alert(`Import failed: ${error.message}`);
+            showError('Import Failed', `Import failed: ${error.message}`);
         } finally {
+            setLoadingStates(prev => ({ ...prev, importData: false }));
             setFileToImport(null);
             setIsImportConfirmModalOpen(false);
         }
@@ -560,7 +619,7 @@ export default function App() {
                 currentSettings={settings} 
                 onExportData={handleExportData} 
                 onFileSelectedForImport={handleFileSelectedForImport} 
-                onGenerateDummyData={generateDummyData} 
+                onGenerateDummyData={handleGenerateDummyData} 
                 owners={owners} 
                 setSettings={setSettings}
                 projects={projects}
@@ -575,11 +634,11 @@ export default function App() {
                             console.log('AI Nudge Test Result:', aiRecommendations);
                         } else {
                             console.log('AI Nudge Test Skipped - session is active or feature disabled');
-                            alert('AI nudge test skipped - either a session is active or the feature is disabled.');
+                            showWarning('AI Nudge Test Skipped', 'Either a session is active or the feature is disabled.');
                         }
                     } catch (error) {
                         console.error('AI nudge test failed:', error);
-                        alert(`AI nudge test failed: ${error.message}`);
+                        showError('AI Nudge Test Failed', error.message);
                     }
                 }}
             />;
@@ -589,6 +648,10 @@ export default function App() {
 
     return (
         <div className="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col">
+            <NotificationSystem 
+                notifications={notifications}
+                onDismiss={dismissNotification}
+            />
             <TopNavBar
                 activeView={activeView}
                 setActiveView={setActiveView}
