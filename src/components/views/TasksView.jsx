@@ -40,6 +40,8 @@ function TasksView({ tasks, projects, onStartTask, onCompleteTask, onEditTask, a
                         <option value="All">Any Time</option>
                         <option value="7">Next 7 Days</option>
                         <option value="30">Next 30 Days</option>
+                        <option value="past_due">Past Due</option>
+                        <option value="nudged">Nudged</option>
                     </select>
                 </div>
             </div>
