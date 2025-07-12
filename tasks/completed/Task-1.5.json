@@ -1,0 +1,338 @@
+{
+  "task_id": "Task-1.5",
+  "task_description": "Add error feedback for failed actions - Implement user notifications for failed task operations, add loading states for asynchronous task operations, handle network errors and Firebase permission issues",
+  "current_manifest": {
+    "version": "1.0-archaeological",
+    "source_files": {
+      "src/App.jsx": {
+        "purpose": "Main application component with Firebase integration and task handlers",
+        "current_error_handling": {
+          "handleSaveTask": "try-catch with console.error and alert for failed saves",
+          "handleStartTask": "try-catch with console.error and alert for failed starts",
+          "handleCompleteTask": "try-catch with console.error and alert for failed completions",
+          "handleExportData": "try-catch with console.error and alert for export failures",
+          "executeImport": "try-catch with console.error and alert for import failures",
+          "pattern": "Basic alert() notifications for all failures"
+        },
+        "loading_states": {
+          "current": "No loading indicators for async operations",
+          "async_operations": [
+            "Task creation/editing",
+            "Task completion/toggling", 
+            "Timer start/session creation",
+            "Project creation/editing",
+            "Data export/import",
+            "AI nudge generation",
+            "Obsidian sync operations"
+          ]
+        }
+      },
+      "src/components/shared/TaskItem.jsx": {
+        "purpose": "Reusable task component with defensive prop handling",
+        "current_error_handling": {
+          "pattern": "Development console.warn for missing props",
+          "user_feedback": "No user-visible error feedback for failed operations",
+          "loading_states": "No loading indicators during task actions"
+        }
+      },
+      "src/utils/aiNudgeService.js": {
+        "purpose": "AI-powered nudging with multiple providers",
+        "current_error_handling": "Console logging only, no user feedback"
+      },
+      "src/hooks/useObsidianSync.js": {
+        "purpose": "Obsidian synchronization hook",
+        "current_error_handling": "Returns error state, handled by ObsidianSyncProgressModal"
+      }
+    },
+    "user_feedback_patterns": {
+      "current": [
+        "alert() for critical errors",
+        "console.error/console.warn for debugging",
+        "No success notifications",
+        "No loading states during operations"
+      ],
+      "gaps": [
+        "No toast/notification system",
+        "No loading indicators for async operations",
+        "No categorized error messaging",
+        "No retry mechanisms for failed operations",
+        "No offline/network error handling"
+      ]
+    }
+  },
+  "expected_manifest": {
+    "version": "1.0-enhanced-feedback",
+    "source_files": {
+      "src/components/shared/NotificationSystem.jsx": {
+        "purpose": "Toast notification system for user feedback",
+        "exports": {
+          "functions": [
+            {
+              "name": "NotificationSystem",
+              "signature": "NotificationSystem() -> JSX.Element",
+              "description": "Global notification container with toast support"
+            }
+          ]
+        },
+        "features": [
+          "Success notifications",
+          "Error notifications", 
+          "Warning notifications",
+          "Auto-dismiss after timeout",
+          "Manual dismiss capability",
+          "Queue management for multiple notifications"
+        ]
+      },
+      "src/hooks/useNotifications.js": {
+        "purpose": "Hook for managing notification state and display",
+        "exports": {
+          "functions": [
+            {
+              "name": "useNotifications",
+              "signature": "useNotifications() -> { showSuccess, showError, showWarning, notifications, dismissNotification }",
+              "description": "Hook for triggering and managing notifications"
+            }
+          ]
+        }
+      },
+      "src/components/shared/LoadingButton.jsx": {
+        "purpose": "Button component with loading state support",
+        "exports": {
+          "functions": [
+            {
+              "name": "LoadingButton", 
+              "signature": "LoadingButton({ isLoading, children, onClick, disabled, ...props }) -> JSX.Element",
+              "description": "Button with spinner and disabled state during loading"
+            }
+          ]
+        }
+      },
+      "src/App.jsx": {
+        "purpose": "Enhanced with comprehensive error handling and loading states",
+        "enhancements": {
+          "error_handling": [
+            "Replace alert() with toast notifications",
+            "Categorize errors (network, permission, validation)",
+            "Add retry mechanisms for transient failures",
+            "Handle Firebase offline scenarios"
+          ],
+          "loading_states": [
+            "Task action loading indicators",
+            "Project operation loading states",
+            "Session management loading feedback",
+            "Data import/export progress"
+          ],
+          "user_feedback": [
+            "Success confirmations for completed actions",
+            "Progress indicators for long operations",
+            "Clear error messages with context",
+            "Actionable error resolution suggestions"
+          ]
+        }
+      },
+      "src/components/shared/TaskItem.jsx": {
+        "purpose": "Enhanced with loading states and error feedback",
+        "enhancements": [
+          "Loading spinner during task completion",
+          "Loading state during timer start",
+          "Error feedback for failed operations",
+          "Optimistic UI updates with rollback on failure"
+        ]
+      }
+    },
+    "notification_categories": {
+      "success": [
+        "Task completed successfully",
+        "Project created/updated",
+        "Session started/completed",
+        "Data exported/imported successfully"
+      ],
+      "error": [
+        "Task operation failed",
+        "Network connectivity issues",
+        "Firebase permission errors",
+        "Validation failures"
+      ],
+      "warning": [
+        "Session timeout approaching",
+        "Offline mode active", 
+        "Sync conflicts detected"
+      ]
+    }
+  },
+  "implementation_notes": {
+    "approach": [
+      "1. Create reusable notification system with toast-style UI",
+      "2. Implement notification hook for easy integration across components",
+      "3. Create loading button component for consistent loading states",
+      "4. Enhance App.jsx task handlers with comprehensive error handling",
+      "5. Add loading states to TaskItem component for immediate feedback",
+      "6. Replace all alert() calls with contextual toast notifications",
+      "7. Add success notifications to confirm completed actions",
+      "8. Implement network error detection and retry mechanisms"
+    ],
+    "files_to_create": [
+      {
+        "file": "src/components/shared/NotificationSystem.jsx",
+        "purpose": "Global toast notification system component",
+        "key_features": ["Toast queue management", "Auto-dismiss", "Multiple notification types", "Responsive design"]
+      },
+      {
+        "file": "src/hooks/useNotifications.js", 
+        "purpose": "React hook for notification management",
+        "key_features": ["State management", "Notification triggering", "Queue handling", "Dismiss functionality"]
+      },
+      {
+        "file": "src/components/shared/LoadingButton.jsx",
+        "purpose": "Button component with integrated loading states",
+        "key_features": ["Loading spinner", "Disabled state", "Accessible design", "Consistent styling"]
+      }
+    ],
+    "files_to_modify": [
+      {
+        "file": "src/App.jsx",
+        "changes": [
+          "Integrate NotificationSystem component",
+          "Replace alert() calls with toast notifications", 
+          "Add loading states to all async operations",
+          "Enhance error handling with categorization",
+          "Add success confirmations for user actions",
+          "Implement network error detection"
+        ]
+      },
+      {
+        "file": "src/components/shared/TaskItem.jsx",
+        "changes": [
+          "Add loading states for task actions",
+          "Integrate with notification system",
+          "Implement optimistic UI updates",
+          "Add error recovery mechanisms"
+        ]
+      }
+    ],
+    "notification_types": {
+      "toast_styles": {
+        "success": "Green background, checkmark icon, auto-dismiss in 3s",
+        "error": "Red background, X icon, manual dismiss or 10s timeout",
+        "warning": "Yellow background, warning icon, auto-dismiss in 5s",
+        "info": "Blue background, info icon, auto-dismiss in 4s"
+      },
+      "positioning": "Fixed top-right corner with stacking",
+      "animations": "Slide-in from right, fade-out on dismiss"
+    },
+    "error_categorization": {
+      "network_errors": [
+        "fetch failed",
+        "network request failed", 
+        "timeout",
+        "offline"
+      ],
+      "firebase_errors": [
+        "permission-denied",
+        "not-found",
+        "already-exists",
+        "quota-exceeded"
+      ],
+      "validation_errors": [
+        "missing required fields",
+        "invalid data format",
+        "constraint violations"
+      ]
+    },
+    "loading_states": {
+      "task_completion": "Checkbox shows spinner during Firebase update",
+      "timer_start": "Play button shows spinner during session creation",
+      "task_edit": "Edit modal shows loading during save operation",
+      "project_operations": "Project cards show loading overlay during updates",
+      "data_operations": "Export/import buttons show progress indicators"
+    },
+    "integration_points": [
+      "Firebase Firestore error handling",
+      "M5 Dial BLE service error handling", 
+      "AI nudge service error handling",
+      "Obsidian sync error handling",
+      "Network connectivity monitoring",
+      "Browser notification permissions"
+    ],
+    "accessibility_considerations": [
+      "Screen reader announcements for notifications",
+      "Keyboard navigation for notification dismissal",
+      "High contrast support for error states",
+      "Focus management during loading states"
+    ]
+  },
+  "acceptance_criteria": [
+    "Users receive toast notifications for all failed operations",
+    "Success notifications confirm completed actions",
+    "Loading states provide immediate feedback during async operations",
+    "Network errors are detected and handled gracefully",
+    "Firebase permission issues show helpful error messages",
+    "Task actions show loading indicators in TaskItem component",
+    "All alert() calls are replaced with contextual notifications",
+    "Notification system is accessible and responsive",
+    "Error messages provide actionable guidance when possible",
+    "Loading states prevent double-clicks and race conditions"
+  ],
+  "estimated_complexity": "Medium-High",
+  "prerequisites": [],
+  "user_experience_improvements": {
+    "before": [
+      "alert() interrupts user workflow",
+      "No feedback for successful operations",
+      "No loading indicators cause uncertainty",
+      "Errors provide minimal context",
+      "No retry mechanisms for failures"
+    ],
+    "after": [
+      "Non-intrusive toast notifications",
+      "Positive feedback for successful actions",
+      "Clear loading states build confidence",
+      "Detailed error messages with context",
+      "Graceful handling of edge cases"
+    ]
+  },
+  "testing_strategy": {
+    "unit_tests": [
+      "NotificationSystem component rendering and behavior",
+      "useNotifications hook state management",
+      "LoadingButton component states and interactions"
+    ],
+    "integration_tests": [
+      "Error handling in App.jsx task handlers",
+      "Loading states in TaskItem component",
+      "Notification triggering from various components"
+    ],
+    "error_scenarios": [
+      "Network disconnection during operations",
+      "Firebase permission denied errors",
+      "Invalid data submission attempts",
+      "Concurrent operation conflicts"
+    ]
+  },
+  "risk_assessment": {
+    "low_risk": [
+      "Adding notification system as new component",
+      "Enhancing existing error handling without breaking changes"
+    ],
+    "medium_risk": [
+      "Replacing alert() calls may change user expectations",
+      "Loading states might affect perceived performance"
+    ],
+    "high_risk": [
+      "Network error handling complexity",
+      "Firebase error categorization accuracy"
+    ],
+    "mitigation": [
+      "Gradual rollout of notification system",
+      "Comprehensive testing of error scenarios",
+      "Fallback to console logging if notification system fails",
+      "Clear documentation for error handling patterns"
+    ]
+  },
+  "performance_considerations": [
+    "Notification queue management to prevent memory leaks",
+    "Debouncing of rapid-fire notifications",
+    "Efficient re-rendering during loading states",
+    "Minimal DOM manipulation for toast animations"
+  ]
+}

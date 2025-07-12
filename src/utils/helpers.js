@@ -74,3 +74,117 @@ export const isPastDue = (task) => {
         return false;
     }
 };
+
+/**
+ * Determines if a task would be considered 'nudged' based on nudge system criteria
+ * Uses the same heuristic algorithm as the AI nudge service for consistency
+ * @param {Object} task - Task object to evaluate
+ * @param {Array} projects - Array of all projects for context
+ * @param {Array} tasks - Array of all tasks for project analysis
+ * @returns {boolean} - true if task should be considered 'nudged', false otherwise
+ */
+export const isNudged = (task, projects, tasks) => {
+    try {
+        // Handle null/undefined inputs
+        if (!task || typeof task !== 'object') {
+            return false;
+        }
+
+        if (!Array.isArray(projects) || !Array.isArray(tasks)) {
+            return false;
+        }
+
+        // Return false for completed tasks
+        if (task.isComplete) {
+            return false;
+        }
+
+        // Return false for tasks with no projectId
+        if (!task.projectId) {
+            return false;
+        }
+
+        // Calculate task age
+        const now = new Date();
+        const taskAge = task.createdAt ? 
+            Math.floor((now - new Date(task.createdAt)) / (1000 * 60 * 60 * 24)) : 0;
+
+        // Return false for very new tasks (< 24 hours old)
+        if (taskAge < 1) {
+            return false;
+        }
+
+        // Find the project associated with this task
+        const project = projects.find(p => p.id === task.projectId);
+        if (!project) {
+            return false;
+        }
+
+        // Return false for archived projects
+        if (project.status === 'archived') {
+            return false;
+        }
+
+        // Calculate project statistics (same algorithm as aiNudgeService.js)
+        const projectTasks = tasks.filter(t => t.projectId === project.id);
+        const completedTasks = projectTasks.filter(t => t.isComplete);
+        const completionPercentage = projectTasks.length > 0 ? 
+            (completedTasks.length / projectTasks.length) * 100 : 0;
+
+        // Calculate days since project creation
+        const daysSinceCreated = project.createdAt ? 
+            Math.floor((now - new Date(project.createdAt)) / (1000 * 60 * 60 * 24)) : 0;
+
+        // Find most recent task activity in project
+        const projectTaskDates = projectTasks
+            .map(t => t.completedAt || t.createdAt)
+            .filter(Boolean)
+            .map(date => new Date(date));
+
+        const lastActivity = projectTaskDates.length > 0 ? 
+            new Date(Math.max(...projectTaskDates)) : project.createdAt;
+
+        const daysSinceActivity = lastActivity ? 
+            Math.floor((now - new Date(lastActivity)) / (1000 * 60 * 60 * 24)) : daysSinceCreated;
+
+        // Calculate nudge score (same algorithm as AI service)
+        const daysOld = project.createdAt ? (now - new Date(project.createdAt)) / (1000 * 60 * 60 * 24) : 0;
+        const nudgeScore = (project.priority || 3) * 2 + daysOld;
+
+        // Calculate project characteristics
+        const isNearCompletion = completionPercentage >= 80 && completionPercentage < 100;
+        const isStalled = daysSinceActivity > 7 && completionPercentage > 0;
+        const isNeglected = daysSinceActivity > 14;
+
+        // Apply weighted scoring system
+        let score = 0;
+
+        // Neglected project (highest weight)
+        if (isNeglected) {
+            score += 4;
+        }
+
+        // High nudge score project
+        if (nudgeScore > 20) {
+            score += 3;
+        }
+
+        // Stalled project
+        if (isStalled) {
+            score += 2;
+        }
+
+        // Old incomplete task
+        if (taskAge > 5) {
+            score += 1;
+        }
+
+        // Return true if score meets nudged threshold
+        return score >= 3;
+
+    } catch (error) {
+        // Handle any unexpected errors gracefully
+        console.warn('Error in isNudged function:', error);
+        return false;
+    }
+};

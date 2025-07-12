@@ -1,0 +1,155 @@
+{
+  "task_id": "Task-1.3",
+  "task_description": "Fix TaskItem component prop handling - Update TaskItem to handle missing props gracefully, add proper default values for optional props, and ensure consistent button rendering across contexts.",
+  "current_manifest": {
+    "files_involved": [
+      "src/components/shared/TaskItem.jsx"
+    ],
+    "current_exports": {
+      "src/components/shared/TaskItem.jsx": {
+        "purpose": "Reusable task item component for displaying individual tasks with interaction buttons",
+        "exports": {
+          "functions": [
+            {
+              "name": "TaskItem",
+              "signature": "TaskItem({ task, onToggle, onOpenDetail, onStartTask, isTaskActive }) -> JSX.Element",
+              "description": "Component for rendering individual task items with checkbox, title, metadata, and action buttons"
+            }
+          ]
+        },
+        "imports": [
+          "react",
+          "lucide-react"
+        ]
+      }
+    },
+    "usage_patterns": [
+      "TasksView: TaskItem with onToggle=onCompleteTask, onOpenDetail=onEditTask, onStartTask=onStartTask, isTaskActive=activeSession?.taskId === task.id",
+      "ProjectView: TaskItem with onToggle=onCompleteTask, onOpenDetail=onEditTask, onStartTask=onStartTask, isTaskActive missing"
+    ],
+    "current_issues": [
+      "Missing prop validation and default values",
+      "No graceful handling when handlers are undefined",
+      "Inconsistent prop passing across different views",
+      "Potential crashes when required props are missing"
+    ]
+  },
+  "expected_manifest": {
+    "files_modified": [
+      {
+        "file": "src/components/shared/TaskItem.jsx",
+        "changes": "Add prop validation, default values, and graceful error handling for missing handlers"
+      }
+    ],
+    "files_created": [],
+    "new_dependencies": [],
+    "updated_exports": {
+      "src/components/shared/TaskItem.jsx": {
+        "purpose": "Robust reusable task item component with graceful prop handling and consistent behavior across all contexts",
+        "exports": {
+          "functions": [
+            {
+              "name": "TaskItem",
+              "signature": "TaskItem({ task, onToggle, onOpenDetail, onStartTask, isTaskActive }) -> JSX.Element",
+              "description": "Enhanced component for rendering individual task items with defensive programming and graceful error handling"
+            }
+          ]
+        },
+        "improvements": [
+          "Added default values for all optional props",
+          "Graceful handling of missing event handlers",
+          "Enhanced error boundaries and validation",
+          "Consistent button rendering logic",
+          "Improved accessibility and user experience"
+        ]
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": [
+      "1. Add comprehensive prop validation with default values",
+      "2. Implement graceful error handling for missing handlers",
+      "3. Add defensive checks for undefined props",
+      "4. Ensure consistent button visibility logic",
+      "5. Add console warnings for development debugging",
+      "6. Maintain backward compatibility with existing usage"
+    ],
+    "files_to_modify": [
+      {
+        "file": "src/components/shared/TaskItem.jsx",
+        "changes": [
+          "Add default props and destructuring with defaults",
+          "Wrap event handlers with existence checks",
+          "Add validation for required task prop structure",
+          "Implement graceful fallbacks for missing handlers",
+          "Add development warnings for missing critical props",
+          "Ensure buttons render consistently regardless of prop state"
+        ]
+      }
+    ],
+    "key_improvements": [
+      "Default prop values prevent undefined errors",
+      "Handler existence checks prevent crashes when functions are missing",
+      "Task prop validation ensures component receives valid data",
+      "Console warnings help developers identify prop issues during development",
+      "Graceful degradation maintains functionality even with missing props",
+      "Consistent button logic works across all view contexts"
+    ],
+    "defensive_programming_patterns": [
+      "Optional chaining for nested object access",
+      "Default parameter destructuring",
+      "Handler existence validation before calling",
+      "Graceful fallbacks for missing data",
+      "Development-time warnings for missing props"
+    ],
+    "compatibility_considerations": [
+      "Maintains existing prop interface",
+      "Backward compatible with all current usage patterns",
+      "No breaking changes to existing components",
+      "Enhanced functionality without changing public API"
+    ]
+  },
+  "acceptance_criteria": [
+    "TaskItem component handles missing onToggle prop gracefully without crashing",
+    "TaskItem component handles missing onOpenDetail prop gracefully without crashing", 
+    "TaskItem component handles missing onStartTask prop gracefully without crashing",
+    "TaskItem component provides sensible defaults for isTaskActive when undefined",
+    "Component validates task prop structure and handles malformed tasks",
+    "Action buttons render consistently whether handlers are provided or not",
+    "Console warnings appear in development when critical props are missing",
+    "All existing usage patterns in TasksView and ProjectView continue to work",
+    "Component gracefully handles edge cases like undefined task properties",
+    "Improved error handling prevents white screen crashes from prop issues"
+  ],
+  "estimated_complexity": "Medium",
+  "prerequisites": [
+    "Understanding of current TaskItem usage patterns",
+    "Knowledge of defensive programming practices in React",
+    "Familiarity with prop validation and default values"
+  ],
+  "testing_approach": [
+    "Test TaskItem with missing onToggle handler",
+    "Test TaskItem with missing onOpenDetail handler", 
+    "Test TaskItem with missing onStartTask handler",
+    "Test TaskItem with undefined isTaskActive prop",
+    "Test TaskItem with malformed task object",
+    "Test TaskItem with partially missing task properties",
+    "Verify existing functionality remains intact in TasksView",
+    "Verify existing functionality remains intact in ProjectView",
+    "Test console warnings appear for missing critical props",
+    "Test graceful fallbacks for all edge cases"
+  ],
+  "integration_points": [
+    "TasksView component usage of TaskItem",
+    "ProjectView component usage of TaskItem", 
+    "App.jsx event handlers passed through view components",
+    "Task data structure from Firebase",
+    "Active session state management"
+  ],
+  "side_effects": [
+    "Improved error handling reduces crashes",
+    "Console warnings help with development debugging",
+    "Enhanced user experience with graceful degradation",
+    "Better component reusability across different contexts"
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "task_id": "Task-2.2",
+  "title": "Implement past due detection logic",
+  "description": "Create utility function to identify tasks with due dates before current date",
+  "phase": "Phase 1: Core Task Functionality Fixes",
+  "priority": "High",
+  "estimated_time": "20 minutes",
+  "complexity_score": 3,
+  "benefit_score": 4,
+  "dependencies": ["Task-2.1"],
+  "status": "prepared",
+  "context": {
+    "parent_task": "Task 2: Enhanced Due Date Filters",
+    "sequence_position": "2 of 5",
+    "integration_points": [
+      "src/utils/helpers.js - Add isPastDue utility function",
+      "Future integration with TasksView filtering logic (Task-2.4)",
+      "Potential use in visual indicators (Task-2.5)"
+    ]
+  },
+  "actions_required": [
+    "Create utility function to identify tasks with due dates before current date",
+    "Handle tasks with no due date appropriately",
+    "Add timezone-aware date comparison"
+  ],
+  "current_manifest": {
+    "src/utils/helpers.js": {
+      "purpose": "Core utility module providing time formatting, color generation, and helper functions for the React task management application",
+      "current_exports": [
+        {
+          "name": "timeAgo",
+          "signature": "timeAgo(date) -> string",
+          "description": "Converts date to human-readable relative time string"
+        },
+        {
+          "name": "generateHslColor", 
+          "signature": "generateHslColor(existingColors = []) -> string",
+          "description": "Generates unique HSL color avoiding conflicts"
+        },
+        {
+          "name": "getComplementaryColor",
+          "signature": "getComplementaryColor(hsl) -> string", 
+          "description": "Returns complementary color for given HSL color"
+        },
+        {
+          "name": "getAnalogousColor",
+          "signature": "getAnalogousColor(hsl) -> string",
+          "description": "Returns analogous color for given HSL color"
+        },
+        {
+          "name": "formatTime",
+          "signature": "formatTime(seconds) -> string",
+          "description": "Formats seconds into MM:SS time display"
+        }
+      ],
+      "imports": [],
+      "sideEffects": []
+    }
+  },
+  "expected_post_task_manifest": {
+    "src/utils/helpers.js": {
+      "purpose": "Core utility module providing time formatting, color generation, date comparison, and helper functions for the React task management application",
+      "exports": [
+        {
+          "name": "timeAgo",
+          "signature": "timeAgo(date) -> string", 
+          "description": "Converts date to human-readable relative time string"
+        },
+        {
+          "name": "generateHslColor",
+          "signature": "generateHslColor(existingColors = []) -> string",
+          "description": "Generates unique HSL color avoiding conflicts"
+        },
+        {
+          "name": "getComplementaryColor",
+          "signature": "getComplementaryColor(hsl) -> string",
+          "description": "Returns complementary color for given HSL color"
+        },
+        {
+          "name": "getAnalogousColor", 
+          "signature": "getAnalogousColor(hsl) -> string",
+          "description": "Returns analogous color for given HSL color"
+        },
+        {
+          "name": "formatTime",
+          "signature": "formatTime(seconds) -> string",
+          "description": "Formats seconds into MM:SS time display"
+        },
+        {
+          "name": "isPastDue",
+          "signature": "isPastDue(task) -> boolean",
+          "description": "Determines if a task's due date has passed the current date/time"
+        }
+      ],
+      "imports": [],
+      "sideEffects": []
+    }
+  },
+  "technical_approach": {
+    "function_design": {
+      "name": "isPastDue",
+      "signature": "isPastDue(task) -> boolean",
+      "parameters": [
+        {
+          "name": "task",
+          "type": "Object",
+          "description": "Task object containing dueDate property",
+          "required": true
+        }
+      ],
+      "return_type": "boolean",
+      "return_description": "true if task is past due, false otherwise"
+    },
+    "implementation_logic": [
+      "Extract task.dueDate from task object",
+      "Handle null/undefined dueDate by returning false",
+      "Convert dueDate to Date object if it's a string/timestamp",
+      "Compare dueDate with current Date.now() for timezone-aware comparison",
+      "Return boolean result of comparison"
+    ],
+    "edge_cases": [
+      "task is null or undefined - return false",
+      "task.dueDate is null or undefined - return false", 
+      "task.dueDate is invalid date format - return false",
+      "task.dueDate is future date - return false",
+      "task.dueDate is exactly current time - return false (not past due yet)",
+      "task.dueDate is before current time - return true"
+    ],
+    "timezone_handling": "Use JavaScript Date objects for comparison which respect local timezone. This is appropriate for task management as users typically think in terms of their local timezone.",
+    "integration_pattern": "Function follows existing helpers.js patterns - pure function with single responsibility, no side effects, clear boolean return for easy filtering integration"
+  },
+  "code_changes": [
+    {
+      "file": "src/utils/helpers.js",
+      "type": "addition",
+      "location": "end of file",
+      "description": "Add isPastDue utility function for date comparison"
+    }
+  ],
+  "testing_considerations": [
+    "Test with task objects containing valid due dates in the past",
+    "Test with task objects containing valid due dates in the future", 
+    "Test with task objects containing null/undefined dueDate",
+    "Test with task objects that are null/undefined",
+    "Test with various date formats (Date objects, ISO strings, timestamps)",
+    "Test edge case where dueDate equals current time",
+    "Test integration with existing filtering logic"
+  ],
+  "acceptance_criteria": [
+    "isPastDue function correctly identifies tasks with due dates before current date/time",
+    "Function returns false for tasks with no due date or invalid dates",
+    "Function uses timezone-aware date comparison appropriate for task management",
+    "Function integrates seamlessly with existing helpers.js module patterns",
+    "Function is ready for integration with TasksView filtering logic",
+    "Function handles all edge cases gracefully without throwing errors"
+  ],
+  "integration_readiness": {
+    "next_task": "Task-2.4: Update task filtering function to use isPastDue",
+    "usage_pattern": "filteredTasks = tasks.filter(task => dueDateFilter === 'past-due' ? isPastDue(task) : otherLogic)",
+    "export_ready": true,
+    "backward_compatible": true
+  },
+  "files_to_modify": [
+    "src/utils/helpers.js"
+  ],
+  "files_to_create": [],
+  "validation_requirements": [
+    "Verify isPastDue function is exported from helpers.js",
+    "Verify function returns boolean for all input types",
+    "Verify function handles edge cases without errors",
+    "Verify function follows existing code style patterns",
+    "Verify function is ready for filtering integration"
+  ]
+}

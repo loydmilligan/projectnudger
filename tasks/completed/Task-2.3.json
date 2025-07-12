@@ -1,0 +1,182 @@
+{
+  "task_id": "Task-2.3",
+  "task_description": "Implement nudged task detection - Analyze existing nudge system in utils/aiNudgeService.js, create logic to identify tasks that have been flagged by nudge system, handle tasks with no nudge history",
+  "current_manifest": {
+    "version": "1.0-archaeological",
+    "generated": "2025-07-11T12:00:00.000Z",
+    "analysis_depth": "standard",
+    "analysis_scope": "Complete codebase archaeological analysis",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications",
+      "version": "0.0.0",
+      "tech_stack": [
+        "React 19.1.0",
+        "Vite 6.3.5",
+        "Firebase Firestore",
+        "Tailwind CSS",
+        "Web Bluetooth API",
+        "Multiple AI Providers (OpenAI, Gemini, Anthropic)"
+      ],
+      "deployment": "Netlify with environment variables",
+      "repository": "Git repository with active development"
+    },
+    "key_files": {
+      "src/App.jsx": "Main application component with AI nudge integration - generates recommendations on session completion",
+      "src/utils/aiNudgeService.js": "AI-powered recommendation engine that generates 'urgentTasks' arrays",
+      "src/components/views/TasksView.jsx": "Master task list view with 'Nudged' filter option (not yet implemented)",
+      "src/components/shared/AINudgeDisplay.jsx": "Displays AI recommendations including urgentTasks list"
+    }
+  },
+  "expected_manifest": {
+    "version": "1.0-post-task-2-3",
+    "changes": "Added nudged task detection functionality to TasksView with helper functions for identifying AI-flagged tasks",
+    "modified_files": {
+      "src/components/views/TasksView.jsx": {
+        "purpose": "Master task list view with working 'Past Due' and 'Nudged' filter functionality",
+        "new_exports": {
+          "functions": [
+            {
+              "name": "TasksView",
+              "signature": "TasksView(props) -> JSX.Element",
+              "description": "Enhanced task view with past due and nudged task filtering capabilities"
+            }
+          ]
+        },
+        "imports": [
+          "react",
+          "../shared/TaskItem",
+          "../../utils/taskFilters"
+        ]
+      },
+      "src/utils/taskFilters.js": {
+        "purpose": "Helper functions for task filtering including nudged task detection",
+        "exports": {
+          "functions": [
+            {
+              "name": "isPastDue",
+              "signature": "isPastDue(task) -> boolean",
+              "description": "Determines if a task is past its due date with timezone awareness"
+            },
+            {
+              "name": "isNudgedTask",
+              "signature": "isNudgedTask(task, aiNudgeRecommendations) -> boolean",
+              "description": "Identifies tasks flagged by AI nudge system as urgent"
+            },
+            {
+              "name": "applyTaskFilters",
+              "signature": "applyTaskFilters(tasks, filters, aiNudgeRecommendations) -> Array",
+              "description": "Applies all filtering logic including new past due and nudged filters"
+            }
+          ]
+        },
+        "imports": []
+      }
+    },
+    "updated_architecture": {
+      "data_flow": "Firestore (primary) ↔ React State ↔ AI Nudge Recommendations ↔ Task Filtering ↔ UI Updates",
+      "filtering_pattern": "TasksView → taskFilters utility → AI nudge state integration → filtered task display"
+    }
+  },
+  "implementation_notes": {
+    "approach": [
+      "1. Create taskFilters.js utility module with filtering logic",
+      "2. Implement isPastDue function with timezone-aware date comparison",
+      "3. Implement isNudgedTask function that checks against AI recommendations",
+      "4. Update TasksView component to use new filtering logic",
+      "5. Integrate AI nudge recommendations state into filtering",
+      "6. Ensure filters work in combination with existing project/tag filters"
+    ],
+    "files_to_create": [
+      {
+        "file": "src/utils/taskFilters.js",
+        "purpose": "Centralized task filtering logic including nudged task detection",
+        "key_exports": ["isPastDue", "isNudgedTask", "applyTaskFilters"]
+      }
+    ],
+    "files_to_modify": [
+      {
+        "file": "src/components/views/TasksView.jsx",
+        "changes": "Update filtering logic to handle 'past_due' and 'nudged' filter options, integrate AI nudge recommendations"
+      },
+      {
+        "file": "src/App.jsx",
+        "changes": "Pass aiNudgeRecommendations to TasksView component for nudged task detection"
+      }
+    ],
+    "dependencies": [],
+    "integration_points": [
+      "AI nudge recommendations state from App.jsx",
+      "Existing task filtering in TasksView",
+      "Date handling for past due detection",
+      "Task data structure compatibility"
+    ],
+    "testing_approach": [
+      "Test past due detection with various timezone scenarios",
+      "Test nudged task detection with and without AI recommendations",
+      "Test filter combinations (project + past due, tag + nudged, etc.)",
+      "Test UI updates when filters are applied",
+      "Test with empty states (no tasks, no AI recommendations)"
+    ],
+    "technical_considerations": [
+      "AI recommendations are ephemeral (not persisted), so nudged status is current session only",
+      "Past due detection needs timezone awareness",
+      "Filter combinations should work logically (AND operations)",
+      "Performance with large task lists should remain good",
+      "Graceful handling when AI recommendations are not available"
+    ]
+  },
+  "acceptance_criteria": [
+    "'Past Due' filter shows only tasks with due dates before current date/time",
+    "'Nudged' filter shows only tasks currently flagged in AI recommendations as urgent",
+    "Filters work in combination with existing project and tag filters",
+    "Performance remains good with large task datasets",
+    "Graceful handling when no AI recommendations are available",
+    "Date comparison is timezone-aware for past due detection",
+    "Filter state persists during component re-renders"
+  ],
+  "estimated_complexity": "Medium",
+  "prerequisites": [
+    "Task-2.2 completed (past due detection logic foundation)"
+  ],
+  "task_context": {
+    "phase": "Phase 1: Core Task Functionality Fixes",
+    "sequence": "Task 2.3 of enhanced due date filters implementation",
+    "related_tasks": [
+      "Task-2.1: Extend due date filter options (completed)",
+      "Task-2.2: Implement past due detection logic (completed)",
+      "Task-2.4: Update task filtering function (next)",
+      "Task-2.5: Add visual indicators for filtered tasks (future)"
+    ]
+  },
+  "ai_nudge_system_analysis": {
+    "current_implementation": {
+      "trigger_points": [
+        "Work session completion",
+        "Manual work session stop",
+        "Test button in settings"
+      ],
+      "data_structure": {
+        "urgentTasks": "Array of task titles/names flagged as urgent",
+        "nearCompletionProjects": "Array of project names near completion",
+        "neglectedProjects": "Array of neglected project names",
+        "recommendedFocus": "String with focus recommendation",
+        "nudgeIntensity": "String: 'low', 'medium', or 'high'",
+        "robotRecommendation": "Personalized message from AI robot character"
+      },
+      "storage": "Ephemeral - stored in React state only, not persisted to database",
+      "identification_method": "AI analyzes all tasks and flags urgent ones by title/name matching"
+    },
+    "nudged_task_detection_strategy": {
+      "approach": "Match task titles against urgentTasks array in current AI recommendations",
+      "fallback": "When no AI recommendations available, show empty results for nudged filter",
+      "matching_logic": "Flexible string matching to handle AI variations in task naming",
+      "edge_cases": [
+        "Tasks with no titles",
+        "AI recommendations with incomplete task names", 
+        "Multiple tasks with similar names",
+        "Tasks deleted since AI analysis"
+      ]
+    }
+  }
+}

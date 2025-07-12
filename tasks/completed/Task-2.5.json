@@ -1,0 +1,391 @@
+{
+  "task_id": "Task-2.5",
+  "task_description": "Add visual indicators for filtered tasks - Add visual cues for past due tasks (red indicators) and nudged tasks (notification badges). Ensure indicators are consistent across all views where TaskItem components are used.",
+  "current_manifest": {
+    "version": "1.0-archaeological",
+    "generated": "2025-07-11T12:00:00.000Z",
+    "analysis_depth": "standard",
+    "analysis_scope": "Complete codebase archaeological analysis",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications",
+      "version": "0.0.0",
+      "tech_stack": [
+        "React 19.1.0",
+        "Vite 6.3.5",
+        "Firebase Firestore",
+        "Tailwind CSS",
+        "Web Bluetooth API",
+        "Multiple AI Providers (OpenAI, Gemini, Anthropic)"
+      ]
+    },
+    "current_visual_indicator_analysis": {
+      "task_item_component": {
+        "file_path": "src/components/shared/TaskItem.jsx",
+        "current_visual_features": {
+          "due_date_display": {
+            "implementation": "Calendar icon with date text",
+            "existing_visual_cue": "Red text color for past due dates (line 102)",
+            "logic": "new Date() > new Date(safeTask.dueDate) ? 'text-red-500' : 'text-gray-500'"
+          },
+          "task_status_indicators": {
+            "completed_tasks": "Line-through text styling",
+            "active_tasks": "Indigo border-left and timer icon with pulse animation",
+            "in_progress": "Opacity reduction to 70%"
+          },
+          "interactive_elements": {
+            "checkbox": "Loading spinner during toggle operations",
+            "start_button": "Loading spinner during start operations",
+            "tags": "Gray background badges"
+          },
+          "missing_indicators": [
+            "No prominent past due visual indicator beyond red text",
+            "No nudged task indicators or badges",
+            "No consistent visual hierarchy for urgency"
+          ]
+        },
+        "current_styling_patterns": {
+          "container": "flex items-center bg-gray-100 dark:bg-gray-900/40 hover:bg-gray-200 dark:hover:bg-gray-900/60 p-2.5 rounded-md text-sm transition-colors group",
+          "active_task_border": "border-l-4 border-indigo-500",
+          "icon_colors": {
+            "calendar": "text-red-500 (past due) | text-gray-500 (normal)",
+            "timer": "text-indigo-500 animate-pulse",
+            "play_button": "text-gray-500 hover:text-green-500"
+          }
+        }
+      },
+      "detection_utilities": {
+        "past_due_detection": {
+          "file_path": "src/utils/taskFilters.js",
+          "function": "isPastDue(task)",
+          "implementation": "Timezone-aware date comparison using new Date() > new Date(task.dueDate)",
+          "status": "Implemented and working"
+        },
+        "nudged_detection": {
+          "file_path": "src/utils/taskFilters.js", 
+          "function": "isNudgedTask(task, aiNudgeRecommendations)",
+          "implementation": "Flexible string matching against AI urgentTasks array",
+          "status": "Implemented and working"
+        }
+      },
+      "usage_contexts": {
+        "tasks_view": {
+          "file_path": "src/components/views/TasksView.jsx",
+          "context": "Master task list with comprehensive filtering",
+          "task_item_usage": "Line 45: <TaskItem key={task.id} task={task} ... />",
+          "ai_recommendations": "Available via aiNudgeRecommendations prop"
+        },
+        "project_view": {
+          "file_path": "src/components/views/ProjectView.jsx", 
+          "context": "Individual project task list",
+          "task_item_usage": "Line 46: <TaskItem key={task.id} task={task} ... />",
+          "ai_recommendations": "Not currently passed to this view"
+        },
+        "dashboard_view": {
+          "file_path": "src/components/views/DashboardView/index.jsx",
+          "context": "Dashboard with project grid",
+          "task_item_usage": "Not directly used - shows project cards instead",
+          "note": "May display individual tasks in future iterations"
+        }
+      }
+    }
+  },
+  "expected_manifest": {
+    "source_files": {
+      "src/components/shared/TaskItem.jsx": {
+        "purpose": "Enhanced task component with prominent visual indicators for past due and nudged tasks, consistent across all application views",
+        "exports": {
+          "functions": [
+            {
+              "name": "TaskItem",
+              "signature": "TaskItem({ task, onToggle, onOpenDetail, onStartTask, isTaskActive, aiNudgeRecommendations }) -> JSX.Element",
+              "description": "Renders task item with comprehensive visual indicators including past due warnings and nudged task badges"
+            }
+          ],
+          "classes": [],
+          "constants": []
+        },
+        "imports": [
+          "react",
+          "lucide-react",
+          "../../utils/taskFilters"
+        ],
+        "sideEffects": [
+          "Dynamic visual indicator calculations",
+          "Real-time urgency status updates"
+        ],
+        "enhancements": {
+          "past_due_indicators": {
+            "border_accent": "Red left border for past due tasks",
+            "background_tint": "Subtle red background tint",
+            "icon_enhancement": "Warning icon alongside calendar for emphasis",
+            "text_styling": "Enhanced red text with bold weight"
+          },
+          "nudged_indicators": {
+            "notification_badge": "Orange notification badge with nudge icon",
+            "border_accent": "Orange left border for nudged tasks",
+            "background_tint": "Subtle orange background tint",
+            "badge_positioning": "Top-right corner with count or simple indicator"
+          },
+          "priority_hierarchy": {
+            "both_past_due_and_nudged": "Combined visual treatment with red taking precedence",
+            "visual_layering": "Proper z-index and positioning for multiple indicators",
+            "accessibility": "ARIA labels and semantic markup for screen readers"
+          }
+        }
+      },
+      "src/components/views/TasksView.jsx": {
+        "purpose": "Enhanced master task list passing AI recommendations to TaskItem components for nudged task detection",
+        "exports": {
+          "functions": [
+            {
+              "name": "TasksView", 
+              "signature": "TasksView({ tasks, projects, onStartTask, onCompleteTask, onEditTask, activeSession, aiNudgeRecommendations }) -> JSX.Element",
+              "description": "Renders master task list with AI recommendations properly passed to TaskItem components"
+            }
+          ]
+        },
+        "changes": {
+          "prop_passing": "Pass aiNudgeRecommendations to TaskItem components for nudged task detection",
+          "consistency": "Ensure all TaskItem instances receive necessary props for visual indicators"
+        }
+      },
+      "src/components/views/ProjectView.jsx": {
+        "purpose": "Enhanced individual project view passing AI recommendations to TaskItem components",
+        "exports": {
+          "functions": [
+            {
+              "name": "ProjectView",
+              "signature": "ProjectView({ project, tasks, settings, categoryColor, onCompleteTask, onEditTask, onOpenNewTaskDetail, nudgeState, onBack, onStartTask, onEditProject, aiNudgeRecommendations }) -> JSX.Element", 
+              "description": "Renders individual project view with AI recommendations properly passed to TaskItem components"
+            }
+          ]
+        },
+        "changes": {
+          "prop_addition": "Add aiNudgeRecommendations prop to component signature",
+          "prop_passing": "Pass aiNudgeRecommendations to TaskItem components for consistent visual indicators",
+          "prop_threading": "Ensure parent components pass AI recommendations through the component tree"
+        }
+      }
+    },
+    "architecture": {
+      "main_flow": "React App → Firebase Firestore ↔ Real-time Subscriptions → Component State → Enhanced Visual Indicators → UI Updates",
+      "data_flow": "Firestore (primary) ↔ React State ↔ AI Nudge Recommendations ↔ Task Visual Indicators ↔ Enhanced UI Display",
+      "configuration": "Environment variables → Firebase config → Application constants → Visual Indicator Rules",
+      "integration_patterns": [
+        "Firebase real-time listeners for live data synchronization",
+        "AI nudge recommendations passed through component hierarchy",
+        "Consistent visual indicator patterns across all task displays",
+        "Utility function integration for urgency detection"
+      ]
+    },
+    "new_features": {
+      "past_due_visual_indicators": {
+        "border_treatment": "Red left border (border-l-4 border-red-500) for immediate visual identification",
+        "background_enhancement": "Subtle red background tint (bg-red-50 dark:bg-red-900/20) for context",
+        "icon_enhancement": "AlertTriangle icon alongside existing calendar icon",
+        "text_styling": "Bold red text for due date display",
+        "animation": "Subtle pulse animation for urgent past due tasks"
+      },
+      "nudged_task_indicators": {
+        "notification_badge": "Orange circular badge with Bell or Zap icon in top-right corner",
+        "border_treatment": "Orange left border (border-l-4 border-orange-500) when not past due",
+        "background_enhancement": "Subtle orange background tint (bg-orange-50 dark:bg-orange-900/20)",
+        "badge_styling": "Small circular badge with notification count or simple indicator",
+        "icon_placement": "Non-intrusive positioning that doesn't interfere with existing UI"
+      },
+      "priority_hierarchy_rules": {
+        "past_due_takes_precedence": "Past due indicators override nudged indicators when both conditions exist",
+        "combined_visual_treatment": "Show both past due styling and nudged badge when applicable",
+        "accessibility_enhancements": "Screen reader friendly descriptions for all visual indicators",
+        "responsive_behavior": "Indicators scale appropriately on mobile and desktop"
+      },
+      "consistency_across_views": {
+        "tasks_view": "Full visual indicator support with AI recommendations",
+        "project_view": "Consistent visual indicators when viewing individual project tasks", 
+        "future_dashboard": "Prepared for dashboard task display integration",
+        "styling_coherence": "Consistent color scheme and visual language across all contexts"
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": "Enhance TaskItem component with visual indicators using existing utility functions, ensure consistent prop passing across all views",
+    "files_to_create": [],
+    "files_to_modify": [
+      {
+        "file": "src/components/shared/TaskItem.jsx",
+        "changes": "Add aiNudgeRecommendations prop, import utility functions, implement visual indicators for past due and nudged tasks with proper hierarchy"
+      },
+      {
+        "file": "src/components/views/TasksView.jsx", 
+        "changes": "Pass aiNudgeRecommendations prop to TaskItem components"
+      },
+      {
+        "file": "src/components/views/ProjectView.jsx",
+        "changes": "Add aiNudgeRecommendations prop and pass it through to TaskItem components"
+      },
+      {
+        "file": "src/App.jsx",
+        "changes": "Ensure aiNudgeRecommendations are passed to ProjectView component when available"
+      }
+    ],
+    "dependencies": [
+      "lucide-react (AlertTriangle, Bell, Zap icons)",
+      "../../utils/taskFilters (isPastDue, isNudgedTask functions)"
+    ],
+    "integration_points": [
+      "Existing TaskItem component prop handling and defensive programming patterns",
+      "Current visual styling using Tailwind CSS classes",
+      "Existing AI nudge recommendation system and data structure",
+      "Past due detection logic already implemented in taskFilters.js",
+      "Nudged task detection logic already implemented in taskFilters.js",
+      "Consistent prop threading through component hierarchy",
+      "Dark mode support for all new visual indicators"
+    ],
+    "testing_approach": "Test visual indicators in all contexts (TasksView, ProjectView), verify past due and nudged detection logic, test combined states, ensure accessibility compliance, validate responsive behavior",
+    "visual_design_principles": {
+      "color_hierarchy": "Red for critical (past due) > Orange for attention (nudged) > Standard colors",
+      "visual_weight": "Prominent but not overwhelming, maintaining task readability",
+      "consistency": "Same visual language across all components using TaskItem",
+      "accessibility": "Sufficient color contrast, screen reader support, focus indicators"
+    }
+  },
+  "acceptance_criteria": [
+    "Past due tasks display prominent red visual indicators (border, background tint, enhanced text)",
+    "Nudged tasks display orange notification badges and visual indicators",
+    "Past due tasks with nudged status show combined visual treatment with red taking precedence",
+    "Visual indicators are consistent across TasksView and ProjectView",
+    "All new visual indicators support dark mode theming",
+    "Visual indicators do not interfere with existing task functionality (checkbox, buttons, editing)",
+    "Screen readers can properly announce urgency status through ARIA labels",
+    "Visual indicators scale appropriately on mobile and desktop devices",
+    "Performance remains good with large task lists containing many urgent tasks",
+    "Visual hierarchy clearly distinguishes between different urgency levels"
+  ],
+  "estimated_complexity": "Medium",
+  "prerequisites": [
+    "Task 2.1: Extend due date filter options (Completed)",
+    "Task 2.2: Implement past due detection logic (Completed)", 
+    "Task 2.3: Implement nudged task detection (Completed)",
+    "Task 2.4: Update task filtering function (Completed)"
+  ],
+  "detailed_implementation_steps": {
+    "step_1_enhance_taskitem": {
+      "description": "Add visual indicator logic to TaskItem component",
+      "changes": [
+        "Add aiNudgeRecommendations prop with default value",
+        "Import isPastDue and isNudgedTask from taskFilters",
+        "Import AlertTriangle, Bell icons from lucide-react",
+        "Calculate isPastDueTask and isNudgedTask status",
+        "Add conditional styling for past due indicators",
+        "Add notification badge for nudged tasks",
+        "Implement priority hierarchy for combined states",
+        "Add ARIA labels for accessibility"
+      ]
+    },
+    "step_2_update_tasksview": {
+      "description": "Ensure TasksView passes AI recommendations to TaskItem",
+      "changes": [
+        "Verify aiNudgeRecommendations prop is being passed to TaskItem on line 45",
+        "Add any missing prop threading if needed"
+      ]
+    },
+    "step_3_update_projectview": {
+      "description": "Add AI recommendations support to ProjectView",
+      "changes": [
+        "Add aiNudgeRecommendations prop to ProjectView component signature",
+        "Pass aiNudgeRecommendations to TaskItem components on line 46",
+        "Update parent component calls to ProjectView with AI recommendations"
+      ]
+    },
+    "step_4_update_app": {
+      "description": "Ensure App.jsx passes AI recommendations to all views",
+      "changes": [
+        "Verify ProjectView receives aiNudgeRecommendations when rendered",
+        "Ensure consistent prop passing across all view components"
+      ]
+    }
+  },
+  "visual_specification": {
+    "past_due_indicators": {
+      "container_styling": {
+        "border": "border-l-4 border-red-500",
+        "background": "bg-red-50 dark:bg-red-900/20",
+        "hover_state": "hover:bg-red-100 dark:hover:bg-red-900/30"
+      },
+      "due_date_styling": {
+        "text_color": "text-red-600 dark:text-red-400",
+        "font_weight": "font-semibold",
+        "icon": "AlertTriangle size={12} className='mr-1 text-red-600'"
+      },
+      "animation": {
+        "urgent_pulse": "animate-pulse for tasks past due by more than 7 days"
+      }
+    },
+    "nudged_indicators": {
+      "container_styling": {
+        "border": "border-l-4 border-orange-500 (when not past due)",
+        "background": "bg-orange-50 dark:bg-orange-900/20 (when not past due)"
+      },
+      "notification_badge": {
+        "positioning": "absolute top-1 right-1",
+        "styling": "bg-orange-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs",
+        "icon": "Bell size={10} or simple dot indicator",
+        "z_index": "z-10"
+      }
+    },
+    "combined_states": {
+      "past_due_and_nudged": {
+        "border": "border-l-4 border-red-500 (red takes precedence)",
+        "background": "bg-red-50 dark:bg-red-900/20",
+        "badge": "Orange notification badge still visible in top-right"
+      }
+    },
+    "responsive_behavior": {
+      "mobile": "Indicators scale down appropriately, badges remain visible",
+      "desktop": "Full visual treatment with optimal spacing",
+      "tablet": "Balanced scaling between mobile and desktop"
+    }
+  },
+  "accessibility_requirements": {
+    "aria_labels": [
+      "aria-label='Past due task' for past due indicators",
+      "aria-label='Nudged task - requires attention' for nudged indicators",
+      "aria-label='Past due and nudged task - urgent attention required' for combined states"
+    ],
+    "color_contrast": {
+      "red_indicators": "Minimum 4.5:1 contrast ratio for text",
+      "orange_indicators": "Minimum 4.5:1 contrast ratio for badges",
+      "background_tints": "Sufficient contrast for readability"
+    },
+    "screen_reader_support": {
+      "visual_indicator_descriptions": "Hidden text descriptions for non-visual users",
+      "status_announcements": "Proper semantic markup for urgency levels"
+    }
+  },
+  "performance_considerations": {
+    "calculation_efficiency": "Utility function calls (isPastDue, isNudgedTask) are lightweight",
+    "rendering_optimization": "Conditional rendering to avoid unnecessary DOM elements",
+    "large_lists": "Visual indicators do not impact list virtualization or scrolling performance",
+    "re_render_minimization": "Proper dependency management for visual state calculations"
+  },
+  "testing_checklist": [
+    "Past due tasks display red indicators in TasksView",
+    "Past due tasks display red indicators in ProjectView", 
+    "Nudged tasks display orange badges in both views",
+    "Combined past due + nudged tasks show proper hierarchy",
+    "Visual indicators work correctly in dark mode",
+    "Accessibility labels are properly announced by screen readers",
+    "Mobile responsive behavior maintains indicator visibility",
+    "Large task lists maintain good performance with indicators",
+    "Visual indicators do not interfere with task interactions",
+    "Indicators update in real-time as task status changes"
+  ],
+  "integration_with_existing_features": {
+    "timer_functionality": "Visual indicators do not interfere with timer start/stop",
+    "task_completion": "Indicators properly handle completed task styling",
+    "drag_and_drop": "Prepared for future drag and drop implementation",
+    "filtering": "Visual indicators complement existing filter functionality",
+    "search": "Indicators remain visible during search and filter operations"
+  }
+}

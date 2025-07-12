@@ -1,0 +1,298 @@
+{
+  "taskId": "Task-2.3",
+  "title": "Implement nudged task detection",
+  "description": "Create logic to identify tasks that have been flagged by nudge system",
+  "phase": "Task 2: Enhanced Due Date Filters",
+  "dependencies": ["Task-2.1", "Task-2.2"],
+  "implementation_complexity": "Medium",
+  "
+  current_manifest": {
+    "focus_files": {
+      "src/utils/helpers.js": {
+        "purpose": "Core utility module providing time formatting, color generation, and helper functions for the React task management application",
+        "current_exports": {
+          "functions": [
+            {
+              "name": "timeAgo",
+              "signature": "timeAgo(date) -> string",
+              "description": "Converts date to human-readable relative time string"
+            },
+            {
+              "name": "generateHslColor", 
+              "signature": "generateHslColor(existingColors = []) -> string",
+              "description": "Generates unique HSL color avoiding conflicts"
+            },
+            {
+              "name": "getComplementaryColor",
+              "signature": "getComplementaryColor(hsl) -> string", 
+              "description": "Gets complementary color from HSL input"
+            },
+            {
+              "name": "getAnalogousColor",
+              "signature": "getAnalogousColor(hsl) -> string",
+              "description": "Gets analogous color from HSL input"
+            },
+            {
+              "name": "formatTime",
+              "signature": "formatTime(seconds) -> string",
+              "description": "Formats seconds into MM:SS time display"
+            },
+            {
+              "name": "isPastDue",
+              "signature": "isPastDue(task) -> boolean",
+              "description": "Determines if a task's due date has passed the current date/time"
+            }
+          ]
+        }
+      },
+      "src/utils/aiNudgeService.js": {
+        "purpose": "AI-powered task and project recommendation engine using multiple LLM providers with robot personality and notification integration",
+        "current_system": {
+          "generateAINudge": "Main entry point - generates AI nudges with notifications (TTS, ntfy) and session awareness",
+          "prepareDataForAI": "Calculate project completion percentages and staleness",
+          "nudge_score_algorithm": "(project.priority || 3) * 2 + daysOld",
+          "project_classifications": {
+            "isNearCompletion": "completionPercentage >= 80 && completionPercentage < 100",
+            "isStalled": "daysSinceActivity > 7 && completionPercentage > 0", 
+            "isNeglected": "daysSinceActivity > 14"
+          }
+        }
+      }
+    }
+  },
+  
+  "expected_manifest": {
+    "focus_files": {
+      "src/utils/helpers.js": {
+        "purpose": "Core utility module providing time formatting, color generation, and helper functions for the React task management application",
+        "expected_exports": {
+          "functions": [
+            {
+              "name": "timeAgo",
+              "signature": "timeAgo(date) -> string", 
+              "description": "Converts date to human-readable relative time string"
+            },
+            {
+              "name": "generateHslColor",
+              "signature": "generateHslColor(existingColors = []) -> string",
+              "description": "Generates unique HSL color avoiding conflicts"
+            },
+            {
+              "name": "getComplementaryColor",
+              "signature": "getComplementaryColor(hsl) -> string",
+              "description": "Gets complementary color from HSL input"
+            },
+            {
+              "name": "getAnalogousColor", 
+              "signature": "getAnalogousColor(hsl) -> string",
+              "description": "Gets analogous color from HSL input"
+            },
+            {
+              "name": "formatTime",
+              "signature": "formatTime(seconds) -> string",
+              "description": "Formats seconds into MM:SS time display"
+            },
+            {
+              "name": "isPastDue",
+              "signature": "isPastDue(task) -> boolean",
+              "description": "Determines if a task's due date has passed the current date/time"
+            },
+            {
+              "name": "isNudged",
+              "signature": "isNudged(task, projects, tasks) -> boolean",
+              "description": "Determines if a task would be considered 'nudged' based on nudge system criteria"
+            }
+          ]
+        }
+      }
+    }
+  },
+
+  "implementation_approach": {
+    "strategy": "Heuristic-based nudge detection using existing project/task data",
+    "rationale": "Since no explicit nudge tracking exists, we'll use the same criteria that the AI nudge system uses to identify 'neglected' or 'nudge-worthy' tasks",
+    "algorithm_source": "Based on nudge score algorithm from aiNudgeService.js",
+    
+    "function_signature": {
+      "name": "isNudged",
+      "parameters": [
+        {
+          "name": "task",
+          "type": "Object",
+          "description": "Task object to evaluate",
+          "required": true
+        },
+        {
+          "name": "projects", 
+          "type": "Array",
+          "description": "Array of all projects for context",
+          "required": true
+        },
+        {
+          "name": "tasks",
+          "type": "Array", 
+          "description": "Array of all tasks for project analysis",
+          "required": true
+        }
+      ],
+      "returns": {
+        "type": "boolean",
+        "description": "true if task should be considered 'nudged', false otherwise"
+      }
+    },
+
+    "nudge_detection_criteria": {
+      "primary_factors": [
+        "Task belongs to a project with high nudge score (priority * 2 + daysOld)",
+        "Task belongs to a project that is stalled (daysSinceActivity > 7 && completionPercentage > 0)",
+        "Task belongs to a project that is neglected (daysSinceActivity > 14)",
+        "Task itself is old but incomplete (daysSinceCreated > threshold)"
+      ],
+      "thresholds": {
+        "nudge_score_threshold": 20,
+        "project_staleness_days": 7,
+        "project_neglect_days": 14,
+        "task_age_days": 5
+      },
+      "weighted_scoring": {
+        "high_nudge_score_project": 3,
+        "stalled_project": 2,
+        "neglected_project": 4,
+        "old_incomplete_task": 1,
+        "threshold_for_nudged": 3
+      }
+    },
+
+    "edge_cases": {
+      "null_undefined_handling": [
+        "Handle null/undefined task object",
+        "Handle missing task.projectId",
+        "Handle missing task.createdAt",
+        "Handle missing project data"
+      ],
+      "completed_tasks": "Return false for completed tasks (isComplete = true)",
+      "new_tasks": "Return false for very new tasks (< 24 hours old)",
+      "archived_projects": "Return false for tasks in archived projects"
+    },
+
+    "integration_points": {
+      "consistent_with": "isPastDue function pattern in helpers.js",
+      "future_integration": "TasksView filtering logic in Task-2.4",
+      "ai_nudge_compatibility": "Uses same criteria as aiNudgeService.js prepareDataForAI function"
+    }
+  },
+
+  "implementation_details": {
+    "file_to_modify": "src/utils/helpers.js",
+    "modification_type": "add_function",
+    "function_location": "Add after isPastDue function",
+    
+    "implementation_pseudocode": [
+      "1. Validate input parameters (task, projects, tasks)",
+      "2. Return false for edge cases (null task, completed tasks, very new tasks)",
+      "3. Find the project associated with the task",
+      "4. Calculate project statistics (completion %, days since activity, nudge score)",
+      "5. Calculate task age",
+      "6. Apply weighted scoring system based on nudge criteria",
+      "7. Return true if total score meets nudged threshold"
+    ],
+
+    "error_handling": [
+      "Graceful handling of missing or invalid data",
+      "Default to false for any errors", 
+      "Console logging for debugging invalid data cases",
+      "Try-catch wrapper for unexpected errors"
+    ],
+
+    "performance_considerations": [
+      "Efficient project lookup using find()",
+      "Minimal calculations per call",
+      "Avoid complex iteration patterns",
+      "Cache-friendly for repeated calls with same data"
+    ]
+  },
+
+  "testing_strategy": {
+    "test_cases": [
+      {
+        "scenario": "Task from high nudge score project",
+        "expected": true,
+        "setup": "Project with priority 5, 10 days old"
+      },
+      {
+        "scenario": "Task from stalled project", 
+        "expected": true,
+        "setup": "Project with 50% completion, 10 days since activity"
+      },
+      {
+        "scenario": "Task from neglected project",
+        "expected": true,
+        "setup": "Project with 20% completion, 20 days since activity"
+      },
+      {
+        "scenario": "Old incomplete task",
+        "expected": true,
+        "setup": "Task created 7 days ago, not completed"
+      },
+      {
+        "scenario": "New task",
+        "expected": false,
+        "setup": "Task created 1 hour ago"
+      },
+      {
+        "scenario": "Completed task",
+        "expected": false,
+        "setup": "Task with isComplete = true"
+      },
+      {
+        "scenario": "Task with null projectId",
+        "expected": false,
+        "setup": "Task with projectId = null"
+      },
+      {
+        "scenario": "Task from active project",
+        "expected": false,
+        "setup": "Project with recent activity, low priority"
+      }
+    ],
+
+    "validation_approach": [
+      "Unit tests for edge cases",
+      "Integration testing with real project/task data",
+      "Performance testing with large datasets",
+      "Manual testing in TasksView filtering context"
+    ]
+  },
+
+  "task_context": {
+    "task_series": "Task 2: Enhanced Due Date Filters",
+    "prerequisite_tasks": {
+      "Task-2.1": "Complete - TasksView has 'Nudged' filter option",
+      "Task-2.2": "Complete - isPastDue utility function in helpers.js"
+    },
+    "subsequent_tasks": {
+      "Task-2.4": "Integrate isNudged into TasksView filtering logic"
+    },
+    "overall_goal": "Enable users to filter tasks by nudge status to identify neglected work"
+  },
+
+  "success_criteria": [
+    "isNudged function successfully added to helpers.js",
+    "Function follows same pattern as existing helper functions",
+    "Function correctly identifies tasks from neglected/stalled projects",
+    "Function handles all edge cases gracefully",
+    "Function integrates seamlessly with existing codebase patterns",
+    "Function is ready for TasksView filtering integration"
+  ],
+
+  "implementation_notes": {
+    "algorithm_rationale": "Uses same underlying logic as AI nudge system to ensure consistency between 'what AI considers nudge-worthy' and 'what users can filter by'",
+    "threshold_tuning": "Thresholds are configurable and can be adjusted based on user feedback",
+    "future_enhancements": [
+      "Could track explicit nudge events in future iterations",
+      "Could add user-configurable nudge sensitivity settings",
+      "Could integrate with notification history when available"
+    ],
+    "performance_impact": "Minimal - function designed for efficient execution in filtering contexts"
+  }
+}

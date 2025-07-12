@@ -1,0 +1,477 @@
+{
+  "version": "1.0",
+  "generated": "2025-07-07T21:44:00.000Z",
+  "project": "project-nudger",
+  "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications.",
+  "files": {
+    "src/main.jsx": {
+      "purpose": "Application entry point that renders the main App component into the DOM",
+      "exports": {
+        "functions": [],
+        "classes": [],
+        "constants": []
+      },
+      "imports": ["react", "react-dom/client", "./index.css", "./App.jsx"],
+      "sideEffects": ["creates-ui", "modifies-dom"]
+    },
+    "src/App.jsx": {
+      "purpose": "Main application component that handles state management, routing, and renders all views and modals",
+      "exports": {
+        "functions": [
+          {
+            "name": "App",
+            "signature": "App() -> JSX.Element",
+            "description": "Main React component that manages application state and renders the entire UI",
+            "parameters": {},
+            "returns": "React JSX element representing the entire application"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "firebase/firestore",
+        "lucide-react",
+        "./config/firebase",
+        "./config/constants",
+        "./utils/helpers",
+        "./utils/dummyData",
+        "./components/layout/TopNavBar",
+        "./components/views/DashboardView",
+        "./components/views/ProjectsView",
+        "./components/views/TasksView",
+        "./components/views/TrackingView",
+        "./components/views/ArchivedProjectsView",
+        "./components/views/ProjectView",
+        "./components/views/SettingsView",
+        "./components/shared/SessionCompletionModal",
+        "./services/M5DialBLEService",
+        "./components/shared/AINudgeDisplay",
+        "./components/shared/ObsidianSyncProgressModal",
+        "./hooks/useObsidianSync",
+        "./utils/aiNudgeService"
+      ],
+      "sideEffects": [
+        "reads-database",
+        "writes-database",
+        "creates-ui",
+        "modifies-dom",
+        "registers-events",
+        "loads-settings",
+        "saves-settings",
+        "network-calls",
+        "sends-data",
+        "receives-data"
+      ]
+    },
+    "src/config/firebase.js": {
+      "purpose": "Firebase configuration and initialization for Firestore database connection",
+      "exports": {
+        "functions": [],
+        "classes": [],
+        "constants": [
+          {
+            "name": "db",
+            "type": "Firestore",
+            "value": "Firestore database instance",
+            "description": "Initialized Firestore database instance for data operations"
+          },
+          {
+            "name": "basePath",
+            "type": "string",
+            "value": "artifacts/${appId}/public/data",
+            "description": "Base path for all Firestore document collections"
+          }
+        ]
+      },
+      "imports": ["firebase/app", "firebase/firestore"],
+      "sideEffects": ["loads-settings", "network-calls"]
+    },
+    "src/config/constants.js": {
+      "purpose": "Application-wide configuration constants for nudging and Pomodoro timer settings",
+      "exports": {
+        "functions": [],
+        "classes": [],
+        "constants": [
+          {
+            "name": "NUDGE_CONFIG",
+            "type": "object",
+            "value": "Configuration object with nudge levels, modes, and thresholds",
+            "description": "Contains all configuration for the nudging system including levels, modes, and threshold values"
+          },
+          {
+            "name": "POMODORO_CONFIG",
+            "type": "object",
+            "value": "Timer durations for work sessions and breaks",
+            "description": "Contains timing configurations for Pomodoro sessions including work, short break, and long break durations"
+          }
+        ]
+      },
+      "imports": [],
+      "sideEffects": []
+    },
+    "src/services/M5DialBLEService.js": {
+      "purpose": "Web Bluetooth service for connecting to and communicating with M5Stack Dial hardware timer",
+      "exports": {
+        "functions": [],
+        "classes": [
+          {
+            "name": "M5DialBLEService",
+            "description": "Singleton class that manages Bluetooth Low Energy connection to M5Stack Dial",
+            "constructor": "M5DialBLEService()",
+            "methods": [
+              {
+                "name": "connect",
+                "signature": "connect() -> Promise<void>",
+                "description": "Initiates BLE connection to M5Stack Dial device",
+                "parameters": {},
+                "returns": "Promise that resolves when connection is established"
+              },
+              {
+                "name": "disconnect",
+                "signature": "disconnect() -> Promise<void>",
+                "description": "Disconnects from the M5Stack Dial device",
+                "parameters": {},
+                "returns": "Promise that resolves when disconnection is complete"
+              },
+              {
+                "name": "sendCommand",
+                "signature": "sendCommand(cmd: string|object) -> Promise<void>",
+                "description": "Sends a command to the connected M5Stack Dial device",
+                "parameters": {
+                  "cmd": "Command string or object to send to the device"
+                },
+                "returns": "Promise that resolves when command is sent"
+              }
+            ],
+            "properties": [
+              {
+                "name": "connected",
+                "type": "boolean",
+                "description": "Current connection status to the M5Stack Dial"
+              },
+              {
+                "name": "device",
+                "type": "BluetoothDevice",
+                "description": "Reference to the connected Bluetooth device"
+              }
+            ]
+          }
+        ],
+        "constants": [
+          {
+            "name": "m5DialBLEService",
+            "type": "M5DialBLEService",
+            "value": "Singleton instance",
+            "description": "Singleton instance of the M5DialBLEService for global use"
+          }
+        ]
+      },
+      "imports": [],
+      "sideEffects": ["sends-data", "receives-data", "registers-events", "publishes-events"]
+    },
+    "src/utils/helpers.js": {
+      "purpose": "Utility functions for time formatting, color generation, and UI helpers",
+      "exports": {
+        "functions": [
+          {
+            "name": "timeAgo",
+            "signature": "timeAgo(date: Date) -> string",
+            "description": "Converts a date to a human-readable relative time string",
+            "parameters": {
+              "date": "Date object to convert to relative time"
+            },
+            "returns": "Human-readable string like '5 days ago' or 'just now'"
+          },
+          {
+            "name": "generateHslColor",
+            "signature": "generateHslColor(existingColors: string[]) -> string",
+            "description": "Generates a random HSL color that doesn't conflict with existing colors",
+            "parameters": {
+              "existingColors": "Array of existing HSL color strings to avoid conflicts"
+            },
+            "returns": "HSL color string with good contrast from existing colors"
+          },
+          {
+            "name": "getComplementaryColor",
+            "signature": "getComplementaryColor(hsl: string) -> string",
+            "description": "Generates a complementary color from an HSL color string",
+            "parameters": {
+              "hsl": "HSL color string to generate complement for"
+            },
+            "returns": "Complementary HSL color string"
+          },
+          {
+            "name": "getAnalogousColor",
+            "signature": "getAnalogousColor(hsl: string) -> string",
+            "description": "Generates an analogous color from an HSL color string",
+            "parameters": {
+              "hsl": "HSL color string to generate analogous color for"
+            },
+            "returns": "Analogous HSL color string"
+          },
+          {
+            "name": "formatTime",
+            "signature": "formatTime(seconds: number) -> string",
+            "description": "Formats seconds into MM:SS format for timer display",
+            "parameters": {
+              "seconds": "Number of seconds to format"
+            },
+            "returns": "Time string in MM:SS format"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [],
+      "sideEffects": []
+    },
+    "src/utils/aiNudgeService.js": {
+      "purpose": "AI-powered intelligent nudging service with multi-LLM support for project and task recommendations",
+      "exports": {
+        "functions": [
+          {
+            "name": "prepareDataForAI",
+            "signature": "prepareDataForAI(projects: Array, tasks: Array) -> Object",
+            "description": "Transforms project and task data into structured format for AI analysis",
+            "parameters": {
+              "projects": "Array of user projects",
+              "tasks": "Array of user tasks"
+            },
+            "returns": "Structured data object with projects, tasks, and summary statistics"
+          },
+          {
+            "name": "getDataAnalysis",
+            "signature": "getDataAnalysis(apiKey: string, provider: string, projectData: Object, additionalRequest: string) -> Promise<Object>",
+            "description": "Makes AI API call for structured data analysis using specified provider",
+            "parameters": {
+              "apiKey": "API key for the chosen AI provider",
+              "provider": "AI provider ('openai', 'gemini', 'anthropic')",
+              "projectData": "Prepared project/task data",
+              "additionalRequest": "Optional additional request from user"
+            },
+            "returns": "Promise resolving to structured analysis with urgent tasks, recommendations, and nudge intensity"
+          },
+          {
+            "name": "getRobotPersonality",
+            "signature": "getRobotPersonality(apiKey: string, provider: string, robotCharacter: string, recommendedFocus: string) -> Promise<string>",
+            "description": "Generates robot character personality response for nudge recommendations",
+            "parameters": {
+              "apiKey": "API key for the chosen AI provider",
+              "provider": "AI provider ('openai', 'gemini', 'anthropic')",
+              "robotCharacter": "Selected robot character name",
+              "recommendedFocus": "Text from analysis to rephrase in character voice"
+            },
+            "returns": "Promise resolving to robot personality response string"
+          },
+          {
+            "name": "getAINudgeRecommendations",
+            "signature": "getAINudgeRecommendations(apiKey: string, provider: string, projectData: Object, additionalRequest: string) -> Promise<Object>",
+            "description": "Orchestrates both AI calls to get complete recommendations with robot personality",
+            "parameters": {
+              "apiKey": "API key for the chosen AI provider",
+              "provider": "AI provider ('openai', 'gemini', 'anthropic')",
+              "projectData": "Prepared project/task data",
+              "additionalRequest": "Optional additional request from user"
+            },
+            "returns": "Promise resolving to complete AI recommendations with robot character response"
+          },
+          {
+            "name": "generateAINudge",
+            "signature": "generateAINudge(settings: Object, projects: Array, tasks: Array, activeSession: Object) -> Promise<Object>",
+            "description": "Main entry point for generating AI nudges with notifications and TTS",
+            "parameters": {
+              "settings": "User settings including AI configuration",
+              "projects": "Array of user projects",
+              "tasks": "Array of user tasks",
+              "activeSession": "Current active session or null"
+            },
+            "returns": "Promise resolving to AI recommendations or null if disabled/error"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [],
+      "sideEffects": ["network-calls", "modifies-dom", "publishes-events"]
+    },
+    "src/hooks/useM5Dial.js": {
+      "purpose": "React hook for managing M5Stack Dial BLE connection state and operations",
+      "exports": {
+        "functions": [
+          {
+            "name": "useM5Dial",
+            "signature": "useM5Dial() -> Object",
+            "description": "React hook that provides M5 Dial connection state and control functions",
+            "parameters": {},
+            "returns": "Object with connection state, methods, and status data"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": ["react", "../services/M5DialBLEService"],
+      "sideEffects": ["registers-events", "subscribes-to-events"]
+    },
+    "src/hooks/useObsidianSync.js": {
+      "purpose": "React hook for orchestrating synchronization with Obsidian note-taking application",
+      "exports": {
+        "functions": [
+          {
+            "name": "useObsidianSync",
+            "signature": "useObsidianSync(firebaseSettings: Object) -> Object",
+            "description": "React hook that manages Obsidian synchronization state and operations",
+            "parameters": {
+              "firebaseSettings": "Settings object loaded from Firebase containing Obsidian configuration"
+            },
+            "returns": "Object with sync state, methods, and result data"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": ["react", "../utils/obsidianApi", "../config/obsidian"],
+      "sideEffects": ["network-calls", "reads-files", "writes-files"]
+    },
+    "src/components/layout/TopNavBar.jsx": {
+      "purpose": "Main navigation bar component with view switching, BLE connection, and Obsidian sync controls",
+      "exports": {
+        "functions": [
+          {
+            "name": "TopNavBar",
+            "signature": "TopNavBar(props: Object) -> JSX.Element",
+            "description": "Navigation bar component with view switching and connection controls",
+            "parameters": {
+              "props": "Component props including activeView, setActiveView, and sync controls"
+            },
+            "returns": "React JSX element for the top navigation bar"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "../../hooks/useM5Dial",
+        "lucide-react",
+        "../shared/ObsidianSyncStatus",
+        "./NudgerLogo"
+      ],
+      "sideEffects": ["creates-ui", "registers-events"]
+    },
+    "src/components/views/DashboardView/index.jsx": {
+      "purpose": "Dashboard view component that displays the main application interface with timer, recommendations, and projects",
+      "exports": {
+        "functions": [
+          {
+            "name": "DashboardView",
+            "signature": "DashboardView(props: Object) -> JSX.Element",
+            "description": "Main dashboard view with timer widget, recommendation engine, and project grid",
+            "parameters": {
+              "props": "Component props including projects, tasks, nudgeState, and session handlers"
+            },
+            "returns": "React JSX element for the dashboard view"
+          }
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "./RecommendationEngine",
+        "./NudgeStatus",
+        "./EnhancedTimerWidget",
+        "../../shared/ProjectFilters",
+        "../../../utils/helpers"
+      ],
+      "sideEffects": ["creates-ui", "registers-events"]
+    },
+    "src/utils/obsidianApi.js": {
+      "purpose": "REST API client for communicating with Obsidian Local REST plugin for note synchronization",
+      "exports": {
+        "functions": [],
+        "classes": [
+          {
+            "name": "ObsidianApi",
+            "description": "API client for Obsidian Local REST plugin integration",
+            "constructor": "ObsidianApi(userConfig: Object)",
+            "methods": [
+              {
+                "name": "testConnection",
+                "signature": "testConnection() -> Promise<void>",
+                "description": "Tests connection to Obsidian Local REST API",
+                "parameters": {},
+                "returns": "Promise that resolves if connection is successful"
+              },
+              {
+                "name": "createNote",
+                "signature": "createNote(path: string, content: string) -> Promise<boolean>",
+                "description": "Creates a new note in Obsidian vault",
+                "parameters": {
+                  "path": "File path for the new note",
+                  "content": "Markdown content for the note"
+                },
+                "returns": "Promise resolving to true if note was created"
+              },
+              {
+                "name": "updateNote",
+                "signature": "updateNote(path: string, content: string) -> Promise<boolean>",
+                "description": "Updates an existing note in Obsidian vault",
+                "parameters": {
+                  "path": "File path for the note to update",
+                  "content": "New markdown content for the note"
+                },
+                "returns": "Promise resolving to true if note was updated"
+              }
+            ],
+            "properties": [
+              {
+                "name": "cfg",
+                "type": "object",
+                "description": "Configuration object with endpoint and API key"
+              }
+            ]
+          }
+        ],
+        "constants": []
+      },
+      "imports": ["../config/obsidian"],
+      "sideEffects": ["network-calls", "reads-files", "writes-files"]
+    },
+    "eslint.config.js": {
+      "purpose": "ESLint configuration for React project with modern JavaScript and JSX support",
+      "exports": {
+        "functions": [],
+        "classes": [],
+        "constants": []
+      },
+      "imports": ["@eslint/js", "globals", "eslint-plugin-react-hooks", "eslint-plugin-react-refresh"],
+      "sideEffects": []
+    }
+  },
+  "dependencies": {
+    "firebase": "Google Firebase SDK for Firestore database and authentication services",
+    "lucide-react": "Beautiful and consistent icon library with React components",
+    "obsidian-mcp-server": "MCP server integration for Obsidian note-taking application",
+    "react": "JavaScript library for building user interfaces with components",
+    "react-dom": "React package for DOM rendering and manipulation",
+    "@eslint/js": "ESLint JavaScript configuration and rules",
+    "@types/react": "TypeScript definitions for React library",
+    "@types/react-dom": "TypeScript definitions for React DOM package",
+    "@vitejs/plugin-react": "Vite plugin for React applications with fast refresh",
+    "autoprefixer": "PostCSS plugin to parse CSS and add vendor prefixes automatically",
+    "eslint": "JavaScript and JSX linter for identifying and fixing code problems",
+    "eslint-plugin-react-hooks": "ESLint plugin for React Hooks rules and best practices",
+    "eslint-plugin-react-refresh": "ESLint plugin for React Fast Refresh compatibility",
+    "globals": "Global identifier definitions for various JavaScript environments",
+    "postcss": "CSS transformation tool with plugin ecosystem",
+    "tailwindcss": "Utility-first CSS framework for rapid UI development",
+    "vite": "Fast build tool and development server for modern web projects"
+  },
+  "architecture": {
+    "main_flow": "Application starts in main.jsx, renders App component which manages global state using React hooks and Firebase real-time subscriptions. App component handles routing between different views (Dashboard, Projects, Tasks, Settings, etc.) and manages active sessions, project/task CRUD operations, and AI nudging. The dashboard serves as the primary interface with timer widgets, recommendation engine, and project overview. BLE integration allows hardware control via M5Stack Dial device.",
+    "data_flow": "Data flows from Firebase Firestore through real-time onSnapshot listeners into React state, which propagates down to child components via props. User interactions trigger state updates that sync back to Firestore. External integrations include Web Bluetooth for M5 Dial communication, AI APIs (OpenAI/Gemini/Anthropic) for intelligent nudging, and Obsidian REST API for note synchronization. Session management coordinates between web app and hardware timer states.",
+    "configuration": "Configuration is managed through Firebase settings documents, environment variables for API keys (Firebase, AI providers), and user preferences stored in Firestore. The app supports multiple AI providers, customizable nudging behavior, Obsidian integration settings, and BLE hardware connectivity. Settings are reactive and immediately applied through the settings state management system."
+  }
+}
