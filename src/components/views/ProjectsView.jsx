@@ -2,7 +2,7 @@ import React from 'react';
 import ProjectFilters from '../shared/ProjectFilters';
 import { timeAgo } from '../../utils/helpers';
 
-function ProjectsView({ projects, tasks, setSelectedProjectId, categories, ownerFilter, setOwnerFilter, owners }) {
+function ProjectsView({ projects, tasks, setSelectedProjectId, categories, ownerFilter, setOwnerFilter, owners, onCompleteTask, onStartTask, onEditTask }) {
     return (
         <div>
             <div className="md:w-1/3 mb-6">

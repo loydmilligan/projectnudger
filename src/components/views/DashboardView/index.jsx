@@ -18,7 +18,10 @@ function DashboardView({
     onStartSession,
     onPauseSession,
     onResetSession,
-    onSessionComplete
+    onSessionComplete,
+    onCompleteTask,
+    onStartTask,
+    onEditTask
 }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

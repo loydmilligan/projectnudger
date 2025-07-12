@@ -1,0 +1,307 @@
+{
+  "task_id": "Task-1.2",
+  "task_description": "Standardize task action handlers in App.jsx - Ensure completeTask, startTimer, and editTask functions are properly passed to all views. Add consistent error handling for all task actions. Verify Firebase update operations work correctly.",
+  "current_manifest": {
+    "version": "1.0-archaeological",
+    "generated": "2025-07-11T12:00:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications",
+      "version": "0.0.0"
+    },
+    "current_task_handler_analysis": {
+      "app_jsx_handlers": {
+        "handleSaveTask": "Saves task to Firebase with error handling",
+        "handleStartTask": "Starts task session and updates status",
+        "handleToggleTask": "Toggles task completion with nudge notifications",
+        "handleOpenTaskDetail": "Opens task detail modal"
+      },
+      "view_prop_passing": {
+        "DashboardView": {
+          "receives_task_handlers": false,
+          "current_props": ["projects", "tasks", "nudgeState", "setSelectedProjectId", "categories", "activeSession", "ownerFilter", "setOwnerFilter", "owners", "onStartSession", "onPauseSession", "onResetSession", "onSessionComplete"],
+          "task_interaction": "None - only shows project cards"
+        },
+        "ProjectsView": {
+          "receives_task_handlers": false,
+          "current_props": ["projects", "tasks", "setSelectedProjectId", "categories", "ownerFilter", "setOwnerFilter", "owners"],
+          "task_interaction": "Shows task previews but no interaction buttons"
+        },
+        "TasksView": {
+          "receives_task_handlers": true,
+          "current_props": ["tasks", "projects", "onStartTask", "onToggle", "onOpenDetail", "activeSession"],
+          "task_interaction": "Full task interaction via TaskItem component"
+        },
+        "ProjectView": {
+          "receives_task_handlers": true,
+          "current_props": ["project", "tasks", "settings", "categoryColor", "onOpenTaskDetail", "onOpenNewTaskDetail", "onStartTask", "onEditProject", "nudgeState", "onBack"],
+          "task_interaction": "Full task interaction with local handleToggleTask"
+        }
+      },
+      "task_item_component": {
+        "required_props": ["task", "onToggle", "onOpenDetail", "onStartTask", "isTaskActive"],
+        "functionality": ["Toggle completion", "Open detail modal", "Start task timer", "Visual active state"]
+      },
+      "inconsistencies": [
+        "ProjectView has its own handleToggleTask instead of using App.jsx handler",
+        "DashboardView doesn't receive task handlers but may need them for future features",
+        "ProjectsView shows task previews but no way to interact with them",
+        "Error handling is inconsistent across different task operations"
+      ]
+    }
+  },
+  "expected_manifest": {
+    "source_files": {
+      "src/App.jsx": {
+        "purpose": "Main application component serving as the root orchestrator for a React-based task management system with Firebase integration, BLE hardware connectivity, AI nudging, and Obsidian synchronization",
+        "exports": {
+          "functions": [
+            {
+              "name": "App",
+              "signature": "App() -> JSX.Element",
+              "description": "Primary application component that renders the entire application interface and manages all global state and business logic"
+            },
+            {
+              "name": "ProjectModal",
+              "signature": "ProjectModal({ onClose, onSave, existingProject, categories, owners }) -> JSX.Element",
+              "description": "Modal component for creating and editing projects with form validation"
+            },
+            {
+              "name": "TaskDetailModal",
+              "signature": "TaskDetailModal({ onClose, onSave, task }) -> JSX.Element",
+              "description": "Modal component for creating and editing task details"
+            }
+          ],
+          "classes": [],
+          "constants": []
+        },
+        "imports": [
+          "react",
+          "firebase/firestore",
+          "lucide-react",
+          "./config/firebase",
+          "./config/constants",
+          "./utils/helpers",
+          "./components/layout/TopNavBar",
+          "./components/views/DashboardView",
+          "./services/M5DialBLEService",
+          "./hooks/useObsidianSync",
+          "./utils/aiNudgeService"
+        ],
+        "sideEffects": [
+          "reads-firestore-database",
+          "writes-firestore-database",
+          "real-time-firestore-subscriptions",
+          "bluetooth-device-communication",
+          "ai-service-api-calls"
+        ],
+        "changes": {
+          "enhanced_error_handling": "Added consistent error handling and user feedback for all task operations",
+          "standardized_task_handlers": "Renamed and refactored task handlers for consistency across all views",
+          "prop_passing_standardization": "Ensured all views receive appropriate task action handlers",
+          "loading_states": "Added loading states for asynchronous task operations"
+        }
+      },
+      "src/components/views/DashboardView/index.jsx": {
+        "purpose": "Main dashboard interface providing centralized view of projects, tasks, timer, and AI recommendations",
+        "exports": {
+          "functions": [
+            {
+              "name": "DashboardView",
+              "signature": "DashboardView(props) -> JSX.Element",
+              "description": "Renders responsive dashboard layout with timer, recommendations, and project grid"
+            }
+          ],
+          "classes": [],
+          "constants": []
+        },
+        "imports": [
+          "react",
+          "./RecommendationEngine",
+          "./NudgeStatus",
+          "./EnhancedTimerWidget",
+          "../../shared/ProjectFilters",
+          "../../../utils/helpers"
+        ],
+        "sideEffects": [
+          "Dynamic color changes on hover",
+          "Project selection state updates"
+        ],
+        "changes": {
+          "task_handler_props": "Now receives task action handlers for future task interaction features",
+          "prop_interface_updated": "Updated prop interface to accept onCompleteTask, onStartTask, onEditTask handlers"
+        }
+      },
+      "src/components/views/ProjectsView.jsx": {
+        "purpose": "Comprehensive projects overview with filtering, task previews, and detailed project cards",
+        "exports": {
+          "functions": [
+            {
+              "name": "ProjectsView",
+              "signature": "ProjectsView(props) -> JSX.Element",
+              "description": "Renders responsive grid of project cards with task previews and filtering"
+            }
+          ],
+          "classes": [],
+          "constants": []
+        },
+        "imports": [
+          "react",
+          "../shared/ProjectFilters",
+          "../../utils/helpers"
+        ],
+        "sideEffects": [
+          "Project detail navigation",
+          "Filter state management"
+        ],
+        "changes": {
+          "task_handler_props": "Now receives task action handlers for potential task interaction in task previews",
+          "prop_interface_updated": "Updated prop interface to accept onCompleteTask, onStartTask, onEditTask handlers"
+        }
+      },
+      "src/components/views/ProjectView.jsx": {
+        "purpose": "Detailed project view with comprehensive task management and quick task creation capabilities",
+        "exports": {
+          "functions": [
+            {
+              "name": "ProjectView",
+              "signature": "ProjectView(props) -> JSX.Element",
+              "description": "Renders detailed project interface with task list and management capabilities"
+            }
+          ],
+          "classes": [],
+          "constants": []
+        },
+        "imports": [
+          "react",
+          "firebase/firestore",
+          "lucide-react",
+          "../../config/firebase",
+          "../../config/constants",
+          "../../utils/helpers",
+          "../shared/TaskItem"
+        ],
+        "sideEffects": [
+          "Firebase task creation",
+          "Notification requests",
+          "Task completion nudge notifications"
+        ],
+        "changes": {
+          "removed_local_handler": "Removed local handleToggleTask function to use centralized App.jsx handler",
+          "prop_consistency": "Now uses onCompleteTask prop from App.jsx instead of local implementation",
+          "improved_error_handling": "Enhanced error handling for task operations"
+        }
+      }
+    },
+    "architecture": {
+      "main_flow": "React App → Firebase Firestore ↔ Real-time Subscriptions → Component State → UI Updates",
+      "data_flow": "Firestore (primary) ↔ React State ↔ Obsidian Sync ↔ M5 Dial BLE ↔ AI Services",
+      "configuration": "Environment variables → Firebase config → Application constants → Feature flags",
+      "integration_patterns": [
+        "Firebase real-time listeners for live data synchronization",
+        "Custom React hooks for external service integrations",
+        "Event-driven BLE communication with M5Stack Dial",
+        "Service layer abstraction for AI providers",
+        "REST API client for Obsidian integration",
+        "Centralized task action handlers with consistent error handling and user feedback"
+      ]
+    },
+    "new_features": {
+      "standardized_task_handlers": {
+        "onCompleteTask": "Centralized task completion handler with consistent error handling",
+        "onStartTask": "Standardized task timer start handler across all views",
+        "onEditTask": "Unified task editing handler for opening task detail modal"
+      },
+      "enhanced_error_handling": {
+        "user_notifications": "Failed operations show user-friendly error messages",
+        "loading_states": "Asynchronous operations display loading indicators",
+        "network_error_handling": "Graceful handling of Firebase connection issues"
+      },
+      "prop_standardization": {
+        "consistent_naming": "All task handlers use consistent naming convention",
+        "complete_coverage": "All views receive appropriate task action handlers",
+        "future_ready": "Views prepared for enhanced task interaction features"
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": "Standardize task action handlers in App.jsx and ensure consistent prop passing to all views, with enhanced error handling and user feedback",
+    "files_to_create": [],
+    "files_to_modify": [
+      {
+        "file": "src/App.jsx",
+        "changes": "Rename handleToggleTask to handleCompleteTask, add enhanced error handling with user notifications, add loading states, ensure all views receive appropriate task handlers"
+      },
+      {
+        "file": "src/components/views/DashboardView/index.jsx",
+        "changes": "Update prop interface to receive task action handlers (onCompleteTask, onStartTask, onEditTask) for future compatibility"
+      },
+      {
+        "file": "src/components/views/ProjectsView.jsx",
+        "changes": "Update prop interface to receive task action handlers (onCompleteTask, onStartTask, onEditTask) for potential task interaction in previews"
+      },
+      {
+        "file": "src/components/views/ProjectView.jsx",
+        "changes": "Remove local handleToggleTask function and use onCompleteTask prop from App.jsx, update TaskItem to use centralized handlers"
+      }
+    ],
+    "dependencies": [],
+    "integration_points": [
+      "Firebase Firestore operations for task updates",
+      "TaskItem component prop interface consistency",
+      "Real-time state synchronization across views",
+      "BLE communication with M5Stack Dial for task operations",
+      "Nudge notification system integration"
+    ],
+    "testing_approach": "Test task completion, timer start, and edit functionality across Dashboard, Projects, and Tasks views. Verify error handling with network disconnection scenarios. Test loading states during async operations."
+  },
+  "acceptance_criteria": [
+    "All task interaction buttons work in Dashboard, Projects, and Tasks views",
+    "Task completion consistently updates Firebase and UI state across all views",
+    "Timer start functionality works from all task locations that support it",
+    "Edit functionality opens task modal from any context",
+    "Users receive appropriate feedback for failed operations with user-friendly error messages",
+    "Loading states are displayed during asynchronous task operations",
+    "Network errors and Firebase permission issues are handled gracefully",
+    "All views receive consistent task action handler props even if not immediately used",
+    "Task handlers use consistent naming convention (onCompleteTask, onStartTask, onEditTask)"
+  ],
+  "estimated_complexity": "Medium",
+  "prerequisites": [],
+  "detailed_changes": {
+    "src/App.jsx": {
+      "handler_renaming": {
+        "old": "handleToggleTask",
+        "new": "handleCompleteTask",
+        "reason": "More descriptive and consistent naming"
+      },
+      "enhanced_error_handling": [
+        "Add try-catch blocks around all Firebase operations",
+        "Display user-friendly error messages using alerts or toast notifications",
+        "Handle specific Firebase errors (permission denied, network issues)",
+        "Add loading states for async operations"
+      ],
+      "prop_passing_updates": {
+        "DashboardView": "Add onCompleteTask, onStartTask, onEditTask props",
+        "ProjectsView": "Add onCompleteTask, onStartTask, onEditTask props", 
+        "TasksView": "Update onToggle to onCompleteTask, add onEditTask",
+        "ProjectView": "Update to use onCompleteTask instead of local handler"
+      }
+    },
+    "view_components": {
+      "prop_interface_updates": "All views updated to receive standardized task action handlers",
+      "future_compatibility": "Views prepared for enhanced task interaction features",
+      "consistency": "Uniform prop naming and handler signatures across all components"
+    }
+  },
+  "validation_checklist": [
+    "Task completion works correctly in all views",
+    "Error messages are user-friendly and informative",
+    "Loading states appear during async operations",
+    "Firebase operations handle network issues gracefully",
+    "All views receive appropriate task handler props",
+    "TaskItem component works consistently across all views",
+    "No breaking changes to existing functionality",
+    "Performance remains good with error handling additions"
+  ]
+}

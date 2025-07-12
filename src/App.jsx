@@ -201,23 +201,31 @@ export default function App() {
     };
 
     const handleStartTask = async (task) => {
-        if (activeSession) return;
-        const session = { taskId: task.id, startTime: new Date(), duration: POMODORO_CONFIG.WORK_SESSION, isDouble: false, active: true, type: 'work' };
-        await setDoc(doc(db, basePath, 'tracking', 'activeSession'), session);
-        await updateDoc(doc(db, basePath, 'tasks', task.id), { status: 'in-progress' });
-        // Inform Dial of new task start
-        if (m5DialBLEService.connected) {
-            try {
-                await m5DialBLEService.sendCommand({
-                    command: 'SET_TASK',
-                    payload: { task_name: task.title || 'Task' }
-                });
-                await m5DialBLEService.sendCommand({ command: 'START' });
-            } catch (e) {
-                console.warn('Failed to send START to Dial', e);
+        try {
+            if (activeSession) {
+                alert('A session is already active. Please complete or stop the current session first.');
+                return;
             }
+            const session = { taskId: task.id, startTime: new Date(), duration: POMODORO_CONFIG.WORK_SESSION, isDouble: false, active: true, type: 'work' };
+            await setDoc(doc(db, basePath, 'tracking', 'activeSession'), session);
+            await updateDoc(doc(db, basePath, 'tasks', task.id), { status: 'in-progress' });
+            // Inform Dial of new task start
+            if (m5DialBLEService.connected) {
+                try {
+                    await m5DialBLEService.sendCommand({
+                        command: 'SET_TASK',
+                        payload: { task_name: task.title || 'Task' }
+                    });
+                    await m5DialBLEService.sendCommand({ command: 'START' });
+                } catch (e) {
+                    console.warn('Failed to send START to Dial', e);
+                }
+            }
+            setActiveView('tracking');
+        } catch (error) {
+            console.error('Error starting task:', error);
+            alert('Failed to start task. Please try again.');
         }
-        setActiveView('tracking');
     };
 
     // Enhanced timer functions for the new dashboard widget
@@ -378,7 +386,7 @@ export default function App() {
     };
 
     // Universal task action handlers for consistent behavior across all views
-    const handleToggleTask = async (task) => {
+    const handleCompleteTask = async (task) => {
         try {
             const isCompleting = !task.isComplete;
             await updateDoc(doc(db, basePath, 'tasks', task.id), { 
@@ -412,12 +420,12 @@ export default function App() {
                 }
             }
         } catch (error) {
-            console.error("Error toggling task:", error);
+            console.error("Error completing task:", error);
             alert("Failed to update task. Please try again.");
         }
     };
 
-    const handleOpenTaskDetail = (task) => {
+    const handleEditTask = (task) => {
         setEditingTask(task);
         setIsTaskDetailModalOpen(true);
     };
@@ -525,7 +533,7 @@ export default function App() {
         if (activeView === 'archived') { return <ArchivedProjectsView allProjects={projects} onSaveProject={handleSaveProject}/>; }
         if (activeView === 'tracking') { return <TrackingView session={activeSession} tasks={tasks} onSessionEnd={handleSessionEnd} />; }
         if (selectedProjectId) {
-            return <ProjectView project={selectedProject} tasks={tasks.filter(t => t.projectId === selectedProjectId)} settings={settings} categoryColor={categories[selectedProject.category]} onOpenTaskDetail={(task) => { setEditingTask(task); setIsTaskDetailModalOpen(true); }} onOpenNewTaskDetail={openTaskDetailForNew} onStartTask={handleStartTask} onEditProject={openEditProjectModal} nudgeState={nudgeState} onBack={() => setSelectedProjectId(null)} />;
+            return <ProjectView project={selectedProject} tasks={tasks.filter(t => t.projectId === selectedProjectId)} settings={settings} categoryColor={categories[selectedProject.category]} onCompleteTask={handleCompleteTask} onEditTask={handleEditTask} onOpenNewTaskDetail={openTaskDetailForNew} onStartTask={handleStartTask} onEditProject={openEditProjectModal} nudgeState={nudgeState} onBack={() => setSelectedProjectId(null)} />;
         }
         switch (activeView) {
             case 'dashboard': return <DashboardView 
@@ -542,9 +550,12 @@ export default function App() {
                 onPauseSession={handlePauseSession}
                 onResetSession={handleResetSession}
                 onSessionComplete={handleSessionComplete}
+                onCompleteTask={handleCompleteTask}
+                onStartTask={handleStartTask}
+                onEditTask={handleEditTask}
             />;
-            case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} />;
-            case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} onToggle={handleToggleTask} onOpenDetail={handleOpenTaskDetail} activeSession={activeSession}/>;
+            case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} onCompleteTask={handleCompleteTask} onStartTask={handleStartTask} onEditTask={handleEditTask} />;
+            case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} onCompleteTask={handleCompleteTask} onEditTask={handleEditTask} activeSession={activeSession}/>;
             case 'settings': return <SettingsView 
                 currentSettings={settings} 
                 onExportData={handleExportData} 
