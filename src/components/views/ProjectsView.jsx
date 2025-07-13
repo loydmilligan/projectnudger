@@ -1,9 +1,9 @@
 import React from 'react';
 import ProjectFilters from '../shared/ProjectFilters';
 import { timeAgo } from '../../utils/helpers';
-import { Edit2, Trash2, Archive } from 'lucide-react';
+import { Edit2, Trash2, Archive, Loader2 } from 'lucide-react';
 
-function ProjectsView({ projects, tasks, setSelectedProjectId, categories, ownerFilter, setOwnerFilter, owners, onCompleteTask, onStartTask, onEditTask, onEditProject, onDeleteProject, onArchiveProject }) {
+function ProjectsView({ projects, tasks, setSelectedProjectId, categories, ownerFilter, setOwnerFilter, owners, onCompleteTask, onStartTask, onEditTask, onEditProject, onDeleteProject, onArchiveProject, loadingStates }) {
     return (
         <div>
             <div className="md:w-1/3 mb-6">
@@ -27,30 +27,51 @@ function ProjectsView({ projects, tasks, setSelectedProjectId, categories, owner
                                                 e.stopPropagation();
                                                 onEditProject(project);
                                             }}
-                                            className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                                            disabled={loadingStates?.editProject}
+                                            className={`p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors ${
+                                                loadingStates?.editProject ? 'opacity-50 cursor-not-allowed' : ''
+                                            }`}
                                             title="Edit project"
                                         >
-                                            <Edit2 size={16} />
+                                            {loadingStates?.editProject ? (
+                                                <Loader2 size={16} className="animate-spin" />
+                                            ) : (
+                                                <Edit2 size={16} />
+                                            )}
                                         </button>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onArchiveProject(project.id);
                                             }}
-                                            className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                                            disabled={loadingStates?.archiveProject}
+                                            className={`p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors ${
+                                                loadingStates?.archiveProject ? 'opacity-50 cursor-not-allowed' : ''
+                                            }`}
                                             title="Archive project"
                                         >
-                                            <Archive size={16} />
+                                            {loadingStates?.archiveProject ? (
+                                                <Loader2 size={16} className="animate-spin" />
+                                            ) : (
+                                                <Archive size={16} />
+                                            )}
                                         </button>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onDeleteProject(project.id);
                                             }}
-                                            className="p-1.5 rounded-md hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                            disabled={loadingStates?.deleteProject}
+                                            className={`p-1.5 rounded-md hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors ${
+                                                loadingStates?.deleteProject ? 'opacity-50 cursor-not-allowed' : ''
+                                            }`}
                                             title="Delete project"
                                         >
-                                            <Trash2 size={16} />
+                                            {loadingStates?.deleteProject ? (
+                                                <Loader2 size={16} className="animate-spin" />
+                                            ) : (
+                                                <Trash2 size={16} />
+                                            )}
                                         </button>
                                     </div>
                                 </div>

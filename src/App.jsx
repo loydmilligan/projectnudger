@@ -83,7 +83,10 @@ export default function App() {
         startTask: false,
         completeTask: false,
         exportData: false,
-        importData: false
+        importData: false,
+        editProject: false,
+        deleteProject: false,
+        archiveProject: false
     });
     const [isSessionCompletionModalOpen, setIsSessionCompletionModalOpen] = useState(false);
     const [completedSessionType, setCompletedSessionType] = useState(null);
@@ -186,24 +189,39 @@ export default function App() {
 
     // --- Handlers ---
     const handleSaveProject = async (projectData) => {
-        if (projectData.category && !categories[projectData.category]) {
-            let newCategories = { ...categories };
-            newCategories[projectData.category] = generateHslColor(Object.values(categories));
-            await setDoc(doc(db, basePath, 'settings', 'categories'), newCategories, { merge: true });
-        }
-        if (projectData.id) {
-            const { id, ...dataToUpdate } = projectData;
-            // Ensure status is preserved or set to active if missing
-            if (!dataToUpdate.status) {
-                dataToUpdate.status = 'active';
+        try {
+            setLoadingStates(prev => ({ ...prev, editProject: true }));
+            
+            if (projectData.category && !categories[projectData.category]) {
+                let newCategories = { ...categories };
+                newCategories[projectData.category] = generateHslColor(Object.values(categories));
+                await setDoc(doc(db, basePath, 'settings', 'categories'), newCategories, { merge: true });
             }
-            await updateDoc(doc(db, basePath, 'projects', id), dataToUpdate);
-        } else {
-            const { id, ...dataToCreate } = projectData;
-            await addDoc(collection(db, basePath, 'projects'), { ...dataToCreate, status: 'active', createdAt: new Date() });
+            
+            const isEditing = !!projectData.id;
+            
+            if (isEditing) {
+                const { id, ...dataToUpdate } = projectData;
+                // Ensure status is preserved or set to active if missing
+                if (!dataToUpdate.status) {
+                    dataToUpdate.status = 'active';
+                }
+                await updateDoc(doc(db, basePath, 'projects', id), dataToUpdate);
+                showSuccess('Project Updated', `"${projectData.name}" has been updated successfully.`);
+            } else {
+                const { id, ...dataToCreate } = projectData;
+                await addDoc(collection(db, basePath, 'projects'), { ...dataToCreate, status: 'active', createdAt: new Date() });
+                showSuccess('Project Created', `"${projectData.name}" has been created successfully.`);
+            }
+            
+            setIsProjectModalOpen(false);
+            setEditingProject(null);
+        } catch (error) {
+            console.error('Error saving project:', error);
+            showFirebaseError(error);
+        } finally {
+            setLoadingStates(prev => ({ ...prev, editProject: false }));
         }
-        setIsProjectModalOpen(false);
-        setEditingProject(null);
     };
 
     const handleSaveTask = async (taskData) => {
@@ -638,6 +656,8 @@ export default function App() {
         if (!projectToDelete) return;
         
         try {
+            setLoadingStates(prev => ({ ...prev, deleteProject: true }));
+            
             const batch = writeBatch(db);
             
             // Delete all tasks for this project
@@ -656,6 +676,7 @@ export default function App() {
             console.error('Error deleting project:', error);
             showFirebaseError(error);
         } finally {
+            setLoadingStates(prev => ({ ...prev, deleteProject: false }));
             setIsDeleteConfirmModalOpen(false);
             setProjectToDelete(null);
         }
@@ -663,14 +684,19 @@ export default function App() {
     
     const handleArchiveProject = async (projectId) => {
         try {
+            setLoadingStates(prev => ({ ...prev, archiveProject: true }));
+            
             await updateDoc(doc(db, basePath, 'projects', projectId), { 
                 status: 'archived' 
             });
+            
             const project = projects.find(p => p.id === projectId);
             showSuccess('Project Archived', `"${project?.name}" has been archived.`);
         } catch (error) {
             console.error('Error archiving project:', error);
             showFirebaseError(error);
+        } finally {
+            setLoadingStates(prev => ({ ...prev, archiveProject: false }));
         }
     };
     const handleSessionEnd = (session) => { setSessionEndData(session); setIsSessionEndModalOpen(true); };
@@ -743,7 +769,7 @@ export default function App() {
                 onToggleExpand={handleToggleExpand}
                 onAddSubTask={handleAddSubTask}
             />;
-            case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} onCompleteTask={handleCompleteTask} onStartTask={handleStartTask} onEditTask={handleEditTask} onEditProject={openEditProjectModal} onDeleteProject={handleDeleteProject} onArchiveProject={handleArchiveProject} />;
+            case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} onCompleteTask={handleCompleteTask} onStartTask={handleStartTask} onEditTask={handleEditTask} onEditProject={openEditProjectModal} onDeleteProject={handleDeleteProject} onArchiveProject={handleArchiveProject} loadingStates={loadingStates} />;
             case 'tasks': return <TasksView 
                 tasks={tasks} 
                 hierarchicalTasks={hierarchicalTasks}
@@ -814,6 +840,7 @@ export default function App() {
                         setIsDeleteConfirmModalOpen(false);
                         setProjectToDelete(null);
                     }}
+                    isLoading={loadingStates.deleteProject}
                 />
             )}
             {obsidianSyncState !== 'idle' && (
@@ -824,7 +851,7 @@ export default function App() {
                     onClose={resetObsidianSync}
                 />
             )}
-            {isProjectModalOpen && <ProjectModal onClose={() => {setIsProjectModalOpen(false); setEditingProject(null);}} onSave={handleSaveProject} existingProject={editingProject} categories={Object.keys(categories)} owners={owners} />}
+            {isProjectModalOpen && <ProjectModal onClose={() => {setIsProjectModalOpen(false); setEditingProject(null);}} onSave={handleSaveProject} existingProject={editingProject} categories={Object.keys(categories)} owners={owners} isLoading={loadingStates.editProject} />}
             {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} parentTask={editingTask.parentTaskId ? tasks.find(t => t.id === editingTask.parentTaskId) : null} />}
             {isSessionEndModalOpen && <SessionEndModal onClose={() => setIsSessionEndModalOpen(false)} onSave={handleSaveSessionNotes} />}
             {isSessionCompletionModalOpen && (
@@ -856,7 +883,7 @@ export default function App() {
 
 // --- Modal Components ---
 
-function ProjectModal({ onClose, onSave, existingProject, categories, owners }) {
+function ProjectModal({ onClose, onSave, existingProject, categories, owners, isLoading }) {
     const [name, setName] = useState(existingProject?.name || '');
     const [owner, setOwner] = useState(existingProject?.owner || '');
     const [category, setCategory] = useState(existingProject?.category || '');
@@ -932,8 +959,20 @@ function ProjectModal({ onClose, onSave, existingProject, categories, owners }) 
                         </div>
                     </div>
                     <div className="flex justify-end space-x-3 pt-4">
-                        <button type="button" onClick={onClose} className="px-4 py-2 rounded-md text-sm font-semibold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                        <button type="submit" className="px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Save</button>
+                        <button type="button" onClick={onClose} disabled={isLoading} className={`px-4 py-2 rounded-md text-sm font-semibold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>Cancel</button>
+                        <button type="submit" disabled={isLoading} className={`px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                            {isLoading ? (
+                                <div className="flex items-center space-x-2">
+                                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Saving...</span>
+                                </div>
+                            ) : (
+                                'Save'
+                            )}
+                        </button>
                     </div>
                 </form>
             </div>
@@ -1066,7 +1105,7 @@ function TaskDetailModal({ onClose, onSave, task, parentTask }) {
     );
 }
 
-function ProjectDeleteConfirmModal({ project, onConfirm, onCancel }) {
+function ProjectDeleteConfirmModal({ project, onConfirm, onCancel, isLoading }) {
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in-fast">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
@@ -1091,15 +1130,27 @@ function ProjectDeleteConfirmModal({ project, onConfirm, onCancel }) {
                 <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                     <button 
                         type="button" 
-                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" 
+                        className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={onConfirm}
+                        disabled={isLoading}
                     >
-                        Delete Project
+                        {isLoading ? (
+                            <div className="flex items-center space-x-2">
+                                <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Deleting...</span>
+                            </div>
+                        ) : (
+                            'Delete Project'
+                        )}
                     </button>
                     <button 
                         type="button" 
-                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm" 
+                        className={`mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={onCancel}
+                        disabled={isLoading}
                     >
                         Cancel
                     </button>
