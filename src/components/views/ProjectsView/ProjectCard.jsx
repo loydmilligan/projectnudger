@@ -156,18 +156,18 @@ function ProjectCard({
                 
                 {/* Project URL - only display if valid URL exists */}
                 {project.url && isValidUrl(project.url) && (
-                    <div className="mt-2">
+                    <div className="mt-2 mb-1">
                         <a
                             href={formatUrl(project.url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors truncate"
+                            className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-200 max-w-full"
                             title={`Open ${formatUrl(project.url)} in new tab`}
                             aria-label={`Open project website ${formatUrl(project.url)} in new tab`}
                         >
-                            <span className="truncate">{formatUrl(project.url)}</span>
-                            <ExternalLink size={14} className="flex-shrink-0" />
+                            <span className="truncate font-medium">{formatUrl(project.url)}</span>
+                            <ExternalLink size={14} className="flex-shrink-0 opacity-70" />
                         </a>
                     </div>
                 )}
