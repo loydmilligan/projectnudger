@@ -1,0 +1,290 @@
+{
+  "task_id": "Task-4.4",
+  "task_description": "Style URL links appropriately - Use consistent styling for project URLs. Ensure links are visually distinct but not overwhelming. Test URL display on different card sizes.",
+  "current_manifest": {
+    "version": "1.0-archaeological",
+    "generated": "2025-07-11T12:00:00.000Z",
+    "analysis_depth": "standard",
+    "analysis_scope": "Complete codebase archaeological analysis",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications",
+      "version": "0.0.0",
+      "tech_stack": [
+        "React 19.1.0",
+        "Vite 6.3.5",
+        "Firebase Firestore",
+        "Tailwind CSS",
+        "Web Bluetooth API",
+        "Multiple AI Providers (OpenAI, Gemini, Anthropic)"
+      ],
+      "deployment": "Netlify with environment variables"
+    },
+    "source_files": {
+      "src/components/views/ProjectsView/ProjectCard.jsx": {
+        "purpose": "Enhanced ProjectCard component for both grid and kanban views with action buttons, project display, and clickable URL functionality",
+        "exports": {
+          "functions": [
+            {
+              "name": "ProjectCard",
+              "signature": "ProjectCard({ project, tasks, categories, setSelectedProjectId, onEditProject, onDeleteProject, onArchiveProject, loadingStates, isDraggable, showStage }) -> JSX.Element",
+              "description": "Renders project card with metadata, tasks preview, action buttons, and clickable URL links when available"
+            }
+          ]
+        },
+        "imports": [
+          "react",
+          "@dnd-kit/sortable",
+          "@dnd-kit/utilities",
+          "lucide-react (Edit2, Trash2, Archive, Loader2, GripVertical, ExternalLink)",
+          "../../../utils/helpers (timeAgo, isValidUrl, formatUrl)"
+        ],
+        "sideEffects": [
+          "Drag and drop operations when in kanban mode",
+          "Project action button interactions",
+          "External URL navigation in new tabs"
+        ],
+        "current_url_styling": {
+          "container": "mt-2",
+          "link_classes": "inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors truncate",
+          "text_element": "truncate",
+          "icon_classes": "flex-shrink-0",
+          "icon_size": 14
+        }
+      },
+      "src/utils/helpers.js": {
+        "purpose": "Core utility module providing time formatting, color generation, URL validation, and helper functions for the React task management application",
+        "exports": {
+          "functions": [
+            {
+              "name": "isValidUrl",
+              "signature": "isValidUrl(urlString) -> boolean",
+              "description": "Validates if a string is a valid URL format with comprehensive error handling"
+            },
+            {
+              "name": "formatUrl",
+              "signature": "formatUrl(urlString) -> string",
+              "description": "Formats URL string by adding https:// prefix if missing and validates format"
+            }
+          ]
+        }
+      },
+      "tailwind.config.js": {
+        "purpose": "Tailwind CSS configuration with dark mode support",
+        "content": ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+        "darkMode": "class",
+        "theme": {
+          "extend": {}
+        }
+      }
+    },
+    "dependencies": {
+      "lucide-react": "Icon library providing ExternalLink icon for URL links",
+      "tailwindcss": "Utility-first CSS framework for styling with dark mode support"
+    },
+    "design_system": {
+      "colors": {
+        "primary": "indigo (indigo-500, indigo-600 for buttons)",
+        "text": "gray (gray-600, gray-800 for regular text)",
+        "links": "indigo (indigo-600 light, indigo-400 dark)",
+        "backgrounds": "white/gray-800 for cards"
+      },
+      "spacing": "Tailwind standard spacing scale",
+      "typography": "text-sm for metadata, text-lg for headings",
+      "interactions": "hover states with transition-colors"
+    }
+  },
+  "expected_manifest": {
+    "version": "1.0-archaeological-task-4.4",
+    "generated": "2025-07-13T00:00:00.000Z",
+    "source_files": {
+      "src/components/views/ProjectsView/ProjectCard.jsx": {
+        "purpose": "Enhanced ProjectCard component with refined URL styling that provides optimal visual hierarchy and accessibility",
+        "exports": {
+          "functions": [
+            {
+              "name": "ProjectCard",
+              "signature": "ProjectCard({ project, tasks, categories, setSelectedProjectId, onEditProject, onDeleteProject, onArchiveProject, loadingStates, isDraggable, showStage }) -> JSX.Element",
+              "description": "Renders project card with metadata, tasks preview, action buttons, and elegantly styled clickable URL links"
+            }
+          ]
+        },
+        "imports": [
+          "react",
+          "@dnd-kit/sortable",
+          "@dnd-kit/utilities",
+          "lucide-react (Edit2, Trash2, Archive, Loader2, GripVertical, ExternalLink)",
+          "../../../utils/helpers (timeAgo, isValidUrl, formatUrl)"
+        ],
+        "sideEffects": [
+          "Drag and drop operations when in kanban mode",
+          "Project action button interactions",
+          "External URL navigation in new tabs"
+        ],
+        "enhanced_url_styling": {
+          "container": "mt-2 mb-1",
+          "link_classes": "inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-200 max-w-full",
+          "text_element": "truncate font-medium",
+          "icon_classes": "flex-shrink-0 opacity-70",
+          "icon_size": 14,
+          "hover_behavior": "subtle underline and color deepening",
+          "accessibility": "focus ring and proper contrast ratios",
+          "responsive_behavior": "truncates on small cards, full display on larger cards"
+        }
+      }
+    },
+    "design_improvements": {
+      "visual_hierarchy": "URL links are prominent but don't compete with project title",
+      "color_consistency": "Uses blue instead of indigo for better link recognition",
+      "hover_states": "Subtle underline and color change for clear interaction feedback",
+      "accessibility": "Focus rings and proper contrast ratios for WCAG compliance",
+      "responsive_design": "Graceful truncation and spacing adjustments across card sizes"
+    },
+    "new_features": [
+      "Refined color scheme for better link recognition (blue vs indigo)",
+      "Enhanced hover and focus states with underline and ring indicators",
+      "Improved icon positioning and opacity for subtle visual hierarchy",
+      "Better spacing and typography for optimal readability",
+      "Responsive behavior that adapts to different card sizes"
+    ]
+  },
+  "implementation_notes": {
+    "approach": "Refine the existing URL link styling in ProjectCard component by updating Tailwind classes to improve visual hierarchy, accessibility, and user experience while maintaining consistency with the overall design system",
+    "files_to_create": [],
+    "files_to_modify": [
+      {
+        "file": "src/components/views/ProjectsView/ProjectCard.jsx",
+        "changes": [
+          "Update URL link container styling for better spacing (mt-2 mb-1)",
+          "Replace indigo colors with blue for better link recognition",
+          "Add hover:underline for clearer interaction feedback",
+          "Enhance focus states with focus:ring-2 focus:ring-blue-500",
+          "Add font-medium to URL text for better readability",
+          "Adjust icon opacity to 70% for subtle visual hierarchy",
+          "Improve gap spacing between text and icon (gap-1.5)",
+          "Add transition-all duration-200 for smoother animations",
+          "Update dark mode colors for better contrast"
+        ]
+      }
+    ],
+    "dependencies": [],
+    "integration_points": [
+      "Existing URL validation and formatting in helpers.js",
+      "Current ProjectCard layout and spacing system",
+      "Application's dark/light theme system",
+      "Tailwind CSS design tokens and spacing scale",
+      "lucide-react ExternalLink icon component"
+    ],
+    "testing_approach": "Test URL display across different project card sizes in grid view, verify readability in kanban view, check hover/focus states, validate dark mode appearance, ensure accessibility with screen readers, test with various URL lengths"
+  },
+  "acceptance_criteria": [
+    "URL links use blue color scheme for better recognition as clickable elements",
+    "Hover states include subtle underline and color deepening for clear feedback",
+    "Focus states include visible ring indicators for keyboard navigation accessibility",
+    "URL text uses medium font weight for improved readability without being overwhelming",
+    "External link icon has reduced opacity (70%) for proper visual hierarchy",
+    "Links truncate gracefully on smaller cards while maintaining readability",
+    "Dark mode colors provide appropriate contrast and consistency",
+    "Spacing around URL links feels balanced within the card layout",
+    "Animations are smooth and not distracting (200ms duration)",
+    "URL styling is consistent across both grid and kanban view modes"
+  ],
+  "estimated_complexity": "Low",
+  "prerequisites": [
+    "Task-4.1: Add URL display logic to project cards (completed)",
+    "Task-4.2: Implement clickable link functionality (completed)",
+    "Task-4.3: Add URL validation and formatting (completed)"
+  ],
+  "technical_considerations": {
+    "design_system_consistency": "URL links should feel native to the application's design language while being clearly identifiable as links",
+    "accessibility_compliance": "Focus indicators and color contrast must meet WCAG 2.1 AA standards",
+    "responsive_behavior": "Styling should work well across all card sizes and viewport widths",
+    "performance": "CSS transitions should be smooth without impacting performance",
+    "dark_mode_compatibility": "Colors must work well in both light and dark themes"
+  },
+  "style_specifications": {
+    "colors": {
+      "light_mode": {
+        "default": "text-blue-600",
+        "hover": "text-blue-700",
+        "focus_ring": "ring-blue-500"
+      },
+      "dark_mode": {
+        "default": "text-blue-400", 
+        "hover": "text-blue-300",
+        "focus_ring": "ring-blue-500"
+      }
+    },
+    "typography": {
+      "size": "text-sm",
+      "weight": "font-medium",
+      "line_height": "leading-normal"
+    },
+    "spacing": {
+      "container_margin": "mt-2 mb-1",
+      "icon_gap": "gap-1.5",
+      "focus_ring_offset": "focus:ring-offset-1"
+    },
+    "effects": {
+      "hover": "hover:underline",
+      "transition": "transition-all duration-200",
+      "icon_opacity": "opacity-70"
+    }
+  },
+  "test_scenarios": [
+    {
+      "scenario": "URL display in grid view cards",
+      "test_case": "Verify URL links are visually distinct but not overwhelming in standard grid layout",
+      "expected": "Blue color, medium weight text, subtle icon, proper spacing"
+    },
+    {
+      "scenario": "URL display in kanban view cards", 
+      "test_case": "Ensure URL links work well in narrower kanban columns",
+      "expected": "Truncation works properly, all interactive states function"
+    },
+    {
+      "scenario": "Hover interaction feedback",
+      "test_case": "Mouse hover over URL link",
+      "expected": "Color deepens, underline appears, smooth 200ms transition"
+    },
+    {
+      "scenario": "Keyboard focus accessibility",
+      "test_case": "Tab navigation to URL link",
+      "expected": "Blue focus ring appears, link is clearly focused, accessible to screen readers"
+    },
+    {
+      "scenario": "Dark mode compatibility",
+      "test_case": "Toggle to dark mode and verify URL appearance",
+      "expected": "Appropriate blue colors for dark theme, good contrast, consistent behavior"
+    },
+    {
+      "scenario": "Long URL truncation",
+      "test_case": "Project with very long URL in smaller card",
+      "expected": "Text truncates with ellipsis, icon remains visible, tooltip shows full URL"
+    },
+    {
+      "scenario": "Multiple card sizes",
+      "test_case": "View URLs across different responsive breakpoints",
+      "expected": "Styling remains consistent and readable at all sizes"
+    }
+  ],
+  "visual_design_goals": {
+    "hierarchy": "URLs are clearly clickable but don't compete with project title for attention",
+    "recognition": "Users immediately recognize URLs as clickable links through color and styling",
+    "elegance": "Link styling feels integrated and polished within the card design",
+    "accessibility": "All users can identify and interact with links regardless of input method",
+    "consistency": "URL styling matches the application's overall design language and conventions"
+  },
+  "completion_metadata": {
+    "status": "completed",
+    "completed_date": "2025-07-13T00:00:00.000Z",
+    "commit_hash": "b8d54bf",
+    "commit_message": "Task-4.4: Style URL links appropriately with enhanced visual hierarchy",
+    "files_modified": [
+      "src/components/views/ProjectsView/ProjectCard.jsx"
+    ],
+    "validation_notes": "All acceptance criteria met: blue color scheme implemented, hover/focus states enhanced, accessibility improved with focus rings, font-medium applied, icon opacity reduced, proper spacing and animations added",
+    "lessons_learned": "URL styling refinements significantly improve user experience and accessibility while maintaining design consistency. The transition from indigo to blue provides better link recognition patterns.",
+    "follow_up_tasks": []
+  }
+}
