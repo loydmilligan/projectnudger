@@ -12,7 +12,7 @@ import {
     getDocs,
     writeBatch
 } from 'firebase/firestore';
-import { Plus, Zap, Target, Folder, Link, Calendar, Hash, Settings, X, Tag, Edit2, ShieldAlert, LayoutDashboard, ListChecks, Briefcase, Sun, Moon, PlayCircle, Timer as TimerIcon, Coffee, Square, CheckCircle, Download, Upload, Beaker, Archive, ArchiveRestore, Users } from 'lucide-react';
+import { Plus, Zap, Target, Folder, Link, Calendar, Hash, Settings, X, Tag, Edit2, Trash2, ShieldAlert, LayoutDashboard, ListChecks, Briefcase, Sun, Moon, PlayCircle, Timer as TimerIcon, Coffee, Square, CheckCircle, Download, Upload, Beaker, Archive, ArchiveRestore, Users } from 'lucide-react';
 
 // Import configurations and utilities
 import { db, basePath } from './config/firebase';
@@ -65,6 +65,8 @@ export default function App() {
     const [sessionEndData, setSessionEndData] = useState(null);
     const [isImportConfirmModalOpen, setIsImportConfirmModalOpen] = useState(false);
     const [fileToImport, setFileToImport] = useState(null);
+    const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] = useState(false);
+    const [projectToDelete, setProjectToDelete] = useState(null);
 
     // Obsidian Sync
     const { state: obsidianSyncState, lastSync: obsidianLastSync, result: obsidianSyncResult, error: obsidianSyncError, reset: resetObsidianSync, syncNow } = useObsidianSync(settings);
@@ -566,6 +568,57 @@ export default function App() {
     
     const openNewProjectModal = () => { setEditingProject(null); setIsProjectModalOpen(true); };
     const openEditProjectModal = (project) => { setEditingProject(project); setIsProjectModalOpen(true); };
+    
+    const handleDeleteProject = async (projectId) => {
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return;
+        
+        const projectTasks = tasks.filter(t => t.projectId === projectId);
+        const projectWithTaskCount = { ...project, taskCount: projectTasks.length };
+        
+        setProjectToDelete(projectWithTaskCount);
+        setIsDeleteConfirmModalOpen(true);
+    };
+    
+    const confirmDeleteProject = async () => {
+        if (!projectToDelete) return;
+        
+        try {
+            const batch = writeBatch(db);
+            
+            // Delete all tasks for this project
+            const projectTasks = tasks.filter(t => t.projectId === projectToDelete.id);
+            projectTasks.forEach(task => {
+                batch.delete(doc(db, basePath, 'tasks', task.id));
+            });
+            
+            // Delete the project
+            batch.delete(doc(db, basePath, 'projects', projectToDelete.id));
+            
+            await batch.commit();
+            
+            showSuccess('Project Deleted', `"${projectToDelete.name}" and ${projectToDelete.taskCount} associated tasks have been deleted.`);
+        } catch (error) {
+            console.error('Error deleting project:', error);
+            showFirebaseError(error);
+        } finally {
+            setIsDeleteConfirmModalOpen(false);
+            setProjectToDelete(null);
+        }
+    };
+    
+    const handleArchiveProject = async (projectId) => {
+        try {
+            await updateDoc(doc(db, basePath, 'projects', projectId), { 
+                status: 'archived' 
+            });
+            const project = projects.find(p => p.id === projectId);
+            showSuccess('Project Archived', `"${project?.name}" has been archived.`);
+        } catch (error) {
+            console.error('Error archiving project:', error);
+            showFirebaseError(error);
+        }
+    };
     const handleSessionEnd = (session) => { setSessionEndData(session); setIsSessionEndModalOpen(true); };
     const openTaskDetailForNew = (template) => { setEditingTask(template); setIsTaskDetailModalOpen(true); };
     const handleSaveSessionNotes = async (notes, markComplete, completionNotes) => {
@@ -613,7 +666,7 @@ export default function App() {
                 onStartTask={handleStartTask}
                 onEditTask={handleEditTask}
             />;
-            case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} onCompleteTask={handleCompleteTask} onStartTask={handleStartTask} onEditTask={handleEditTask} />;
+            case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} onCompleteTask={handleCompleteTask} onStartTask={handleStartTask} onEditTask={handleEditTask} onEditProject={openEditProjectModal} onDeleteProject={handleDeleteProject} onArchiveProject={handleArchiveProject} />;
             case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} onCompleteTask={handleCompleteTask} onEditTask={handleEditTask} activeSession={activeSession} aiNudgeRecommendations={aiNudgeRecommendations}/>;
             case 'settings': return <SettingsView 
                 currentSettings={settings} 
@@ -664,6 +717,16 @@ export default function App() {
             />
             <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{renderView()}</main>
             {isImportConfirmModalOpen && <ImportConfirmModal onClose={() => setIsImportConfirmModalOpen(false)} onConfirm={executeImport} />}
+            {isDeleteConfirmModalOpen && projectToDelete && (
+                <ProjectDeleteConfirmModal 
+                    project={projectToDelete} 
+                    onConfirm={confirmDeleteProject} 
+                    onCancel={() => {
+                        setIsDeleteConfirmModalOpen(false);
+                        setProjectToDelete(null);
+                    }}
+                />
+            )}
             {obsidianSyncState !== 'idle' && (
                 <ObsidianSyncProgressModal
                     state={obsidianSyncState}
@@ -897,6 +960,49 @@ function TaskDetailModal({ onClose, onSave, task }) {
                         <button type="submit" className="px-4 py-2 rounded-md text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Save Task</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    );
+}
+
+function ProjectDeleteConfirmModal({ project, onConfirm, onCancel }) {
+    return (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in-fast">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+                <div className="flex items-start">
+                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10">
+                        <ShieldAlert className="h-6 w-6 text-red-600 dark:text-red-400" aria-hidden="true" />
+                    </div>
+                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+                            Delete Project
+                        </h3>
+                        <div className="mt-2">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Are you sure you want to delete <span className="font-semibold">"{project.name}"</span>?
+                            </p>
+                            <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+                                This will permanently delete the project and all {project.taskCount} associated tasks. This action cannot be undone.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button 
+                        type="button" 
+                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" 
+                        onClick={onConfirm}
+                    >
+                        Delete Project
+                    </button>
+                    <button 
+                        type="button" 
+                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm" 
+                        onClick={onCancel}
+                    >
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
     );
