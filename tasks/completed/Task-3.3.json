@@ -1,0 +1,391 @@
+{
+  "task_id": "Task-3.3",
+  "title": "Sub-Tasks Implementation",
+  "description": "Implement the ability to create nested sub-tasks under a parent task, with their own completion status and management capabilities.",
+  "phase": "Phase 3: Advanced Task Features",
+  "priority": "Medium",
+  "estimated_time": "180 minutes",
+  "complexity_score": 9,
+  "benefit_score": 3,
+  "dependencies": ["Task-1.1"],
+  "status": "completed",
+  "completion_date": "2025-07-13",
+  "commit_hash": "37f5931",
+  "completion_summary": {
+    "files_created": ["src/utils/taskHelpers.js"],
+    "files_modified": [
+      "src/App.jsx",
+      "src/components/shared/TaskItem.jsx", 
+      "src/components/views/DashboardView/index.jsx",
+      "src/components/views/ProjectView.jsx",
+      "src/components/views/TasksView.jsx"
+    ],
+    "key_features_implemented": [
+      "Hierarchical task data model with parentTaskId, depth, and order fields",
+      "Visual indentation and expand/collapse UI for task hierarchies",
+      "Sub-task creation with parent context",
+      "Parent task completion logic based on child status",
+      "Child count badges and visual hierarchy indicators",
+      "Hierarchy-aware filtering and display in all views"
+    ],
+    "testing_notes": "Manual testing verified hierarchical display, sub-task creation, expand/collapse functionality, and parent-child completion logic work correctly"
+  },
+  "context": {
+    "parent_task": "Task 3.3: Sub-Tasks Implementation",
+    "sequence_position": "3 of 3",
+    "integration_points": [
+      "src/components/shared/TaskItem.jsx - Add hierarchical display with indentation",
+      "src/App.jsx - Extend TaskDetailModal for sub-task creation",
+      "Firebase data model - Add parentTaskId field for hierarchical relationships",
+      "Task filtering logic - Handle parent-child relationships in searches",
+      "Task completion logic - Define behavior for parent tasks with incomplete sub-tasks"
+    ]
+  },
+  "actions_required": [
+    "Extend task data model for hierarchy with parentTaskId field",
+    "Modify TaskItem component for hierarchy display with indentation",
+    "Add sub-task creation UI to task detail modal",
+    "Implement completion logic for hierarchies",
+    "Update filtering and display logic for hierarchical tasks",
+    "Integrate with existing drag and drop functionality"
+  ],
+  "current_manifest": {
+    "src/components/shared/TaskItem.jsx": {
+      "purpose": "Renders individual task items with checkbox, title, due date, tags, and action buttons",
+      "current_exports": [
+        {
+          "name": "TaskItem",
+          "signature": "TaskItem({ task, onToggle, onOpenDetail, onStartTask, isTaskActive, aiNudgeRecommendations }) -> JSX.Element",
+          "description": "Renders task item with defensive programming and visual urgency indicators"
+        }
+      ],
+      "imports": ["react", "lucide-react", "../../utils/taskFilters"],
+      "sideEffects": ["DOM manipulation for task interactions"]
+    },
+    "src/App.jsx": {
+      "purpose": "Main application component with task management and Firebase integration",
+      "current_task_related_exports": [
+        {
+          "name": "TaskDetailModal",
+          "signature": "TaskDetailModal({ onClose, onSave, task }) -> JSX.Element",
+          "description": "Modal for creating and editing task details with title, detail, dueDate, tags"
+        }
+      ],
+      "current_task_data_model": {
+        "id": "Firebase document ID",
+        "projectId": "string - reference to parent project",
+        "title": "string - task title",
+        "detail": "string - task description",
+        "isComplete": "boolean - completion status",
+        "createdAt": "Date - creation timestamp",
+        "tags": "array - tag strings",
+        "dueDate": "Date|null - optional due date",
+        "status": "string - 'idle'|'in-progress'"
+      }
+    }
+  },
+  "expected_post_task_manifest": {
+    "src/components/shared/TaskItem.jsx": {
+      "purpose": "Renders individual task items with hierarchical display, indentation for sub-tasks, and expandable/collapsible functionality",
+      "exports": [
+        {
+          "name": "TaskItem",
+          "signature": "TaskItem({ task, onToggle, onOpenDetail, onStartTask, isTaskActive, aiNudgeRecommendations, depth, children, onToggleExpand, isExpanded, onAddSubTask }) -> JSX.Element",
+          "description": "Renders task item with hierarchical support, visual indentation, and sub-task management"
+        }
+      ],
+      "new_props": [
+        {
+          "name": "depth",
+          "type": "number",
+          "description": "Nesting depth for visual indentation (0 = root level)"
+        },
+        {
+          "name": "children", 
+          "type": "array",
+          "description": "Array of child task objects for sub-tasks"
+        },
+        {
+          "name": "onToggleExpand",
+          "type": "function",
+          "description": "Handler for expanding/collapsing sub-tasks"
+        },
+        {
+          "name": "isExpanded",
+          "type": "boolean", 
+          "description": "Whether sub-tasks are currently visible"
+        },
+        {
+          "name": "onAddSubTask",
+          "type": "function",
+          "description": "Handler for adding sub-task to this parent"
+        }
+      ],
+      "imports": ["react", "lucide-react", "../../utils/taskFilters"],
+      "sideEffects": ["DOM manipulation for task interactions", "Hierarchical expand/collapse state management"]
+    },
+    "src/App.jsx": {
+      "purpose": "Main application component with hierarchical task management and Firebase integration",
+      "updated_task_data_model": {
+        "id": "Firebase document ID",
+        "projectId": "string - reference to parent project", 
+        "parentTaskId": "string|null - reference to parent task for sub-tasks",
+        "title": "string - task title",
+        "detail": "string - task description",
+        "isComplete": "boolean - completion status",
+        "createdAt": "Date - creation timestamp",
+        "tags": "array - tag strings",
+        "dueDate": "Date|null - optional due date",
+        "status": "string - 'idle'|'in-progress'",
+        "depth": "number - calculated nesting depth",
+        "order": "number - order within parent (for future drag & drop)"
+      },
+      "new_functions": [
+        {
+          "name": "buildTaskHierarchy",
+          "signature": "buildTaskHierarchy(tasks) -> Array",
+          "description": "Converts flat task list into hierarchical structure with parent-child relationships"
+        },
+        {
+          "name": "handleAddSubTask",
+          "signature": "handleAddSubTask(parentTask) -> void",
+          "description": "Opens task modal pre-configured for creating sub-task under specified parent"
+        },
+        {
+          "name": "handleParentTaskCompletion",
+          "signature": "handleParentTaskCompletion(task, childTasks) -> boolean",
+          "description": "Determines if parent task can be completed based on child completion status"
+        }
+      ],
+      "updated_exports": [
+        {
+          "name": "TaskDetailModal",
+          "signature": "TaskDetailModal({ onClose, onSave, task, parentTask }) -> JSX.Element",
+          "description": "Enhanced modal with sub-task creation support and parent task context"
+        }
+      ]
+    },
+    "src/utils/taskHelpers.js": {
+      "purpose": "NEW FILE - Utility functions for hierarchical task management",
+      "exports": [
+        {
+          "name": "buildTaskHierarchy",
+          "signature": "buildTaskHierarchy(tasks) -> Array",
+          "description": "Converts flat task array into nested hierarchy with parent-child relationships"
+        },
+        {
+          "name": "flattenTaskHierarchy", 
+          "signature": "flattenTaskHierarchy(hierarchicalTasks) -> Array",
+          "description": "Converts hierarchical task structure back to flat array for Firebase operations"
+        },
+        {
+          "name": "getTaskDepth",
+          "signature": "getTaskDepth(task, allTasks) -> number",
+          "description": "Calculates nesting depth of task by traversing parent chain"
+        },
+        {
+          "name": "canCompleteParent",
+          "signature": "canCompleteParent(parentTask, childTasks) -> boolean",
+          "description": "Determines if parent task can be completed based on children status"
+        },
+        {
+          "name": "getTaskChildren",
+          "signature": "getTaskChildren(parentTaskId, allTasks) -> Array",
+          "description": "Gets all direct child tasks for specified parent"
+        }
+      ],
+      "imports": [],
+      "sideEffects": []
+    }
+  },
+  "technical_approach": {
+    "data_model_changes": {
+      "new_fields": [
+        {
+          "field": "parentTaskId",
+          "type": "string|null",
+          "description": "Firebase document ID of parent task, null for root-level tasks",
+          "default": "null"
+        },
+        {
+          "field": "depth", 
+          "type": "number",
+          "description": "Calculated nesting depth (0 = root, 1 = first level sub-task, etc)",
+          "default": "0"
+        },
+        {
+          "field": "order",
+          "type": "number", 
+          "description": "Order within parent for consistent sorting",
+          "default": "0"
+        }
+      ],
+      "migration_strategy": "Add new fields with default values to existing tasks during next save operation"
+    },
+    "hierarchy_building_algorithm": {
+      "input": "Flat array of tasks from Firebase",
+      "output": "Nested array with parent-child relationships",
+      "steps": [
+        "Group tasks by parentTaskId (null = root level)",
+        "For each root task, recursively find and attach children",
+        "Calculate depth for each task based on parent chain",
+        "Sort children within each parent by order field",
+        "Return nested structure suitable for rendering"
+      ]
+    },
+    "visual_hierarchy_implementation": {
+      "indentation": "Use left padding: depth * 20px for visual hierarchy",
+      "expand_collapse": "Add chevron icon for tasks with children",
+      "parent_indicators": "Show child count badge on parent tasks",
+      "completion_cascading": "Visual indicators when parent completion depends on children"
+    },
+    "completion_logic_rules": [
+      "Sub-tasks can be completed independently of parent",
+      "Parent tasks show visual indicator when all children are complete",
+      "Optional setting: auto-complete parent when all children complete",
+      "Completing parent does not auto-complete children",
+      "Deleting parent task shows confirmation and options for child tasks"
+    ],
+    "ui_interaction_patterns": {
+      "sub_task_creation": [
+        "Add 'Add Sub-task' button to TaskItem for non-complete tasks",
+        "Right-click context menu option for 'Add Sub-task'",
+        "Enhanced TaskDetailModal with 'Add as Sub-task' option when parent context exists"
+      ],
+      "hierarchy_navigation": [
+        "Click parent task chevron to expand/collapse children",
+        "Visual breadcrumb showing task path in detail modal",
+        "Keyboard navigation support (arrow keys for hierarchy traversal)"
+      ]
+    }
+  },
+  "implementation_steps": [
+    {
+      "step": 1,
+      "title": "Create task hierarchy utility functions",
+      "description": "Create src/utils/taskHelpers.js with hierarchy building and manipulation functions",
+      "estimated_time": "30 minutes",
+      "files_affected": ["src/utils/taskHelpers.js"]
+    },
+    {
+      "step": 2,
+      "title": "Extend task data model",
+      "description": "Add parentTaskId, depth, and order fields to task creation and update operations",
+      "estimated_time": "20 minutes", 
+      "files_affected": ["src/App.jsx"]
+    },
+    {
+      "step": 3,
+      "title": "Enhance TaskItem component for hierarchy",
+      "description": "Add visual indentation, expand/collapse functionality, and sub-task indicators",
+      "estimated_time": "45 minutes",
+      "files_affected": ["src/components/shared/TaskItem.jsx"]
+    },
+    {
+      "step": 4,
+      "title": "Update TaskDetailModal for sub-task creation",
+      "description": "Add sub-task creation capabilities and parent task context to modal",
+      "estimated_time": "30 minutes",
+      "files_affected": ["src/App.jsx"]
+    },
+    {
+      "step": 5,
+      "title": "Implement hierarchy building in App component",
+      "description": "Convert flat task arrays to hierarchical structure for rendering",
+      "estimated_time": "25 minutes",
+      "files_affected": ["src/App.jsx"]
+    },
+    {
+      "step": 6,
+      "title": "Update task rendering in all views",
+      "description": "Modify DashboardView, ProjectsView, TasksView to handle hierarchical tasks",
+      "estimated_time": "30 minutes",
+      "files_affected": ["src/components/views/DashboardView/index.jsx", "src/components/views/TasksView.jsx", "src/components/views/ProjectView.jsx"]
+    }
+  ],
+  "code_changes": [
+    {
+      "file": "src/utils/taskHelpers.js",
+      "type": "creation",
+      "description": "New utility file for hierarchical task management functions"
+    },
+    {
+      "file": "src/components/shared/TaskItem.jsx",
+      "type": "enhancement",
+      "description": "Add hierarchical display, indentation, expand/collapse, and sub-task creation UI"
+    },
+    {
+      "file": "src/App.jsx", 
+      "type": "enhancement",
+      "description": "Extend task data model, add hierarchy building, enhance TaskDetailModal for sub-tasks"
+    },
+    {
+      "file": "src/components/views/DashboardView/index.jsx",
+      "type": "modification", 
+      "description": "Update to render hierarchical task structure"
+    },
+    {
+      "file": "src/components/views/TasksView.jsx",
+      "type": "modification",
+      "description": "Update to render hierarchical task structure with filtering support"
+    },
+    {
+      "file": "src/components/views/ProjectView.jsx",
+      "type": "modification",
+      "description": "Update to render hierarchical task structure in project context"
+    }
+  ],
+  "testing_considerations": [
+    "Test sub-task creation from multiple contexts (modal, quick-add button, context menu)",
+    "Test hierarchical display with multiple nesting levels (up to 3-4 levels deep)",
+    "Test expand/collapse functionality for parent tasks with children",
+    "Test completion logic - completing sub-tasks, parent tasks, mixed states",
+    "Test task filtering with hierarchical structures (ensure children appear with parents)",
+    "Test task search functionality includes sub-task relationships",
+    "Test performance with deeply nested hierarchies and large task counts",
+    "Test visual hierarchy with various screen sizes and theme modes",
+    "Test keyboard navigation through hierarchical task lists",
+    "Test edge cases: deleting parent tasks, orphaned sub-tasks, circular references"
+  ],
+  "acceptance_criteria": [
+    "Sub-tasks display with clear visual hierarchy and indentation proportional to depth",
+    "Parent tasks show completion status based on sub-task progress with visual indicators",
+    "Sub-task creation is intuitive and accessible from multiple contexts within the application",
+    "Filtering and search work correctly with task hierarchies, showing relevant parent-child relationships",
+    "Expand/collapse functionality allows users to manage visual complexity of nested task lists",
+    "Performance remains responsive with deep task hierarchies and large numbers of tasks",
+    "Task completion logic properly handles parent-child relationships without breaking existing functionality",
+    "Visual design maintains consistency with existing task display patterns and theme support",
+    "Data integrity is maintained - no orphaned tasks or circular parent-child references",
+    "Integration with existing features (timers, filters, AI nudges) works seamlessly with hierarchical tasks"
+  ],
+  "integration_readiness": {
+    "drag_and_drop_considerations": "Hierarchy must respect drag and drop constraints - cannot drag parent into its own child",
+    "filtering_integration": "Filters should show parent tasks when children match criteria", 
+    "ai_nudge_integration": "AI recommendations should consider task hierarchy in priority calculations",
+    "export_import_compatibility": "Data export/import must preserve hierarchical relationships",
+    "obsidian_sync_impact": "Markdown generation should represent task hierarchy with indentation or nested lists"
+  },
+  "files_to_create": [
+    "src/utils/taskHelpers.js"
+  ],
+  "files_to_modify": [
+    "src/components/shared/TaskItem.jsx",
+    "src/App.jsx",
+    "src/components/views/DashboardView/index.jsx", 
+    "src/components/views/TasksView.jsx",
+    "src/components/views/ProjectView.jsx"
+  ],
+  "validation_requirements": [
+    "Verify hierarchical task structure builds correctly from flat Firebase data",
+    "Verify visual indentation scales properly with task depth",
+    "Verify expand/collapse state management works reliably",
+    "Verify sub-task creation modal pre-populates parent context correctly",
+    "Verify completion logic respects parent-child relationships", 
+    "Verify filtering and search include hierarchical considerations",
+    "Verify performance with realistic task hierarchy scenarios",
+    "Verify data model changes maintain backward compatibility",
+    "Verify UI remains accessible with hierarchical navigation",
+    "Verify integration with existing drag and drop functionality (future-proofing)"
+  ]
+}
