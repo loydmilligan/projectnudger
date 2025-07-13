@@ -46,6 +46,9 @@ import useNotifications from './hooks/useNotifications';
 // Import AI nudge service
 import { generateAINudge } from './utils/aiNudgeService';
 
+// Import task hierarchy utilities
+import { buildTaskHierarchy, getTaskChildren, canCompleteParent, getTaskDepth } from './utils/taskHelpers';
+
 
 // --- Main App Component ---
 export default function App() {
@@ -87,6 +90,10 @@ export default function App() {
     const [aiNudgeRecommendations, setAiNudgeRecommendations] = useState(null);
     const [isAiNudgeDisplayOpen, setIsAiNudgeDisplayOpen] = useState(false);
     const [queuedSessionAfterRest, setQueuedSessionAfterRest] = useState(null);
+    
+    // Hierarchical task state
+    const [expandedTasks, setExpandedTasks] = useState(new Set());
+    const [hierarchicalTasks, setHierarchicalTasks] = useState([]);
     
     // --- Memoized derived state ---
     const activeTask = useMemo(() => activeSession ? tasks.find(t => t.id === activeSession.taskId) : null, [activeSession, tasks]);
@@ -145,6 +152,12 @@ export default function App() {
         return () => { unsubSettings(); unsubProjects(); unsubTasks(); unsubCategories(); unsubSession(); };
     }, []);
     
+    // Build hierarchical task structure when tasks change
+    useEffect(() => {
+        const hierarchy = buildTaskHierarchy(tasks);
+        setHierarchicalTasks(hierarchy);
+    }, [tasks]);
+    
     useEffect(() => { document.documentElement.classList.toggle('dark', settings.theme === 'dark'); }, [settings.theme]);
     useEffect(() => {
         let title = "Project Nudger";
@@ -197,6 +210,13 @@ export default function App() {
         try {
             setLoadingStates(prev => ({ ...prev, saveTask: true }));
             const { id, ...dataToSave } = taskData;
+            
+            // Add hierarchy-related defaults for new tasks
+            if (!id) {
+                dataToSave.parentTaskId = dataToSave.parentTaskId || null;
+                dataToSave.depth = dataToSave.depth || 0;
+                dataToSave.order = dataToSave.order || 0;
+            }
             
             // Remove undefined values to prevent Firestore errors
             Object.keys(dataToSave).forEach(key => {
@@ -459,6 +479,40 @@ export default function App() {
         setEditingTask(task);
         setIsTaskDetailModalOpen(true);
     };
+
+    // Hierarchical task management functions
+    const handleToggleExpand = (taskId) => {
+        setExpandedTasks(prev => {
+            const newExpanded = new Set(prev);
+            if (newExpanded.has(taskId)) {
+                newExpanded.delete(taskId);
+            } else {
+                newExpanded.add(taskId);
+            }
+            return newExpanded;
+        });
+    };
+
+    const handleAddSubTask = (parentTask) => {
+        const newSubTask = {
+            projectId: parentTask.projectId,
+            parentTaskId: parentTask.id,
+            title: '',
+            detail: '',
+            isComplete: false,
+            tags: [],
+            dueDate: null,
+            status: 'idle',
+            depth: (parentTask.depth || 0) + 1,
+            order: 0
+        };
+        setEditingTask(newSubTask);
+        setIsTaskDetailModalOpen(true);
+    };
+
+    const handleParentTaskCompletion = (task, childTasks) => {
+        return canCompleteParent(task, childTasks);
+    };
     
     const handleExportData = async () => {
         try {
@@ -645,12 +699,32 @@ export default function App() {
         if (activeView === 'archived') { return <ArchivedProjectsView allProjects={projects} onSaveProject={handleSaveProject}/>; }
         if (activeView === 'tracking') { return <TrackingView session={activeSession} tasks={tasks} onSessionEnd={handleSessionEnd} />; }
         if (selectedProjectId) {
-            return <ProjectView project={selectedProject} tasks={tasks.filter(t => t.projectId === selectedProjectId)} settings={settings} categoryColor={categories[selectedProject.category]} onCompleteTask={handleCompleteTask} onEditTask={handleEditTask} onOpenNewTaskDetail={openTaskDetailForNew} onStartTask={handleStartTask} onEditProject={openEditProjectModal} nudgeState={nudgeState} onBack={() => setSelectedProjectId(null)} aiNudgeRecommendations={aiNudgeRecommendations} />;
+            const projectTasks = tasks.filter(t => t.projectId === selectedProjectId);
+            const projectHierarchy = buildTaskHierarchy(projectTasks);
+            return <ProjectView 
+                project={selectedProject} 
+                tasks={projectTasks}
+                hierarchicalTasks={projectHierarchy}
+                settings={settings} 
+                categoryColor={categories[selectedProject.category]} 
+                onCompleteTask={handleCompleteTask} 
+                onEditTask={handleEditTask} 
+                onOpenNewTaskDetail={openTaskDetailForNew} 
+                onStartTask={handleStartTask} 
+                onEditProject={openEditProjectModal} 
+                nudgeState={nudgeState} 
+                onBack={() => setSelectedProjectId(null)} 
+                aiNudgeRecommendations={aiNudgeRecommendations}
+                expandedTasks={expandedTasks}
+                onToggleExpand={handleToggleExpand}
+                onAddSubTask={handleAddSubTask}
+            />;
         }
         switch (activeView) {
             case 'dashboard': return <DashboardView 
                 projects={visibleProjects} 
-                tasks={tasks} 
+                tasks={tasks}
+                hierarchicalTasks={hierarchicalTasks}
                 nudgeState={nudgeState} 
                 setSelectedProjectId={setSelectedProjectId} 
                 categories={categories} 
@@ -665,9 +739,24 @@ export default function App() {
                 onCompleteTask={handleCompleteTask}
                 onStartTask={handleStartTask}
                 onEditTask={handleEditTask}
+                expandedTasks={expandedTasks}
+                onToggleExpand={handleToggleExpand}
+                onAddSubTask={handleAddSubTask}
             />;
             case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} onCompleteTask={handleCompleteTask} onStartTask={handleStartTask} onEditTask={handleEditTask} onEditProject={openEditProjectModal} onDeleteProject={handleDeleteProject} onArchiveProject={handleArchiveProject} />;
-            case 'tasks': return <TasksView tasks={tasks} projects={projects} onStartTask={handleStartTask} onCompleteTask={handleCompleteTask} onEditTask={handleEditTask} activeSession={activeSession} aiNudgeRecommendations={aiNudgeRecommendations}/>;
+            case 'tasks': return <TasksView 
+                tasks={tasks} 
+                hierarchicalTasks={hierarchicalTasks}
+                projects={projects} 
+                onStartTask={handleStartTask} 
+                onCompleteTask={handleCompleteTask} 
+                onEditTask={handleEditTask} 
+                activeSession={activeSession} 
+                aiNudgeRecommendations={aiNudgeRecommendations}
+                expandedTasks={expandedTasks}
+                onToggleExpand={handleToggleExpand}
+                onAddSubTask={handleAddSubTask}
+            />;
             case 'settings': return <SettingsView 
                 currentSettings={settings} 
                 onExportData={handleExportData} 
@@ -736,7 +825,7 @@ export default function App() {
                 />
             )}
             {isProjectModalOpen && <ProjectModal onClose={() => {setIsProjectModalOpen(false); setEditingProject(null);}} onSave={handleSaveProject} existingProject={editingProject} categories={Object.keys(categories)} owners={owners} />}
-            {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} />}
+            {isTaskDetailModalOpen && editingTask && <TaskDetailModal onClose={() => setIsTaskDetailModalOpen(false)} onSave={handleSaveTask} task={editingTask} parentTask={editingTask.parentTaskId ? tasks.find(t => t.id === editingTask.parentTaskId) : null} />}
             {isSessionEndModalOpen && <SessionEndModal onClose={() => setIsSessionEndModalOpen(false)} onSave={handleSaveSessionNotes} />}
             {isSessionCompletionModalOpen && (
                 <SessionCompletionModal
@@ -914,7 +1003,7 @@ function SessionEndModal({ onClose, onSave }) {
     );
 }
 
-function TaskDetailModal({ onClose, onSave, task }) {
+function TaskDetailModal({ onClose, onSave, task, parentTask }) {
     const [title, setTitle] = useState(task.title || '');
     const [detail, setDetail] = useState(task.detail || '');
     const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
@@ -924,18 +1013,30 @@ function TaskDetailModal({ onClose, onSave, task }) {
         onSave({ 
             id: task.id,
             projectId: task.projectId,
+            parentTaskId: task.parentTaskId || null,
             title, 
             detail, 
             dueDate: dueDate ? new Date(dueDate) : null, 
             tags: tags.split(',').map(t => t.trim()).filter(Boolean),
             status: task.status || 'idle',
-            isComplete: task.isComplete || false
+            isComplete: task.isComplete || false,
+            depth: task.depth || 0,
+            order: task.order || 0
         }); 
     };
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in-fast">
              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
-                <h3 className="text-xl font-semibold mb-4">{task.id ? 'Edit Task' : 'Add New Task'}</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                    {task.id ? 'Edit Task' : parentTask ? `Add Sub-task to "${parentTask.title}"` : 'Add New Task'}
+                </h3>
+                {parentTask && !task.id && (
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                            <span className="font-medium">Parent Task:</span> {parentTask.title}
+                        </p>
+                    </div>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="text-sm font-medium">Title</label>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlayCircle, TimerIcon, Calendar, Loader2, AlertTriangle, Bell } from 'lucide-react';
+import { PlayCircle, TimerIcon, Calendar, Loader2, AlertTriangle, Bell, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { isPastDue, isNudgedTask } from '../../utils/taskFilters';
 
 function TaskItem({ 
@@ -8,7 +8,12 @@ function TaskItem({
     onOpenDetail = null, 
     onStartTask = null, 
     isTaskActive = false,
-    aiNudgeRecommendations = null
+    aiNudgeRecommendations = null,
+    depth = 0,
+    children = [],
+    onToggleExpand = null,
+    isExpanded = false,
+    onAddSubTask = null
 }) {
     const [isToggling, setIsToggling] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
@@ -25,6 +30,12 @@ function TaskItem({
         }
         if (!onStartTask) {
             console.warn('TaskItem: onStartTask handler is missing - start task button will be disabled');
+        }
+        if (children.length > 0 && !onToggleExpand) {
+            console.warn('TaskItem: onToggleExpand handler is missing - expand/collapse functionality will be disabled');
+        }
+        if (!onAddSubTask) {
+            console.warn('TaskItem: onAddSubTask handler is missing - add sub-task functionality will be disabled');
         }
     }
 
@@ -46,6 +57,9 @@ function TaskItem({
     const getContainerClasses = () => {
         let baseClasses = 'flex items-center p-2.5 rounded-md text-sm transition-colors group relative';
         
+        // Add indentation based on depth
+        const indentationPx = depth * 20;
+        
         // Background and border styling based on urgency (past due takes precedence)
         if (isPastDueTask) {
             baseClasses += ' bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border-l-4 border-red-500';
@@ -66,6 +80,13 @@ function TaskItem({
         }
         
         return baseClasses;
+    };
+
+    // Calculate indentation style
+    const getIndentationStyle = () => {
+        return {
+            marginLeft: `${depth * 20}px`
+        };
     };
 
     // Determine due date styling
@@ -106,13 +127,48 @@ function TaskItem({
         }
     };
 
+    const handleToggleExpand = (e) => {
+        e.stopPropagation();
+        if (onToggleExpand && typeof onToggleExpand === 'function') {
+            onToggleExpand(safeTask.id);
+        }
+    };
+
+    const handleAddSubTask = (e) => {
+        e.stopPropagation();
+        if (onAddSubTask && typeof onAddSubTask === 'function') {
+            onAddSubTask(safeTask);
+        }
+    };
+
     return (
-        <li 
-            className={getContainerClasses()}
-            data-testid={`task-item-${safeTask.id}`}
-            aria-label={`${isPastDueTask && isNudgedTaskIndicator ? 'Past due and nudged task - urgent attention required' : isPastDueTask ? 'Past due task' : isNudgedTaskIndicator ? 'Nudged task - requires attention' : 'Task'}`}
-        >
-            <div className="relative mr-3 flex-shrink-0">
+        <>
+            <li 
+                className={getContainerClasses()}
+                style={getIndentationStyle()}
+                data-testid={`task-item-${safeTask.id}`}
+                aria-label={`${isPastDueTask && isNudgedTaskIndicator ? 'Past due and nudged task - urgent attention required' : isPastDueTask ? 'Past due task' : isNudgedTaskIndicator ? 'Nudged task - requires attention' : 'Task'}`}
+            >
+                {/* Expand/Collapse button for parent tasks */}
+                {children.length > 0 && (
+                    <button
+                        onClick={handleToggleExpand}
+                        className="mr-2 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                        data-testid={`task-expand-button-${safeTask.id}`}
+                    >
+                        {isExpanded ? (
+                            <ChevronDown size={16} className="text-gray-500" />
+                        ) : (
+                            <ChevronRight size={16} className="text-gray-500" />
+                        )}
+                    </button>
+                )}
+                {/* Spacer for tasks without children to align with parent tasks */}
+                {children.length === 0 && (
+                    <div className="w-6 mr-2 flex-shrink-0" />
+                )}
+
+                <div className="relative mr-3 flex-shrink-0">
                 {isToggling ? (
                     <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
                 ) : (
@@ -180,6 +236,29 @@ function TaskItem({
                     data-testid={`task-active-timer-${safeTask.id}`}
                 />
             )}
+
+            {/* Add Sub-task button */}
+            {!safeTask.isComplete && onAddSubTask && (
+                <button 
+                    onClick={handleAddSubTask} 
+                    className="ml-2 p-1 text-gray-500 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Add sub-task"
+                    data-testid={`task-add-subtask-button-${safeTask.id}`}
+                >
+                    <Plus size={16} />
+                </button>
+            )}
+            
+            {/* Child count badge for parent tasks */}
+            {children.length > 0 && (
+                <div 
+                    className="ml-2 bg-gray-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                    data-testid={`task-child-count-${safeTask.id}`}
+                    title={`${children.length} sub-task${children.length !== 1 ? 's' : ''}`}
+                >
+                    {children.length}
+                </div>
+            )}
             
             {/* Nudged task notification badge */}
             {isNudgedTaskIndicator && (
@@ -192,6 +271,25 @@ function TaskItem({
                 </div>
             )}
         </li>
+
+        {/* Render children when expanded */}
+        {isExpanded && children.length > 0 && children.map(child => (
+            <TaskItem
+                key={child.id}
+                task={child}
+                onToggle={onToggle}
+                onOpenDetail={onOpenDetail}
+                onStartTask={onStartTask}
+                isTaskActive={isTaskActive}
+                aiNudgeRecommendations={aiNudgeRecommendations}
+                depth={child.depth || depth + 1}
+                children={child.children || []}
+                onToggleExpand={onToggleExpand}
+                isExpanded={child.children && child.children.length > 0 ? isExpanded : false}
+                onAddSubTask={onAddSubTask}
+            />
+        ))}
+    </>
     );
 }
 

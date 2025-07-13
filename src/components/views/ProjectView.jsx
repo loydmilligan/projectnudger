@@ -5,9 +5,34 @@ import { db, basePath } from '../../config/firebase';
 import { getAnalogousColor } from '../../utils/helpers';
 import TaskItem from '../shared/TaskItem';
 
-function ProjectView({ project, tasks, settings, categoryColor, onCompleteTask, onEditTask, onOpenNewTaskDetail, nudgeState, onBack, onStartTask, onEditProject, aiNudgeRecommendations }) {
+function ProjectView({ 
+    project, 
+    tasks, 
+    hierarchicalTasks,
+    settings, 
+    categoryColor, 
+    onCompleteTask, 
+    onEditTask, 
+    onOpenNewTaskDetail, 
+    nudgeState, 
+    onBack, 
+    onStartTask, 
+    onEditProject, 
+    aiNudgeRecommendations,
+    expandedTasks,
+    onToggleExpand,
+    onAddSubTask
+}) {
     const [newTaskTitle, setNewTaskTitle] = useState('');
-    const projectTasks = useMemo(() => tasks.filter(t => t.projectId === project.id).sort((a, b) => (a.isComplete - b.isComplete) || (a.createdAt || 0) - (b.createdAt || 0)), [tasks, project.id]);
+    
+    // Use hierarchical tasks if provided, otherwise fallback to flat tasks
+    const projectTasksToRender = useMemo(() => {
+        if (hierarchicalTasks && hierarchicalTasks.length > 0) {
+            return hierarchicalTasks;
+        }
+        // Fallback to flat tasks sorted by completion status and creation date
+        return tasks.filter(t => t.projectId === project.id).sort((a, b) => (a.isComplete - b.isComplete) || (a.createdAt || 0) - (b.createdAt || 0));
+    }, [tasks, hierarchicalTasks, project.id]);
     
 
     const handleQuickAddTask = async () => {
@@ -23,6 +48,44 @@ function ProjectView({ project, tasks, settings, categoryColor, onCompleteTask, 
             projectId: project.id, title: newTaskTitle, detail: '', isComplete: false, tags: [], dueDate: null, status: 'idle'
         });
         setNewTaskTitle('');
+    };
+
+    // Recursive function to render hierarchical tasks
+    const renderHierarchicalTasks = (taskList) => {
+        return taskList.map(task => (
+            <TaskItem
+                key={task.id}
+                task={task}
+                onToggle={onCompleteTask}
+                onOpenDetail={onEditTask}
+                onStartTask={onStartTask}
+                aiNudgeRecommendations={aiNudgeRecommendations}
+                depth={task.depth || 0}
+                children={task.children || []}
+                onToggleExpand={onToggleExpand}
+                isExpanded={expandedTasks && expandedTasks.has(task.id)}
+                onAddSubTask={onAddSubTask}
+            />
+        ));
+    };
+
+    // Render function that handles both hierarchical and flat tasks
+    const renderTasks = () => {
+        if (hierarchicalTasks && hierarchicalTasks.length > 0) {
+            return renderHierarchicalTasks(projectTasksToRender);
+        }
+        // Fallback to flat rendering
+        return projectTasksToRender.map(task => (
+            <TaskItem 
+                key={task.id} 
+                task={task} 
+                onToggle={onCompleteTask} 
+                onOpenDetail={onEditTask} 
+                onStartTask={onStartTask} 
+                aiNudgeRecommendations={aiNudgeRecommendations}
+                onAddSubTask={onAddSubTask}
+            />
+        ));
     };
 
 
@@ -43,7 +106,7 @@ function ProjectView({ project, tasks, settings, categoryColor, onCompleteTask, 
                     <button onClick={handleOpenAddModal} className="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md text-sm font-semibold text-white">Add Details...</button>
                 </div>
                 <ul className="space-y-2">
-                    {projectTasks.map(task => <TaskItem key={task.id} task={task} onToggle={onCompleteTask} onOpenDetail={onEditTask} onStartTask={onStartTask} aiNudgeRecommendations={aiNudgeRecommendations}/>)}
+                    {renderTasks()}
                 </ul>
             </div>
         </div>

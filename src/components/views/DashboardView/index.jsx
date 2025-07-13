@@ -7,7 +7,8 @@ import { getComplementaryColor } from '../../../utils/helpers';
 
 function DashboardView({ 
     projects, 
-    tasks, 
+    tasks,
+    hierarchicalTasks,
     nudgeState, 
     setSelectedProjectId, 
     categories, 
@@ -21,7 +22,10 @@ function DashboardView({
     onSessionComplete,
     onCompleteTask,
     onStartTask,
-    onEditTask
+    onEditTask,
+    expandedTasks,
+    onToggleExpand,
+    onAddSubTask
 }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

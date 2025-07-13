@@ -1,16 +1,58 @@
 import React, { useState, useMemo } from 'react';
 import TaskItem from '../shared/TaskItem';
 import { applyTaskFilters } from '../../utils/taskFilters';
+import { buildTaskHierarchy } from '../../utils/taskHelpers';
 
-function TasksView({ tasks, projects, onStartTask, onCompleteTask, onEditTask, activeSession, aiNudgeRecommendations }) {
+function TasksView({ 
+    tasks, 
+    hierarchicalTasks,
+    projects, 
+    onStartTask, 
+    onCompleteTask, 
+    onEditTask, 
+    activeSession, 
+    aiNudgeRecommendations,
+    expandedTasks,
+    onToggleExpand,
+    onAddSubTask
+}) {
     const [filters, setFilters] = useState({ project: 'All', tag: '', dueDate: 'All' });
 
-    const filteredTasks = useMemo(() => {
+    const filteredHierarchicalTasks = useMemo(() => {
+        // First apply filters to flat tasks
         const filtered = applyTaskFilters(tasks, filters, aiNudgeRecommendations);
-        return filtered.sort((a,b) => (a.isComplete - b.isComplete) || (a.createdAt || 0) - (b.createdAt || 0));
-    }, [tasks, filters, aiNudgeRecommendations]);
+        
+        // If no filters are active, use the pre-built hierarchy
+        if (filters.project === 'All' && !filters.tag && filters.dueDate === 'All') {
+            return hierarchicalTasks;
+        }
+        
+        // When filters are active, build hierarchy from filtered tasks
+        const hierarchy = buildTaskHierarchy(filtered);
+        return hierarchy;
+    }, [tasks, hierarchicalTasks, filters, aiNudgeRecommendations]);
 
     const allTags = useMemo(() => [...new Set(tasks.flatMap(t => t.tags || []))], [tasks]);
+
+    // Recursive function to render hierarchical tasks
+    const renderHierarchicalTasks = (taskList) => {
+        return taskList.map(task => (
+            <TaskItem
+                key={task.id}
+                task={task}
+                onToggle={onCompleteTask}
+                onOpenDetail={onEditTask}
+                onStartTask={onStartTask}
+                isTaskActive={activeSession?.taskId === task.id}
+                aiNudgeRecommendations={aiNudgeRecommendations}
+                depth={task.depth || 0}
+                children={task.children || []}
+                onToggleExpand={onToggleExpand}
+                isExpanded={expandedTasks.has(task.id)}
+                onAddSubTask={onAddSubTask}
+            />
+        ));
+    };
 
     return (
         <div>
@@ -42,7 +84,7 @@ function TasksView({ tasks, projects, onStartTask, onCompleteTask, onEditTask, a
                 </div>
             </div>
             <ul className="space-y-3">
-                {filteredTasks.map(task => <TaskItem key={task.id} task={task} onToggle={onCompleteTask} onOpenDetail={onEditTask} onStartTask={onStartTask} isTaskActive={activeSession?.taskId === task.id} aiNudgeRecommendations={aiNudgeRecommendations}/>)}
+                {renderHierarchicalTasks(filteredHierarchicalTasks)}
             </ul>
         </div>
     );
