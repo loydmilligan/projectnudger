@@ -55,7 +55,14 @@ export const isValidUrl = (urlString) => {
         const trimmedUrl = urlString.trim();
         
         // Add https:// if no protocol is present
-        const urlToTest = trimmedUrl.match(/^https?:\/\//) ? trimmedUrl : `https://${trimmedUrl}`;
+        let urlToTest;
+        if (trimmedUrl.match(/^https?:\/\//)) {
+            urlToTest = trimmedUrl;
+        } else {
+            // Handle protocol-relative URLs by removing leading //
+            const urlToFormat = trimmedUrl.startsWith('//') ? trimmedUrl.slice(2) : trimmedUrl;
+            urlToTest = `https://${urlToFormat}`;
+        }
         
         // Use URL constructor for validation
         const url = new URL(urlToTest);
@@ -102,7 +109,9 @@ export const formatUrl = (urlString) => {
 
         // Add https:// prefix if missing
         if (!trimmedUrl.match(/^https?:\/\//)) {
-            return `https://${trimmedUrl}`;
+            // Handle protocol-relative URLs by removing leading //
+            const urlToFormat = trimmedUrl.startsWith('//') ? trimmedUrl.slice(2) : trimmedUrl;
+            return `https://${urlToFormat}`;
         }
 
         return trimmedUrl;
