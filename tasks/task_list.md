@@ -123,7 +123,7 @@ title: "Project Nudger - Task and Project Enhancements Task List"
   - Add confirmation modal for project deletion
   - Handle associated task cleanup when project is deleted
   - Update Firebase to remove project and dependent data
-- [ ] **Task 3.4:** Implement archive functionality
+- [x] **Task 3.4:** Implement archive functionality (COMPLETED - Pre-implemented in Task 3.1)
   - Add project status field to Firebase data model if needed
   - Create archive toggle functionality
   - Update project display to respect archived status
