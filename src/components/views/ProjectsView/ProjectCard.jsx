@@ -1,13 +1,13 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Edit2, Trash2, Archive, Loader2, GripVertical } from 'lucide-react';
-import { timeAgo } from '../../../utils/helpers';
+import { Edit2, Trash2, Archive, Loader2, GripVertical, ExternalLink } from 'lucide-react';
+import { timeAgo, isValidUrl, formatUrl } from '../../../utils/helpers';
 
 /**
- * Reusable ProjectCard component for both grid and kanban views
+ * Enhanced ProjectCard component for both grid and kanban views
  * Supports drag and drop when in kanban mode and provides consistent
- * project display with action buttons
+ * project display with action buttons and clickable URL links when available
  */
 function ProjectCard({ 
     project, 
@@ -153,6 +153,24 @@ function ProjectCard({
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Priority: {project.priority} | Created: {timeAgo(project.createdAt)}
                 </p>
+                
+                {/* Project URL - only display if valid URL exists */}
+                {project.url && isValidUrl(project.url) && (
+                    <div className="mt-2">
+                        <a
+                            href={formatUrl(project.url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors truncate"
+                            title={`Open ${formatUrl(project.url)} in new tab`}
+                            aria-label={`Open project website ${formatUrl(project.url)} in new tab`}
+                        >
+                            <span className="truncate">{formatUrl(project.url)}</span>
+                            <ExternalLink size={14} className="flex-shrink-0" />
+                        </a>
+                    </div>
+                )}
 
                 {/* Next tasks section */}
                 <div className="mt-4 border-t dark:border-gray-700 pt-3">

@@ -40,6 +40,78 @@ export const formatTime = (seconds) => {
 };
 
 /**
+ * Validates if a string is a valid URL format
+ * @param {string} urlString - String to validate as URL
+ * @returns {boolean} - true if valid URL, false otherwise
+ */
+export const isValidUrl = (urlString) => {
+    try {
+        // Handle null/undefined/empty strings
+        if (!urlString || typeof urlString !== 'string' || urlString.trim() === '') {
+            return false;
+        }
+
+        // Normalize the URL string
+        const trimmedUrl = urlString.trim();
+        
+        // Add https:// if no protocol is present
+        const urlToTest = trimmedUrl.match(/^https?:\/\//) ? trimmedUrl : `https://${trimmedUrl}`;
+        
+        // Use URL constructor for validation
+        const url = new URL(urlToTest);
+        
+        // Ensure it has a valid hostname
+        if (!url.hostname || url.hostname.length === 0) {
+            return false;
+        }
+
+        // Basic domain validation - must have at least one dot
+        if (!url.hostname.includes('.')) {
+            return false;
+        }
+
+        // Ensure protocol is http or https
+        if (!['http:', 'https:'].includes(url.protocol)) {
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+/**
+ * Formats URL string by adding https:// prefix if missing and validates format
+ * @param {string} urlString - URL string to format
+ * @returns {string} - Formatted URL with https:// prefix, or empty string if invalid
+ */
+export const formatUrl = (urlString) => {
+    try {
+        // Handle null/undefined/empty strings
+        if (!urlString || typeof urlString !== 'string' || urlString.trim() === '') {
+            return '';
+        }
+
+        const trimmedUrl = urlString.trim();
+        
+        // Check if URL is valid first
+        if (!isValidUrl(trimmedUrl)) {
+            return '';
+        }
+
+        // Add https:// prefix if missing
+        if (!trimmedUrl.match(/^https?:\/\//)) {
+            return `https://${trimmedUrl}`;
+        }
+
+        return trimmedUrl;
+    } catch (error) {
+        return '';
+    }
+};
+
+/**
  * Determines if a task's due date has passed the current date/time
  * @param {Object} task - Task object containing dueDate property
  * @returns {boolean} - true if task is past due, false otherwise
