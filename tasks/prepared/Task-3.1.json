@@ -1,0 +1,259 @@
+{
+  "task_id": "Task-3.1",
+  "task_description": "Add edit, delete, and archive buttons to each project card for direct project management without navigating to separate views. Use appropriate Lucide icons for each action and position buttons for optimal UX without cluttering cards.",
+  "current_manifest": {
+    "version": "1.0-archaeological",
+    "generated": "2025-07-11T12:00:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications"
+    },
+    "relevant_files": {
+      "src/App.jsx": {
+        "purpose": "Main application component serving as the root orchestrator for a React-based task management system with Firebase integration",
+        "current_project_functions": [
+          "handleSaveProject - saves/updates project data to Firebase",
+          "openNewProjectModal - opens modal for creating new project",
+          "openEditProjectModal - opens modal for editing existing project"
+        ],
+        "current_exports": {
+          "functions": [
+            {
+              "name": "App",
+              "signature": "App() -> JSX.Element",
+              "description": "Primary application component"
+            },
+            {
+              "name": "ProjectModal",
+              "signature": "ProjectModal({ onClose, onSave, existingProject, categories, owners }) -> JSX.Element",
+              "description": "Modal component for creating and editing projects"
+            }
+          ]
+        }
+      },
+      "src/components/views/ProjectsView.jsx": {
+        "purpose": "Comprehensive projects overview with filtering, task previews, and detailed project cards",
+        "current_features": [
+          "Grid layout of project cards",
+          "Project filtering by owner",
+          "Task preview (next 3 tasks)",
+          "View Details button"
+        ],
+        "current_exports": {
+          "functions": [
+            {
+              "name": "ProjectsView",
+              "signature": "ProjectsView(props) -> JSX.Element",
+              "description": "Renders responsive grid of project cards with task previews and filtering"
+            }
+          ]
+        }
+      },
+      "src/components/views/ArchivedProjectsView.jsx": {
+        "purpose": "View for managing archived projects with reactivation functionality",
+        "current_features": [
+          "Lists archived projects",
+          "Reactivate button functionality"
+        ]
+      }
+    }
+  },
+  "expected_manifest": {
+    "version": "1.0-archaeological-post-task-3-1",
+    "generated": "2025-07-12T12:00:00.000Z",
+    "changes_summary": "Added project action buttons (edit, delete, archive) to ProjectsView cards with proper icon placement and handler functions",
+    "files_modified": {
+      "src/App.jsx": {
+        "purpose": "Main application component with enhanced project management capabilities",
+        "new_functions_added": [
+          {
+            "name": "handleDeleteProject",
+            "signature": "handleDeleteProject(projectId: string) -> Promise<void>",
+            "description": "Deletes a project and all associated tasks from Firebase with confirmation modal"
+          },
+          {
+            "name": "handleArchiveProject", 
+            "signature": "handleArchiveProject(projectId: string) -> Promise<void>",
+            "description": "Archives a project by setting status to 'archived'"
+          }
+        ],
+        "new_state_added": [
+          {
+            "name": "isDeleteConfirmModalOpen",
+            "type": "boolean",
+            "description": "Controls visibility of project deletion confirmation modal"
+          },
+          {
+            "name": "projectToDelete",
+            "type": "object|null",
+            "description": "Project object pending deletion confirmation"
+          }
+        ],
+        "updated_exports": {
+          "functions": [
+            {
+              "name": "App",
+              "signature": "App() -> JSX.Element",
+              "description": "Primary application component with enhanced project management"
+            },
+            {
+              "name": "ProjectModal",
+              "signature": "ProjectModal({ onClose, onSave, existingProject, categories, owners }) -> JSX.Element",
+              "description": "Modal component for creating and editing projects"
+            },
+            {
+              "name": "ProjectDeleteConfirmModal",
+              "signature": "ProjectDeleteConfirmModal({ project, onConfirm, onCancel }) -> JSX.Element",
+              "description": "Modal component for confirming project deletion with associated task count"
+            }
+          ]
+        },
+        "new_imports": [],
+        "sideEffects": [
+          "reads-firestore-database",
+          "writes-firestore-database", 
+          "deletes-firestore-documents",
+          "real-time-firestore-subscriptions",
+          "confirmation-modals"
+        ]
+      },
+      "src/components/views/ProjectsView.jsx": {
+        "purpose": "Enhanced projects overview with inline project management actions",
+        "new_features_added": [
+          "Edit button with pencil icon",
+          "Delete button with trash icon", 
+          "Archive button with archive icon",
+          "Action button container with proper spacing",
+          "Hover effects and visual feedback"
+        ],
+        "updated_props": [
+          {
+            "name": "onEditProject",
+            "type": "function",
+            "description": "Handler for project edit button clicks"
+          },
+          {
+            "name": "onDeleteProject", 
+            "type": "function",
+            "description": "Handler for project delete button clicks"
+          },
+          {
+            "name": "onArchiveProject",
+            "type": "function", 
+            "description": "Handler for project archive button clicks"
+          }
+        ],
+        "layout_changes": [
+          "Added action buttons container to project card header",
+          "Repositioned View Details button to card footer",
+          "Added hover effects for action buttons",
+          "Maintained responsive grid layout"
+        ],
+        "updated_exports": {
+          "functions": [
+            {
+              "name": "ProjectsView",
+              "signature": "ProjectsView({ projects, tasks, setSelectedProjectId, categories, ownerFilter, setOwnerFilter, owners, onCompleteTask, onStartTask, onEditTask, onEditProject, onDeleteProject, onArchiveProject }) -> JSX.Element",
+              "description": "Enhanced project cards with inline action buttons for edit, delete, and archive"
+            }
+          ]
+        },
+        "new_imports": [
+          "Edit2, Trash2, Archive from lucide-react"
+        ]
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": "Enhance ProjectsView with action buttons and add corresponding handlers in App.jsx. Follow existing patterns for modal management and Firebase operations.",
+    "files_to_create": [],
+    "files_to_modify": [
+      {
+        "file": "src/App.jsx",
+        "changes": [
+          "Add handleDeleteProject function with batch deletion of project and associated tasks",
+          "Add handleArchiveProject function to update project status",
+          "Add state management for delete confirmation modal",
+          "Add ProjectDeleteConfirmModal component",
+          "Pass new handlers to ProjectsView component",
+          "Add delete confirmation modal to render tree"
+        ]
+      },
+      {
+        "file": "src/components/views/ProjectsView.jsx", 
+        "changes": [
+          "Import Edit2, Trash2, Archive icons from lucide-react",
+          "Add action buttons container to project card header",
+          "Implement edit button with onClick handler",
+          "Implement delete button with onClick handler", 
+          "Implement archive button with onClick handler",
+          "Update props to include new handler functions",
+          "Add appropriate styling and hover effects",
+          "Ensure responsive design is maintained"
+        ]
+      }
+    ],
+    "dependencies": [
+      "lucide-react icons (Edit2, Trash2, Archive)",
+      "firebase/firestore writeBatch for bulk task deletion",
+      "Existing modal patterns for confirmation dialog"
+    ],
+    "integration_points": [
+      "App.jsx state management for modals and handlers",
+      "ProjectsView props interface for new handlers", 
+      "Firebase batch operations for project/task deletion",
+      "Existing handleSaveProject pattern for archive functionality"
+    ],
+    "testing_approach": [
+      "Test edit button opens ProjectModal with correct project data",
+      "Test delete button shows confirmation modal with task count",
+      "Test delete confirmation removes project and associated tasks",
+      "Test archive button updates project status to 'archived'",
+      "Test visual layout doesn't break with new buttons",
+      "Test responsive behavior on mobile devices",
+      "Test button hover states and accessibility"
+    ],
+    "ui_design_decisions": [
+      "Place action buttons in top-right corner of project card header",
+      "Use small icon buttons with consistent spacing",
+      "Apply hover effects with appropriate color transitions",
+      "Maintain existing card layout and spacing",
+      "Ensure buttons don't interfere with category badge",
+      "Position View Details button in card footer for clear separation"
+    ],
+    "data_handling": [
+      "Delete operation uses writeBatch for atomic project+tasks removal",
+      "Archive operation updates project.status field to 'archived'",
+      "Edit operation reuses existing ProjectModal and handleSaveProject",
+      "Confirmation modal displays count of associated tasks",
+      "Operations provide user feedback via existing notification system"
+    ]
+  },
+  "acceptance_criteria": [
+    "Edit button opens ProjectModal with existing project data pre-populated",
+    "Delete button shows confirmation modal displaying project name and associated task count",
+    "Delete confirmation removes project and all associated tasks from Firebase",
+    "Archive button updates project status and removes from active projects view",
+    "All action buttons use appropriate Lucide icons (Edit2, Trash2, Archive)",
+    "Action buttons are positioned in project card header without cluttering layout",
+    "Buttons have proper hover effects and visual feedback",
+    "Project cards maintain responsive design with new buttons",
+    "Operations provide appropriate user feedback for success/failure",
+    "View Details button remains functional and clearly separated from action buttons"
+  ],
+  "estimated_complexity": "Medium",
+  "prerequisites": [
+    "Understanding of existing Firebase operations patterns",
+    "Familiarity with React state management in App.jsx", 
+    "Knowledge of Firestore batch operations for bulk deletion",
+    "Understanding of existing modal patterns in codebase"
+  ],
+  "technical_considerations": [
+    "Use writeBatch for atomic deletion of project and tasks",
+    "Handle potential Firebase errors with try-catch blocks",
+    "Maintain existing notification patterns for user feedback",
+    "Preserve responsive grid layout with additional buttons",
+    "Follow existing icon and styling patterns from codebase",
+    "Ensure accessibility with proper button labels and focus management"
+  ]
+}

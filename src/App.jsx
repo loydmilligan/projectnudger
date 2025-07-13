@@ -210,6 +210,10 @@ export default function App() {
                 showSuccess('Project Updated', `"${projectData.name}" has been updated successfully.`);
             } else {
                 const { id, ...dataToCreate } = projectData;
+                // Assign default stage if not provided
+                if (!dataToCreate.stage) {
+                    dataToCreate.stage = 'planning'; // Default stage
+                }
                 await addDoc(collection(db, basePath, 'projects'), { ...dataToCreate, status: 'active', createdAt: new Date() });
                 showSuccess('Project Created', `"${projectData.name}" has been created successfully.`);
             }
@@ -699,6 +703,29 @@ export default function App() {
             setLoadingStates(prev => ({ ...prev, archiveProject: false }));
         }
     };
+    
+    // Handle moving project to different stage
+    const handleMoveProjectToStage = async (projectId, newStageId) => {
+        try {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) {
+                throw new Error('Project not found');
+            }
+            
+            // Update project stage in Firebase
+            await updateDoc(doc(db, basePath, 'projects', projectId), {
+                stage: newStageId
+            });
+            
+            // Show success notification
+            showSuccess('Project Moved', `"${project.name}" moved to new stage.`);
+            
+        } catch (error) {
+            console.error('Error moving project to stage:', error);
+            showFirebaseError(error);
+            throw error; // Re-throw so the UI can handle it
+        }
+    };
     const handleSessionEnd = (session) => { setSessionEndData(session); setIsSessionEndModalOpen(true); };
     const openTaskDetailForNew = (template) => { setEditingTask(template); setIsTaskDetailModalOpen(true); };
     const handleSaveSessionNotes = async (notes, markComplete, completionNotes) => {
@@ -769,7 +796,23 @@ export default function App() {
                 onToggleExpand={handleToggleExpand}
                 onAddSubTask={handleAddSubTask}
             />;
-            case 'projects': return <ProjectsView projects={visibleProjects} tasks={tasks} setSelectedProjectId={setSelectedProjectId} categories={categories} ownerFilter={settings.ownerFilter} setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} owners={owners} onCompleteTask={handleCompleteTask} onStartTask={handleStartTask} onEditTask={handleEditTask} onEditProject={openEditProjectModal} onDeleteProject={handleDeleteProject} onArchiveProject={handleArchiveProject} loadingStates={loadingStates} />;
+            case 'projects': return <ProjectsView 
+                projects={visibleProjects} 
+                tasks={tasks} 
+                setSelectedProjectId={setSelectedProjectId} 
+                categories={categories} 
+                ownerFilter={settings.ownerFilter} 
+                setOwnerFilter={(val) => setSettings({...settings, ownerFilter: val})} 
+                owners={owners} 
+                onCompleteTask={handleCompleteTask} 
+                onStartTask={handleStartTask} 
+                onEditTask={handleEditTask} 
+                onEditProject={openEditProjectModal} 
+                onDeleteProject={handleDeleteProject} 
+                onArchiveProject={handleArchiveProject} 
+                onMoveProjectToStage={handleMoveProjectToStage}
+                loadingStates={loadingStates} 
+            />;
             case 'tasks': return <TasksView 
                 tasks={tasks} 
                 hierarchicalTasks={hierarchicalTasks}

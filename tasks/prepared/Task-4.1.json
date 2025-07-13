@@ -1,0 +1,279 @@
+{
+  "task_id": "Task-4.1",
+  "task_description": "Transform projects screen into a kanban board with configurable project stage buckets, project drag & drop between stages, and enhanced filtering. This includes creating a responsive kanban board layout, adding project stage management, implementing drag and drop functionality, and providing view toggles between grid and kanban layouts.",
+  "current_manifest": {
+    "version": "1.0-archaeological",
+    "generated": "2025-07-11T12:00:00.000Z",
+    "analysis_depth": "standard",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications",
+      "version": "0.0.0",
+      "tech_stack": [
+        "React 19.1.0",
+        "Vite 6.3.5",
+        "Firebase Firestore",
+        "Tailwind CSS",
+        "Web Bluetooth API",
+        "Multiple AI Providers (OpenAI, Gemini, Anthropic)"
+      ]
+    },
+    "key_files": {
+      "src/components/views/ProjectsView.jsx": {
+        "purpose": "Comprehensive projects overview with filtering, task previews, and detailed project cards",
+        "current_layout": "Grid-based responsive layout with project cards"
+      },
+      "src/components/shared/ProjectFilters.jsx": {
+        "purpose": "Basic owner-based filtering for projects",
+        "current_features": "Simple dropdown for owner selection"
+      }
+    },
+    "dependencies": {
+      "firebase": "Real-time NoSQL database for data persistence and synchronization",
+      "lucide-react": "Icon library providing consistent UI iconography",
+      "react": "Frontend framework for building user interfaces",
+      "tailwindcss": "Utility-first CSS framework for styling"
+    }
+  },
+  "expected_manifest": {
+    "version": "1.1-kanban-implementation",
+    "generated": "2025-07-13T12:00:00.000Z",
+    "analysis_depth": "standard",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications",
+      "version": "0.0.0",
+      "tech_stack": [
+        "React 19.1.0",
+        "Vite 6.3.5",
+        "Firebase Firestore",
+        "Tailwind CSS",
+        "Web Bluetooth API",
+        "Multiple AI Providers (OpenAI, Gemini, Anthropic)",
+        "@dnd-kit/core",
+        "@dnd-kit/sortable",
+        "@dnd-kit/utilities"
+      ]
+    },
+    "new_files": [
+      {
+        "file": "src/components/views/ProjectsView/KanbanBoard.jsx",
+        "purpose": "Main kanban board layout component with configurable columns and drag-drop support",
+        "key_exports": ["KanbanBoard"]
+      },
+      {
+        "file": "src/components/views/ProjectsView/KanbanColumn.jsx", 
+        "purpose": "Individual kanban column component for project stages",
+        "key_exports": ["KanbanColumn"]
+      },
+      {
+        "file": "src/components/views/ProjectsView/ProjectCard.jsx",
+        "purpose": "Reusable project card component for both grid and kanban views",
+        "key_exports": ["ProjectCard"]
+      },
+      {
+        "file": "src/components/views/ProjectsView/ViewModeToggle.jsx",
+        "purpose": "Toggle component for switching between grid and kanban views",
+        "key_exports": ["ViewModeToggle"]
+      },
+      {
+        "file": "src/components/views/ProjectsView/StageManager.jsx",
+        "purpose": "Modal component for managing project stages (add, edit, delete, reorder)",
+        "key_exports": ["StageManager"]
+      },
+      {
+        "file": "src/utils/projectStages.js",
+        "purpose": "Utility functions for project stage management and default configurations",
+        "key_exports": ["getDefaultStages", "validateStage", "migrateProjectsToStages"]
+      },
+      {
+        "file": "src/hooks/useProjectStages.js",
+        "purpose": "Custom hook for managing project stages state and operations",
+        "key_exports": ["useProjectStages"]
+      }
+    ],
+    "modified_files": [
+      {
+        "file": "src/components/views/ProjectsView.jsx",
+        "changes": "Restructured to support both grid and kanban views, integrated view mode toggle, stage management, and enhanced filtering"
+      },
+      {
+        "file": "src/components/shared/ProjectFilters.jsx", 
+        "changes": "Extended to include stage-specific filtering, view mode controls, and stage management access"
+      },
+      {
+        "file": "src/App.jsx",
+        "changes": "Added project stage management functions, stage migration logic, and enhanced project update handlers"
+      },
+      {
+        "file": "package.json",
+        "changes": "Added @dnd-kit dependencies for drag and drop functionality"
+      }
+    ],
+    "dependencies": {
+      "firebase": "Real-time NoSQL database for data persistence and synchronization",
+      "lucide-react": "Icon library providing consistent UI iconography", 
+      "react": "Frontend framework for building user interfaces",
+      "tailwindcss": "Utility-first CSS framework for styling",
+      "@dnd-kit/core": "Core drag and drop utilities",
+      "@dnd-kit/sortable": "Sortable drag and drop functionality",
+      "@dnd-kit/utilities": "CSS utilities for drag and drop"
+    },
+    "architecture": {
+      "main_flow": "React App → Firebase Firestore ↔ Real-time Subscriptions → Component State → UI Updates (Grid/Kanban)",
+      "data_flow": "Firestore (projects with stages) ↔ React State ↔ Kanban/Grid Views ↔ Drag-Drop Updates",
+      "new_features": [
+        "Kanban board layout with configurable stage columns",
+        "Drag and drop project movement between stages", 
+        "View mode toggle (Grid/Kanban)",
+        "Stage management system with customization",
+        "Enhanced filtering with stage-based options"
+      ]
+    }
+  },
+  "implementation_notes": {
+    "approach": [
+      "1. Install @dnd-kit dependencies for modern drag-and-drop functionality",
+      "2. Create utility functions for project stage management and default configurations",
+      "3. Develop custom hook for stage state management",
+      "4. Build kanban board components (board, columns, cards)",
+      "5. Create view mode toggle and stage management UI",
+      "6. Refactor ProjectsView to support both grid and kanban layouts",
+      "7. Enhance ProjectFilters with stage-based filtering",
+      "8. Update App.jsx with stage management functions and migration logic",
+      "9. Test drag-and-drop functionality and stage transitions",
+      "10. Ensure responsive design works on desktop and tablet"
+    ],
+    "files_to_create": [
+      {
+        "file": "src/components/views/ProjectsView/KanbanBoard.jsx",
+        "purpose": "Main kanban board layout with DndContext and responsive column layout",
+        "key_exports": ["KanbanBoard"],
+        "dependencies": ["@dnd-kit/core", "@dnd-kit/sortable", "react", "lucide-react"]
+      },
+      {
+        "file": "src/components/views/ProjectsView/KanbanColumn.jsx",
+        "purpose": "Individual stage column with droppable area and project count",
+        "key_exports": ["KanbanColumn"], 
+        "dependencies": ["@dnd-kit/sortable", "react", "lucide-react"]
+      },
+      {
+        "file": "src/components/views/ProjectsView/ProjectCard.jsx",
+        "purpose": "Reusable project card component with drag handle for kanban",
+        "key_exports": ["ProjectCard"],
+        "dependencies": ["@dnd-kit/sortable", "react", "lucide-react"]
+      },
+      {
+        "file": "src/components/views/ProjectsView/ViewModeToggle.jsx",
+        "purpose": "Toggle button component for switching between grid and kanban views",
+        "key_exports": ["ViewModeToggle"],
+        "dependencies": ["react", "lucide-react"]
+      },
+      {
+        "file": "src/components/views/ProjectsView/StageManager.jsx",
+        "purpose": "Modal for stage CRUD operations with color picker and ordering",
+        "key_exports": ["StageManager"],
+        "dependencies": ["react", "lucide-react"]
+      },
+      {
+        "file": "src/utils/projectStages.js",
+        "purpose": "Stage management utilities and default stage configurations",
+        "key_exports": ["getDefaultStages", "validateStage", "migrateProjectsToStages"],
+        "dependencies": []
+      },
+      {
+        "file": "src/hooks/useProjectStages.js",
+        "purpose": "Custom hook for stage state management and Firebase operations",
+        "key_exports": ["useProjectStages"],
+        "dependencies": ["react", "../config/firebase", "../utils/projectStages"]
+      }
+    ],
+    "files_to_modify": [
+      {
+        "file": "src/components/views/ProjectsView.jsx",
+        "changes": "Restructure component to conditionally render grid or kanban view based on mode toggle, integrate stage management and enhanced filtering"
+      },
+      {
+        "file": "src/components/shared/ProjectFilters.jsx",
+        "changes": "Add stage filter dropdown, view mode toggle integration, and stage management button"
+      },
+      {
+        "file": "src/App.jsx", 
+        "changes": "Add stage management functions, project update handlers for stage changes, and stage migration logic"
+      },
+      {
+        "file": "package.json",
+        "changes": "Add @dnd-kit/core, @dnd-kit/sortable, and @dnd-kit/utilities dependencies"
+      }
+    ],
+    "dependencies": [
+      "@dnd-kit/core@^6.1.0",
+      "@dnd-kit/sortable@^8.0.0", 
+      "@dnd-kit/utilities@^3.2.2"
+    ],
+    "integration_points": [
+      "Firebase project data model extension with stage field",
+      "Existing project CRUD operations in App.jsx",
+      "Current ProjectFilters component for enhanced filtering",
+      "Real-time Firebase listeners for stage updates",
+      "Responsive Tailwind CSS grid system",
+      "Existing project card styling and interactions"
+    ],
+    "testing_approach": [
+      "Test drag and drop functionality across different browsers",
+      "Verify stage transitions update Firebase correctly",
+      "Test responsive design on desktop, tablet, and mobile",
+      "Validate stage management CRUD operations",
+      "Test view mode toggle persistence",
+      "Verify filtering works correctly in both views",
+      "Test performance with large numbers of projects"
+    ],
+    "technical_decisions": [
+      "Use @dnd-kit over react-beautiful-dnd for better accessibility and modern React support",
+      "Implement stage data as part of project document in Firebase",
+      "Use localStorage for view mode preference persistence",
+      "Default stages: Planning, In Progress, Review, Complete",
+      "Stage colors stored as HSL values for consistency",
+      "Responsive breakpoints: mobile (single column), tablet (2 columns), desktop (4+ columns)"
+    ]
+  },
+  "acceptance_criteria": [
+    "Kanban board displays projects in configurable stage columns",
+    "Projects can be dragged between stages with real-time Firebase updates", 
+    "Stage configuration allows customization of workflow stages with colors",
+    "View toggle allows switching between grid and kanban layouts",
+    "Stage-based filtering works correctly in both views",
+    "Performance remains good with large numbers of projects",
+    "Mobile/tablet experience is functional and intuitive",
+    "Existing project functionality (edit, delete, archive) works in both views",
+    "Stage management UI allows adding, editing, and removing custom stages",
+    "View mode preference persists across browser sessions"
+  ],
+  "estimated_complexity": "High",
+  "prerequisites": [
+    "Task 2.1 (Project Action Buttons) - provides edit/delete functionality",
+    "Task 3.1 (Task Drag & Drop) - establishes drag-drop patterns in codebase"
+  ],
+  "data_model_changes": [
+    {
+      "collection": "projects",
+      "field": "stage", 
+      "type": "string",
+      "description": "Project stage identifier (e.g., 'planning', 'in-progress', 'review', 'complete')",
+      "default": "planning"
+    },
+    {
+      "collection": "settings",
+      "field": "projectStages",
+      "type": "array",
+      "description": "Array of stage configuration objects with id, name, color, and order properties"
+    },
+    {
+      "collection": "userPreferences", 
+      "field": "projectViewMode",
+      "type": "string",
+      "description": "User preference for project view mode ('grid' or 'kanban')",
+      "default": "grid"
+    }
+  ]
+}

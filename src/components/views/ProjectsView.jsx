@@ -1,101 +1,189 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ProjectFilters from '../shared/ProjectFilters';
-import { timeAgo } from '../../utils/helpers';
-import { Edit2, Trash2, Archive, Loader2 } from 'lucide-react';
+import KanbanBoard from './ProjectsView/KanbanBoard';
+import ProjectCard from './ProjectsView/ProjectCard';
+import ViewModeToggle from './ProjectsView/ViewModeToggle';
+import StageManager from './ProjectsView/StageManager';
+import { useProjectStages } from '../../hooks/useProjectStages';
+import { migrateProjectsToStages } from '../../utils/projectStages';
+import { Settings } from 'lucide-react';
 
-function ProjectsView({ projects, tasks, setSelectedProjectId, categories, ownerFilter, setOwnerFilter, owners, onCompleteTask, onStartTask, onEditTask, onEditProject, onDeleteProject, onArchiveProject, loadingStates }) {
+function ProjectsView({ 
+    projects, 
+    tasks, 
+    setSelectedProjectId, 
+    categories, 
+    ownerFilter, 
+    setOwnerFilter, 
+    owners, 
+    onCompleteTask, 
+    onStartTask, 
+    onEditTask, 
+    onEditProject, 
+    onDeleteProject, 
+    onArchiveProject, 
+    onMoveProjectToStage,
+    loadingStates 
+}) {
+    // View mode state (default to grid, persisted in localStorage)
+    const [viewMode, setViewMode] = useState(() => {
+        return localStorage.getItem('projectViewMode') || 'grid';
+    });
+    
+    // Stage management
+    const {
+        stages,
+        loading: stagesLoading,
+        error: stagesError,
+        addStage,
+        updateStage,
+        deleteStage,
+        reorderStageList,
+        resetToDefaults
+    } = useProjectStages();
+    
+    // Stage manager modal state
+    const [isStageManagerOpen, setIsStageManagerOpen] = useState(false);
+    
+    // Stage filter state
+    const [stageFilter, setStageFilter] = useState('All');
+    
+    // Migrate projects to stages if needed
+    const migratedProjects = React.useMemo(() => {
+        if (!stages.length) return projects;
+        return migrateProjectsToStages(projects, stages);
+    }, [projects, stages]);
+    
+    // Filter projects by stage
+    const filteredProjects = React.useMemo(() => {
+        if (stageFilter === 'All') return migratedProjects;
+        return migratedProjects.filter(project => project.stage === stageFilter);
+    }, [migratedProjects, stageFilter]);
+    
+    // Persist view mode changes
+    useEffect(() => {
+        localStorage.setItem('projectViewMode', viewMode);
+    }, [viewMode]);
+    
+    // Handle project stage movement
+    const handleMoveProject = async (projectId, newStageId) => {
+        if (onMoveProjectToStage) {
+            await onMoveProjectToStage(projectId, newStageId);
+        }
+    };
+    
+    // Handle view mode change
+    const handleViewModeChange = (newMode) => {
+        setViewMode(newMode);
+    };
+    
     return (
-        <div>
-            <div className="md:w-1/3 mb-6">
-                <ProjectFilters ownerFilter={ownerFilter} setOwnerFilter={setOwnerFilter} owners={owners} />
+        <div className="space-y-6">
+            {/* Header section with filters and controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <ProjectFilters 
+                        ownerFilter={ownerFilter} 
+                        setOwnerFilter={setOwnerFilter} 
+                        owners={owners}
+                        stageFilter={stageFilter}
+                        setStageFilter={setStageFilter}
+                        stages={stages}
+                    />
+                </div>
+                
+                <div className="flex items-center gap-4">
+                    <ViewModeToggle 
+                        viewMode={viewMode} 
+                        onViewModeChange={handleViewModeChange}
+                        disabled={stagesLoading}
+                    />
+                    
+                    <button
+                        onClick={() => setIsStageManagerOpen(true)}
+                        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                        title="Manage project stages"
+                    >
+                        <Settings size={16} />
+                        <span className="hidden sm:inline">Manage Stages</span>
+                    </button>
+                </div>
             </div>
-            <h2 className="text-2xl font-bold mb-6">Projects ({projects.length})</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {projects.map(project => {
-                    const projectTasks = tasks.filter(t => t.projectId === project.id && !t.isComplete).sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
-                    return (
-                        <div key={project.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 border border-transparent hover:border-indigo-500 transition-colors flex flex-col">
-                            <div className="flex-1">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="flex-1">
-                                        <h3 className="text-lg font-bold">{project.name}</h3>
-                                        <span className="inline-block text-xs font-semibold px-2 py-1 rounded-full text-white mt-1" style={{backgroundColor: categories[project.category]}}>{project.category}</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2 ml-2">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onEditProject(project);
-                                            }}
-                                            disabled={loadingStates?.editProject}
-                                            className={`p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors ${
-                                                loadingStates?.editProject ? 'opacity-50 cursor-not-allowed' : ''
-                                            }`}
-                                            title="Edit project"
-                                        >
-                                            {loadingStates?.editProject ? (
-                                                <Loader2 size={16} className="animate-spin" />
-                                            ) : (
-                                                <Edit2 size={16} />
-                                            )}
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onArchiveProject(project.id);
-                                            }}
-                                            disabled={loadingStates?.archiveProject}
-                                            className={`p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors ${
-                                                loadingStates?.archiveProject ? 'opacity-50 cursor-not-allowed' : ''
-                                            }`}
-                                            title="Archive project"
-                                        >
-                                            {loadingStates?.archiveProject ? (
-                                                <Loader2 size={16} className="animate-spin" />
-                                            ) : (
-                                                <Archive size={16} />
-                                            )}
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onDeleteProject(project.id);
-                                            }}
-                                            disabled={loadingStates?.deleteProject}
-                                            className={`p-1.5 rounded-md hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors ${
-                                                loadingStates?.deleteProject ? 'opacity-50 cursor-not-allowed' : ''
-                                            }`}
-                                            title="Delete project"
-                                        >
-                                            {loadingStates?.deleteProject ? (
-                                                <Loader2 size={16} className="animate-spin" />
-                                            ) : (
-                                                <Trash2 size={16} />
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Owner: {project.owner}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Priority: {project.priority} | Created: {timeAgo(project.createdAt)}</p>
-                                <div className="mt-4 border-t dark:border-gray-700 pt-3">
-                                    <h4 className="text-sm font-semibold mb-2">Next Tasks:</h4>
-                                    <ul className="space-y-2">
-                                        {projectTasks.slice(0, 3).map(task => (
-                                            <li key={task.id} className="text-sm text-gray-600 dark:text-gray-300 truncate">{task.title}</li>
-                                        ))}
-                                        {projectTasks.length === 0 && <li className="text-sm text-gray-400 italic">No pending tasks.</li>}
-                                    </ul>
-                                </div>
-                            </div>
-                            <div className="mt-4 pt-3 border-t dark:border-gray-700">
-                                <button onClick={() => setSelectedProjectId(project.id)} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md transition-colors text-sm">
-                                    View Details
-                                </button>
-                            </div>
-                        </div>
-                    );
-                })}
+            
+            {/* Projects count and title */}
+            <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">
+                    Projects ({filteredProjects.length})
+                    {stageFilter !== 'All' && (
+                        <span className="text-lg font-normal text-gray-500 dark:text-gray-400 ml-2">
+                            in {stages.find(s => s.id === stageFilter)?.name || stageFilter}
+                        </span>
+                    )}
+                </h2>
             </div>
+            
+            {/* Error states */}
+            {stagesError && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                    <p className="text-sm text-red-800 dark:text-red-200">Error loading stages: {stagesError}</p>
+                </div>
+            )}
+            
+            {/* Main content area */}
+            <div className="min-h-96">
+                {viewMode === 'kanban' ? (
+                    <KanbanBoard
+                        projects={filteredProjects}
+                        stages={stages}
+                        tasks={tasks}
+                        categories={categories}
+                        setSelectedProjectId={setSelectedProjectId}
+                        onEditProject={onEditProject}
+                        onDeleteProject={onDeleteProject}
+                        onArchiveProject={onArchiveProject}
+                        onMoveProject={handleMoveProject}
+                        loadingStates={loadingStates}
+                        isLoading={stagesLoading}
+                    />
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {filteredProjects.map(project => (
+                            <ProjectCard
+                                key={project.id}
+                                project={project}
+                                tasks={tasks}
+                                categories={categories}
+                                setSelectedProjectId={setSelectedProjectId}
+                                onEditProject={onEditProject}
+                                onDeleteProject={onDeleteProject}
+                                onArchiveProject={onArchiveProject}
+                                loadingStates={loadingStates}
+                                isDraggable={false}
+                                showStage={true}
+                            />
+                        ))}
+                        
+                        {filteredProjects.length === 0 && (
+                            <div className="col-span-full flex items-center justify-center h-32 text-gray-400 dark:text-gray-500">
+                                <p>No projects found{stageFilter !== 'All' ? ` in ${stages.find(s => s.id === stageFilter)?.name || stageFilter}` : ''}.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+            
+            {/* Stage Manager Modal */}
+            <StageManager
+                isOpen={isStageManagerOpen}
+                onClose={() => setIsStageManagerOpen(false)}
+                stages={stages}
+                onAddStage={addStage}
+                onUpdateStage={updateStage}
+                onDeleteStage={deleteStage}
+                onReorderStages={reorderStageList}
+                onResetToDefaults={resetToDefaults}
+                isLoading={stagesLoading}
+            />
         </div>
     );
 }
