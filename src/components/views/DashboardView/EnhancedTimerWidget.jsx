@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, Square, RotateCcw } from 'lucide-react';
+import { Play, Pause, Square, RotateCcw, Clock, Plus } from 'lucide-react';
 import { formatTime } from '../../../utils/helpers';
+import TimeEntryModal from '../../shared/TimeEntryModal';
 
 // Tomato and Vine icons as SVG components
 const TomatoIcon = ({ size = 24 }) => (
@@ -54,11 +55,14 @@ function EnhancedTimerWidget({
     onStartSession, 
     onPauseSession, 
     onResetSession, 
-    onSessionComplete 
+    onSessionComplete,
+    onAddTimeEntry 
 }) {
     const [sessionType, setSessionType] = useState('work');
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [selectedDuration, setSelectedDuration] = useState(25 * 60); // 25 minutes default
+    const [showTimeEntryModal, setShowTimeEntryModal] = useState(false);
+    const [timeEntryTask, setTimeEntryTask] = useState(null);
 
     const isActive = activeSession && activeSession.active;
     const currentType = activeSession?.type || sessionType;
@@ -97,6 +101,19 @@ function EnhancedTimerWidget({
     const handleTaskSelect = (task) => {
         onStartSession(task, sessionType, selectedDuration);
         setShowTaskModal(false);
+    };
+
+    const handleManualTimeEntry = (task) => {
+        setTimeEntryTask(task);
+        setShowTimeEntryModal(true);
+    };
+
+    const handleSaveTimeEntry = async (taskId, timeEntry) => {
+        if (onAddTimeEntry && typeof onAddTimeEntry === 'function') {
+            await onAddTimeEntry(taskId, timeEntry);
+        }
+        setShowTimeEntryModal(false);
+        setTimeEntryTask(null);
     };
 
     return (
@@ -169,6 +186,16 @@ function EnhancedTimerWidget({
                                     <Square size={18} className="mr-2" />
                                     Stop
                                 </button>
+                                {activeSession.type === 'work' && activeSession.taskId && (
+                                    <button
+                                        onClick={() => handleManualTimeEntry(tasks.find(t => t.id === activeSession.taskId))}
+                                        className="flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white transition-colors"
+                                        title="Add manual time entry"
+                                    >
+                                        <Plus size={18} className="mr-2" />
+                                        <Clock size={18} />
+                                    </button>
+                                )}
                             </div>
                         </>
                     ) : (
@@ -195,6 +222,20 @@ function EnhancedTimerWidget({
                                 </button>
                             </div>
                             
+                            {/* Manual time entry for work sessions */}
+                            {sessionType === 'work' && (
+                                <div className="mt-4 flex justify-center">
+                                    <button
+                                        onClick={() => setShowTaskModal(true)}
+                                        className="flex items-center px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white/80 hover:text-white transition-colors text-sm"
+                                        title="Add manual time entry"
+                                    >
+                                        <Clock size={16} className="mr-2" />
+                                        Log Time
+                                    </button>
+                                </div>
+                            )}
+                            
                             <p className="text-white/70 text-xs mt-3">
                                 {sessionType === 'work' ? 'Start a focused work session' : 'Take a refreshing break'}
                             </p>
@@ -207,16 +248,28 @@ function EnhancedTimerWidget({
             {showTaskModal && (
                 <TaskSelectionModal
                     tasks={tasks}
-                    onSelectTask={handleTaskSelect}
+                    onSelectTask={sessionType === 'work' && !isActive ? handleTaskSelect : handleManualTimeEntry}
                     onClose={() => setShowTaskModal(false)}
                     duration={selectedDuration}
+                    isManualTimeEntry={sessionType === 'work' && !isActive ? false : true}
                 />
             )}
+            
+            {/* Time Entry Modal */}
+            <TimeEntryModal
+                isOpen={showTimeEntryModal}
+                onClose={() => {
+                    setShowTimeEntryModal(false);
+                    setTimeEntryTask(null);
+                }}
+                onSave={handleSaveTimeEntry}
+                task={timeEntryTask}
+            />
         </>
     );
 }
 
-function TaskSelectionModal({ tasks, onSelectTask, onClose, duration }) {
+function TaskSelectionModal({ tasks, onSelectTask, onClose, duration, isManualTimeEntry = false }) {
     const [searchTerm, setSearchTerm] = useState('');
     
     const safeTasks = Array.isArray(tasks) ? tasks : [];
@@ -229,7 +282,9 @@ function TaskSelectionModal({ tasks, onSelectTask, onClose, duration }) {
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in-fast">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-                <h3 className="text-xl font-semibold mb-4">Choose a task for your {formatTime(duration)} session</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                    {isManualTimeEntry ? 'Choose a task to log time for' : `Choose a task for your ${formatTime(duration)} session`}
+                </h3>
                 
                 {/* Search input */}
                 <input

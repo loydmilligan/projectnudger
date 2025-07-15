@@ -1,6 +1,6 @@
 {
-  "version": "1.7",
-  "generated": "2025-07-15T18:30:00.000Z",
+  "version": "1.8",
+  "generated": "2025-07-15T19:45:00.000Z",
   "project": {
     "name": "project-nudger",
     "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
@@ -347,14 +347,22 @@
       "sideEffects": []
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/DashboardView/EnhancedTimerWidget.jsx": {
-      "purpose": "Comprehensive Pomodoro timer with task selection and session management",
+      "purpose": "Comprehensive Pomodoro timer with task selection, session management, and time tracking integration",
       "exports": {
-        "functions": ["EnhancedTimerWidget"],
+        "functions": ["EnhancedTimerWidget", "Timer", "TaskSelectionModal"],
         "classes": [],
         "constants": []
       },
-      "imports": ["react", "lucide-react", "../../../utils/helpers"],
-      "sideEffects": ["Timer countdown updates", "Session state management"]
+      "imports": ["react", "lucide-react", "../../../utils/helpers", "../../shared/TimeEntryModal"],
+      "sideEffects": ["Timer countdown updates", "Session state management", "Time entry management"],
+      "enhancements": [
+        "Task-3.1: Integrated TimeEntryModal for manual time logging during and outside Pomodoro sessions",
+        "Task-3.1: Added manual time entry functionality with 'Log Time' button in work session mode",
+        "Task-3.1: Enhanced TaskSelectionModal to support both session start and manual time entry modes",
+        "Task-3.1: Added time entry controls during active work sessions with manual time logging",
+        "Task-3.1: Improved session management with proper task association for time tracking",
+        "Task-3.1: Added comprehensive time entry workflow integration with existing timer functionality"
+      ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView.jsx": {
       "purpose": "Optimized projects management interface with enhanced card layout, improved responsive design, dual-mode display, and archive filtering by default",
@@ -579,14 +587,23 @@
       ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/TrackingView.jsx": {
-      "purpose": "Active session tracking interface with timer controls and session notes",
+      "purpose": "Active session tracking interface with timer controls, session notes, and comprehensive time tracking statistics",
       "exports": {
-        "functions": ["TrackingView"],
+        "functions": ["TrackingView", "Timer"],
         "classes": [],
         "constants": []
       },
-      "imports": ["react", "lucide-react", "../../utils/helpers"],
-      "sideEffects": ["Timer updates", "Session completion events"]
+      "imports": ["react", "lucide-react", "../../utils/helpers", "firebase/firestore", "../../config/firebase", "../../config/constants", "../shared/TimeEntryModal"],
+      "sideEffects": ["Timer updates", "Session completion events", "Firebase document updates", "Manual time entry operations"],
+      "enhancements": [
+        "Task-3.1: Integrated TimeEntryModal for manual time logging during active sessions",
+        "Task-3.1: Added comprehensive time tracking statistics with daily and weekly progress indicators",
+        "Task-3.1: Implemented time tracking settings with goals and preferences management",
+        "Task-3.1: Added manual time entry functionality with task selection during active sessions",
+        "Task-3.1: Enhanced session management with proper time entry workflow integration",
+        "Task-3.1: Added statistics calculation for daily/weekly time tracking with progress visualization",
+        "Task-3.1: Improved user experience with manual time logging capabilities during Pomodoro sessions"
+      ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/SettingsView.jsx": {
       "purpose": "Application settings and configuration interface with data management tools",
@@ -626,21 +643,71 @@
       ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/shared/TaskItem.jsx": {
-      "purpose": "Enhanced reusable task component with hierarchical display, action buttons, status indicators, and delete functionality",
+      "purpose": "Enhanced reusable task component with hierarchical display, action buttons, status indicators, delete functionality, and comprehensive time tracking integration",
       "exports": {
         "functions": ["TaskItem"],
         "classes": [],
         "constants": []
       },
-      "imports": ["react", "lucide-react", "../../utils/helpers", "../../utils/taskHelpers"],
-      "sideEffects": ["Task interaction events", "Hierarchy expansion toggle", "Task deletion actions"],
+      "imports": ["react", "lucide-react", "../../utils/helpers", "../../utils/taskHelpers", "./TaskDeleteConfirmModal", "./ExpandableTaskDetails", "./TimeEntryModal"],
+      "sideEffects": ["Task interaction events", "Hierarchy expansion toggle", "Task deletion actions", "Time entry management", "Task details display"],
       "enhancements": [
         "Task-1.3: Added delete button with Trash2 icon from lucide-react",
         "Task-1.3: Integrated TaskDeleteConfirmModal for deletion confirmation",
         "Task-1.3: Added onDeleteTask prop handling with proper error handling",
         "Task-1.3: Enhanced edit functionality to ensure TaskDetailModal opens correctly",
         "Task-1.3: Added proper prop validation and development warnings",
-        "Task-1.3: Improved accessibility with proper button labels and tooltips"
+        "Task-1.3: Improved accessibility with proper button labels and tooltips",
+        "Task-3.1: Integrated ExpandableTaskDetails component for comprehensive time tracking display",
+        "Task-3.1: Added TimeEntryModal integration for manual time logging",
+        "Task-3.1: Implemented time tracking indicators showing total tracked time per task",
+        "Task-3.1: Added time entry button with hover-based visibility for better UX",
+        "Task-3.1: Enhanced task details toggle functionality with expandable time tracking information",
+        "Task-3.1: Added comprehensive time tracking workflow with manual entry capabilities"
+      ]
+    },
+    "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/shared/TimeEntryModal.jsx": {
+      "purpose": "Modal component for manual time entry with validation, task association, and comprehensive form handling",
+      "exports": {
+        "functions": ["TimeEntryModal"],
+        "classes": [],
+        "constants": []
+      },
+      "imports": ["react", "lucide-react"],
+      "sideEffects": ["Modal display", "Time entry form submission", "Form validation", "Loading state management"],
+      "features": [
+        "Hours and minutes input with validation (0-23 hours, 0-59 minutes)",
+        "Optional notes field for time entry descriptions",
+        "Comprehensive form validation with real-time error feedback",
+        "Task association display showing which task time is being logged for",
+        "Loading states during submission with visual feedback",
+        "Automatic form reset on close or successful submission",
+        "Time conversion to minutes for consistent data storage",
+        "Source tracking (manual vs timer) for time entry categorization",
+        "Responsive design with dark mode support",
+        "Error handling for failed time entry submissions"
+      ]
+    },
+    "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/shared/ExpandableTaskDetails.jsx": {
+      "purpose": "Expandable component for displaying comprehensive task time tracking details with entry history and statistics",
+      "exports": {
+        "functions": ["ExpandableTaskDetails"],
+        "classes": [],
+        "constants": []
+      },
+      "imports": ["react", "lucide-react", "../../utils/helpers"],
+      "sideEffects": ["Task details display", "Time calculation", "Entry sorting and formatting"],
+      "features": [
+        "Comprehensive time tracking summary with total time and entry count",
+        "Chronologically sorted time entry history (most recent first)",
+        "Detailed time entry display with duration, timestamp, source, and notes",
+        "Visual source indicators (blue for timer, green for manual entries)",
+        "Formatted duration display (hours and minutes) with consistent formatting",
+        "Scrollable time entry list with maximum height for long histories",
+        "Empty state handling with helpful messaging",
+        "Toggle functionality for show/hide details",
+        "Responsive design with proper spacing and visual hierarchy",
+        "Dark mode support with theme-aware styling"
       ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/shared/AINudgeDisplay.jsx": {
@@ -782,8 +849,8 @@
     "data_flow": "Firestore (primary) ↔ React State ↔ Obsidian Sync ↔ M5 Dial BLE ↔ AI Services (OpenAI/Gemini/Anthropic)",
     "configuration": "Environment Variables → Firebase Config → Application Constants → Feature Flags → Component Props",
     "key_components": [
-      "App.jsx - Global orchestrator with stage management",
-      "DashboardView - Main interface with progress indicators", 
+      "App.jsx - Global orchestrator with stage management and time tracking",
+      "DashboardView - Main interface with progress indicators and enhanced timer", 
       "ProjectsView - Dual-mode interface (grid/kanban) with comprehensive project management",
       "KanbanBoard - Drag-and-drop workflow management with stage transitions",
       "KanbanColumn - Stage-based project organization with visual feedback",
@@ -791,12 +858,14 @@
       "ViewModeToggle - Seamless view switching between grid and kanban modes",
       "ProjectCard - Enhanced project display with progress visualization and drag support",
       "ProgressBar - Reusable progress indicator with completion effects",
-      "TaskItem - Hierarchical task display",
-      "EnhancedTimerWidget - Pomodoro functionality",
-      "RecommendationEngine - AI-powered suggestions"
+      "TaskItem - Hierarchical task display with comprehensive time tracking integration",
+      "EnhancedTimerWidget - Pomodoro functionality with time entry capabilities",
+      "RecommendationEngine - AI-powered suggestions",
+      "TimeEntryModal - Manual time logging with validation and task association",
+      "ExpandableTaskDetails - Comprehensive time tracking history and statistics display"
     ],
     "integration_points": [
-      "Firebase Firestore - Real-time data persistence with stage management",
+      "Firebase Firestore - Real-time data persistence with stage management and time tracking",
       "@dnd-kit - Comprehensive drag-and-drop system for kanban workflows",
       "M5Stack Dial - Hardware timer via Web Bluetooth",
       "Obsidian - Knowledge management sync via REST API",
@@ -811,14 +880,27 @@
       "Customizable stages with color coding and descriptions",
       "Real-time progress tracking with 5-color gradient system",
       "Enhanced visual feedback for completed projects and tasks",
-      "Responsive design optimized for both desktop and mobile devices"
+      "Responsive design optimized for both desktop and mobile devices",
+      "Comprehensive time tracking with manual entry and timer integration",
+      "Time tracking statistics with daily and weekly progress indicators",
+      "Expandable task details with complete time entry history"
+    ],
+    "time_tracking_features": [
+      "Manual time entry with hours/minutes validation and notes",
+      "Integration with Pomodoro timer for automatic time tracking",
+      "Comprehensive time entry history with source tracking (timer vs manual)",
+      "Task-level time tracking with expandable details view",
+      "Time tracking statistics and progress visualization",
+      "Multiple entry points: timer widget, task items, and dedicated modals",
+      "Persistent time data with Firebase Firestore integration",
+      "Visual time indicators and progress tracking across the application"
     ]
   },
   "development": {
     "approach": "Task-driven development with structured roadmap and completion tracking",
     "workflow": "Feature tasks → Implementation → Testing → Validation → Documentation",
     "task_status": "Active development with completed and prepared task queues",
-    "current_phase": "Feature enhancement and optimization phase - kanban workflow implementation complete",
+    "current_phase": "Feature enhancement and optimization phase - time tracking implementation complete",
     "version_control": "Git with main branch, task-based commits, and completion metadata",
     "testing": "Vitest with React Testing Library, minimal coverage currently",
     "deployment": "Netlify static hosting with environment variable configuration",
@@ -827,11 +909,12 @@
       "Task-1.2: Implemented comprehensive progress indicators with ProgressBar component, enhanced ProjectCard and DashboardView with real-time task completion tracking, 5-color gradient system, and completion celebration effects",
       "Task-1.4: Implemented comprehensive kanban board workflow management with KanbanBoard, KanbanColumn, ViewModeToggle, and StageManager components; added project stage utilities and drag-and-drop functionality",
       "Task-1.5: Optimized project card layout with improved responsive breakpoints, reduced white space, and enhanced column progression for better visual balance across all screen sizes",
-      "Task-2.1: Added task count displays and project age indicators with color-coded visual feedback - created dateHelpers utility, enhanced helpers with project information functions, and updated ProjectCard with at-a-glance information display"
+      "Task-2.1: Added task count displays and project age indicators with color-coded visual feedback - created dateHelpers utility, enhanced helpers with project information functions, and updated ProjectCard with at-a-glance information display",
+      "Task-3.1: Implemented comprehensive time tracking system with TimeEntryModal and ExpandableTaskDetails components, enhanced TaskItem with time tracking integration, improved EnhancedTimerWidget with manual time entry capabilities, and added time tracking statistics to TrackingView"
     ],
     "file_structure": {
-      "total_source_files": 49,
-      "components": 27,
+      "total_source_files": 51,
+      "components": 29,
       "utilities": 10,
       "hooks": 4,
       "services": 1,
@@ -842,35 +925,40 @@
         "KanbanColumn.jsx - Individual stage columns",
         "ViewModeToggle.jsx - Grid/kanban view switching", 
         "StageManager.jsx - Complete stage management modal"
+      ],
+      "new_time_tracking_components": [
+        "TimeEntryModal.jsx - Manual time entry with validation and task association",
+        "ExpandableTaskDetails.jsx - Comprehensive time tracking details and history display"
       ]
     },
-    "task_14_implementation": {
-      "summary": "Comprehensive kanban board workflow management system",
+    "task_31_implementation": {
+      "summary": "Comprehensive time tracking system with manual entry, timer integration, and detailed statistics",
       "components_added": [
-        "KanbanBoard - Main board layout with drag-and-drop project management",
-        "KanbanColumn - Individual stage columns with visual feedback",
-        "ViewModeToggle - Clean interface for switching between grid and kanban views",
-        "StageManager - Full CRUD modal for stage management with validation"
+        "TimeEntryModal - Modal for manual time entry with hours/minutes validation and notes",
+        "ExpandableTaskDetails - Expandable component showing comprehensive time tracking history and statistics"
       ],
-      "utilities_added": [
-        "projectStages.js - Complete stage management utility with validation, migration, and organization functions"
-      ],
-      "enhancements_made": [
-        "Enhanced ProjectsView with dual-mode display and comprehensive project operations",
-        "Updated App.jsx with handleMoveProjectToStage function for Firebase integration",
-        "Added @dnd-kit integration for drag-and-drop functionality throughout kanban system",
-        "Implemented responsive design with mobile-friendly fallbacks and warnings",
-        "Added comprehensive error handling and loading states for all stage operations"
+      "components_enhanced": [
+        "TaskItem - Integrated time tracking indicators, TimeEntryModal, and ExpandableTaskDetails",
+        "EnhancedTimerWidget - Added manual time entry capabilities and TimeEntryModal integration",
+        "TrackingView - Enhanced with time tracking statistics, manual time entry, and comprehensive time management"
       ],
       "features_implemented": [
-        "Default 4-stage workflow: Planning → In Progress → Review → Complete",
-        "Drag-and-drop project movement between stages with visual feedback",
-        "Customizable stage colors using HSL color system for consistency",
-        "Stage validation with comprehensive error reporting",
-        "Project creation directly in appropriate stages (planning/first stage)",
-        "Responsive grid layout with automatic column sizing",
-        "Enhanced visual feedback during drag operations",
-        "Mobile-responsive design with warning for optimal experience"
+        "Manual time entry with validation (0-23 hours, 0-59 minutes) and optional notes",
+        "Time tracking integration with existing Pomodoro timer system",
+        "Comprehensive time entry history with source tracking (timer vs manual)",
+        "Task-level time tracking indicators showing total tracked time",
+        "Expandable task details with chronological time entry history",
+        "Time tracking statistics with daily and weekly progress calculation",
+        "Multiple entry points for time logging throughout the application",
+        "Visual time indicators and progress tracking integration",
+        "Persistent time data storage with Firebase Firestore integration",
+        "Responsive design with dark mode support for all time tracking components"
+      ],
+      "data_structure": [
+        "timeTracked array on task objects containing time entry records",
+        "Each time entry includes: timestamp, duration (minutes), notes, source (timer/manual)",
+        "Time tracking settings for goals and preferences",
+        "Daily and weekly time tracking statistics calculation"
       ]
     }
   }

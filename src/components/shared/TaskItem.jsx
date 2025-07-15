@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { PlayCircle, TimerIcon, Calendar, Loader2, AlertTriangle, Bell, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { PlayCircle, TimerIcon, Calendar, Loader2, AlertTriangle, Bell, ChevronDown, ChevronRight, Plus, Trash2, Clock, MoreVertical } from 'lucide-react';
 import { isPastDue, isNudgedTask } from '../../utils/taskFilters';
 import TaskDeleteConfirmModal from './TaskDeleteConfirmModal';
+import ExpandableTaskDetails from './ExpandableTaskDetails';
+import TimeEntryModal from './TimeEntryModal';
 
 function TaskItem({ 
     task = {}, 
@@ -9,6 +11,7 @@ function TaskItem({
     onOpenDetail = null, 
     onStartTask = null, 
     onDeleteTask = null,
+    onAddTimeEntry = null,
     isTaskActive = false,
     aiNudgeRecommendations = null,
     depth = 0,
@@ -20,6 +23,8 @@ function TaskItem({
     const [isToggling, setIsToggling] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showTimeModal, setShowTimeModal] = useState(false);
+    const [showTaskDetails, setShowTaskDetails] = useState(false);
     // Development warnings for missing critical props
     if (process.env.NODE_ENV === 'development') {
         if (!task || typeof task !== 'object') {
@@ -52,7 +57,8 @@ function TaskItem({
         isComplete: Boolean(task?.isComplete),
         status: task?.status || 'idle',
         dueDate: task?.dueDate || null,
-        tags: Array.isArray(task?.tags) ? task.tags : []
+        tags: Array.isArray(task?.tags) ? task.tags : [],
+        timeTracked: Array.isArray(task?.timeTracked) ? task.timeTracked : []
     };
 
     // Calculate visual indicator states
@@ -163,6 +169,33 @@ function TaskItem({
         setShowDeleteModal(false);
     };
 
+    const handleTimeEntry = (e) => {
+        e.stopPropagation();
+        setShowTimeModal(true);
+    };
+
+    const handleSaveTimeEntry = async (taskId, timeEntry) => {
+        if (onAddTimeEntry && typeof onAddTimeEntry === 'function') {
+            await onAddTimeEntry(taskId, timeEntry);
+        }
+    };
+
+    const handleToggleTaskDetails = (e) => {
+        e.stopPropagation();
+        setShowTaskDetails(!showTaskDetails);
+    };
+
+    // Calculate total time tracked
+    const totalTimeTracked = safeTask.timeTracked.reduce((sum, entry) => sum + (entry.duration || 0), 0);
+    const formatTimeTracked = (minutes) => {
+        if (minutes === 0) return null;
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        if (hours === 0) return `${mins}m`;
+        if (mins === 0) return `${hours}h`;
+        return `${hours}h ${mins}m`;
+    };
+
     return (
         <>
             <li 
@@ -235,6 +268,13 @@ function TaskItem({
                             {tag}
                         </span>
                     ))}
+                    {/* Time tracking indicator */}
+                    {totalTimeTracked > 0 && (
+                        <div className="flex items-center text-xs text-blue-600 dark:text-blue-400">
+                            <Clock size={12} className="mr-1" />
+                            <span>{formatTimeTracked(totalTimeTracked)}</span>
+                        </div>
+                    )}
                 </div>
             </div>
             {safeTask.status !== 'in-progress' && !isTaskActive && !safeTask.isComplete && onStartTask && (
@@ -257,6 +297,30 @@ function TaskItem({
                     className="ml-2 text-indigo-500 animate-pulse" 
                     data-testid={`task-active-timer-${safeTask.id}`}
                 />
+            )}
+
+            {/* Time entry button */}
+            {onAddTimeEntry && (
+                <button 
+                    onClick={handleTimeEntry} 
+                    className="ml-2 p-1 text-gray-500 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Add time entry"
+                    data-testid={`task-time-entry-button-${safeTask.id}`}
+                >
+                    <Clock size={16} />
+                </button>
+            )}
+
+            {/* Task details toggle button */}
+            {(totalTimeTracked > 0 || safeTask.timeTracked.length > 0) && (
+                <button 
+                    onClick={handleToggleTaskDetails} 
+                    className="ml-2 p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Toggle task details"
+                    data-testid={`task-details-toggle-button-${safeTask.id}`}
+                >
+                    <MoreVertical size={16} />
+                </button>
             )}
 
             {/* Add Sub-task button */}
@@ -306,6 +370,21 @@ function TaskItem({
                 </div>
             )}
         </li>
+
+        {/* Expandable task details */}
+        <ExpandableTaskDetails 
+            task={safeTask}
+            isExpanded={showTaskDetails}
+            onToggle={handleToggleTaskDetails}
+        />
+
+        {/* Time entry modal */}
+        <TimeEntryModal 
+            isOpen={showTimeModal}
+            onClose={() => setShowTimeModal(false)}
+            onSave={handleSaveTimeEntry}
+            task={safeTask}
+        />
 
         {/* Render children when expanded */}
         {isExpanded && children.length > 0 && children.map(child => (
