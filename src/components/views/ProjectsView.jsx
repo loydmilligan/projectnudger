@@ -48,22 +48,44 @@ function ProjectsView({
     // Stage filter state
     const [stageFilter, setStageFilter] = useState('All');
     
+    // Archive filter state (default to false - archived projects hidden by default)
+    const [showArchived, setShowArchived] = useState(() => {
+        const saved = sessionStorage.getItem('showArchived');
+        return saved ? JSON.parse(saved) : false;
+    });
+    
     // Migrate projects to stages if needed
     const migratedProjects = React.useMemo(() => {
         if (!stages.length) return projects;
         return migrateProjectsToStages(projects, stages);
     }, [projects, stages]);
     
-    // Filter projects by stage
+    // Filter projects by stage and archive status
     const filteredProjects = React.useMemo(() => {
-        if (stageFilter === 'All') return migratedProjects;
-        return migratedProjects.filter(project => project.stage === stageFilter);
-    }, [migratedProjects, stageFilter]);
+        let filtered = migratedProjects;
+        
+        // Filter by archive status first (archived projects hidden by default)
+        if (!showArchived) {
+            filtered = filtered.filter(project => !project.archived);
+        }
+        
+        // Then filter by stage
+        if (stageFilter !== 'All') {
+            filtered = filtered.filter(project => project.stage === stageFilter);
+        }
+        
+        return filtered;
+    }, [migratedProjects, stageFilter, showArchived]);
     
     // Persist view mode changes
     useEffect(() => {
         localStorage.setItem('projectViewMode', viewMode);
     }, [viewMode]);
+    
+    // Persist archive filter preference
+    useEffect(() => {
+        sessionStorage.setItem('showArchived', JSON.stringify(showArchived));
+    }, [showArchived]);
     
     // Handle project stage movement
     const handleMoveProject = async (projectId, newStageId) => {
@@ -89,6 +111,8 @@ function ProjectsView({
                         stageFilter={stageFilter}
                         setStageFilter={setStageFilter}
                         stages={stages}
+                        showArchived={showArchived}
+                        setShowArchived={setShowArchived}
                     />
                 </div>
                 

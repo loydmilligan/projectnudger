@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { Clock, AlertTriangle, Archive } from 'lucide-react';
 
 function ProjectFilters({ 
     ownerFilter, 
@@ -13,7 +13,10 @@ function ProjectFilters({
     setPastDueFilter,
     nudgedFilter,
     setNudgedFilter,
-    showTaskFilters = false
+    showTaskFilters = false,
+    // New props for Archive filter
+    showArchived,
+    setShowArchived
 }) {
     return (
         <div className="flex flex-col sm:flex-row gap-4 w-full">
@@ -85,6 +88,24 @@ function ProjectFilters({
                     >
                         <AlertTriangle className="w-4 h-4" />
                         Nudged
+                    </button>
+                </div>
+            )}
+
+            {/* Archive Filter Toggle - Always visible for project views */}
+            {setShowArchived && (
+                <div className="flex items-center">
+                    <button
+                        onClick={() => setShowArchived(!showArchived)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                            showArchived
+                                ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-2 border-blue-300 dark:border-blue-700'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-transparent hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                        title="Toggle visibility of archived projects"
+                    >
+                        <Archive className="w-4 h-4" />
+                        Show Archived
                     </button>
                 </div>
             )}

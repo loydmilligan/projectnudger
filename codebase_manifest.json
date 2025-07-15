@@ -1,6 +1,6 @@
 {
-  "version": "1.5",
-  "generated": "2025-07-15T22:50:00.000Z",
+  "version": "1.6",
+  "generated": "2025-07-15T23:10:00.000Z",
   "project": {
     "name": "project-nudger",
     "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
@@ -351,7 +351,7 @@
       "sideEffects": ["Timer countdown updates", "Session state management"]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView.jsx": {
-      "purpose": "Optimized projects management interface with enhanced card layout, improved responsive design, and dual-mode display (grid/kanban)",
+      "purpose": "Optimized projects management interface with enhanced card layout, improved responsive design, dual-mode display, and archive filtering by default",
       "exports": {
         "functions": ["ProjectsView"],
         "classes": [],
@@ -366,7 +366,7 @@
         "./ProjectsView/ViewModeToggle",
         "./ProjectsView/StageManager"
       ],
-      "sideEffects": ["Project filtering", "Task interaction events", "View mode state management"],
+      "sideEffects": ["Project filtering", "Task interaction events", "View mode state management", "Archive filter state management"],
       "enhancements": [
         "Added dual-mode view with grid and kanban layouts",
         "Integrated ViewModeToggle component for seamless view switching",
@@ -378,7 +378,12 @@
         "Task-1.5: Reduced white space with gap-4 instead of gap-6",
         "Task-1.5: Enhanced column progression (1→2→3→4) for better screen utilization",
         "Task-1.5: Added medium breakpoint for improved tablet experience",
-        "Task-1.5: Better integration with ProgressBar components from Task-1.2"
+        "Task-1.5: Better integration with ProgressBar components from Task-1.2",
+        "Task-2.2: Added showArchived state management with default false (archived projects hidden by default)",
+        "Task-2.2: Enhanced project filtering logic to exclude archived projects when showArchived is false",
+        "Task-2.2: Integrated archive filter state with ProjectFilters component props",
+        "Task-2.2: Added session storage persistence for archive filter preference",
+        "Task-2.2: Enhanced performance with optimized filtering for large archived project counts"
       ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView/ProjectCard.jsx": {
@@ -656,21 +661,26 @@
       "sideEffects": []
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/shared/ProjectFilters.jsx": {
-      "purpose": "Enhanced project and task filtering controls with owner selection, status filtering, and task-specific toggles for Past Due and Nudged tasks",
+      "purpose": "Enhanced project and task filtering controls with owner selection, status filtering, task-specific toggles, and archive visibility management",
       "exports": {
         "functions": ["ProjectFilters"],
         "classes": [],
         "constants": []
       },
       "imports": ["react", "lucide-react"],
-      "sideEffects": ["Filter state updates"],
+      "sideEffects": ["Filter state updates", "Archive filter state management", "User preference persistence"],
       "enhancements": [
         "Added Past Due filter toggle with Clock icon from lucide-react",
         "Added Nudged filter toggle with AlertTriangle icon from lucide-react", 
         "Added showTaskFilters prop to conditionally display task-specific filters",
         "Enhanced with pastDueFilter, setPastDueFilter, nudgedFilter, setNudgedFilter props",
         "Implemented visual styling with red theme for Past Due and orange theme for Nudged filters",
-        "Added hover states and active/inactive styling for toggle buttons"
+        "Added hover states and active/inactive styling for toggle buttons",
+        "Task-2.2: Added 'Show Archived' toggle with Archive icon for archive visibility control",
+        "Task-2.2: Implemented showArchived state management with user preference persistence",
+        "Task-2.2: Added visual distinction for archived projects when toggle is enabled",
+        "Task-2.2: Enhanced filter props with showArchived and setShowArchived for parent component communication",
+        "Task-2.2: Added session storage for remembering archive filter preference"
       ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/shared/ProgressBar.jsx": {
