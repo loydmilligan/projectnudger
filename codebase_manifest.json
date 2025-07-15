@@ -1,11 +1,11 @@
 {
-  "version": "1.2",
-  "generated": "2025-07-15T14:30:00.000Z",
+  "version": "1.3",
+  "generated": "2025-07-15T16:45:00.000Z",
   "project": {
     "name": "project-nudger",
     "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
     "version": "0.0.0",
-    "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration",
+    "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration + @dnd-kit for drag-and-drop",
     "deployment": "Netlify static site with Firebase backend",
     "repository": "Active Git repository with task-driven development workflow"
   },
@@ -34,7 +34,8 @@
         "./components/views/*",
         "./services/M5DialBLEService",
         "./hooks/useObsidianSync",
-        "./utils/aiNudgeService"
+        "./utils/aiNudgeService",
+        "./utils/taskHelpers"
       ],
       "sideEffects": [
         "Firebase Firestore real-time subscriptions",
@@ -42,6 +43,12 @@
         "AI service API calls",
         "Browser notifications and TTS",
         "Theme management (dark/light mode)"
+      ],
+      "enhancements": [
+        "Added handleMoveProjectToStage function for kanban board project stage management",
+        "Enhanced project save logic to ensure proper stage assignment with 'planning' default",
+        "Added comprehensive error handling and validation for project stage operations",
+        "Integrated stage management with Firebase document updates and real-time sync"
       ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/main.jsx": {
@@ -123,6 +130,34 @@
       },
       "imports": [],
       "sideEffects": []
+    },
+    "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/utils/projectStages.js": {
+      "purpose": "Project stage management utilities providing default configurations, validation, and migration logic for kanban workflow",
+      "exports": {
+        "functions": [
+          "getDefaultStages",
+          "validateStage",
+          "migrateProjectsToStages",
+          "sortStagesByOrder",
+          "findStageById",
+          "groupProjectsByStage",
+          "generateStageId",
+          "reorderStages"
+        ],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [],
+      "sideEffects": [],
+      "features": [
+        "Default 4-stage workflow: Planning → In Progress → Review → Complete",
+        "HSL color system for consistent stage visualization",
+        "Stage validation with comprehensive error reporting",
+        "Project migration logic for existing data compatibility",
+        "Drag-and-drop reordering support with order management",
+        "Unique ID generation with conflict resolution",
+        "Project grouping by stage for kanban board organization"
+      ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/utils/aiNudgeService.js": {
       "purpose": "AI-powered recommendation engine supporting multiple LLM providers with personality-driven nudging",
@@ -286,14 +321,30 @@
       "sideEffects": ["Timer countdown updates", "Session state management"]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView.jsx": {
-      "purpose": "Grid-based projects overview with filtering, task previews, and project management",
+      "purpose": "Comprehensive projects management interface with dual-mode display (grid/kanban), filtering, and project operations",
       "exports": {
         "functions": ["ProjectsView"],
         "classes": [],
         "constants": []
       },
-      "imports": ["react", "lucide-react", "../shared/ProjectFilters", "../../utils/helpers", "./ProjectsView/KanbanBoard"],
-      "sideEffects": ["Project filtering", "Task interaction events"]
+      "imports": [
+        "react", 
+        "lucide-react", 
+        "../shared/ProjectFilters", 
+        "../../utils/helpers", 
+        "./ProjectsView/KanbanBoard",
+        "./ProjectsView/ViewModeToggle",
+        "./ProjectsView/StageManager"
+      ],
+      "sideEffects": ["Project filtering", "Task interaction events", "View mode state management"],
+      "enhancements": [
+        "Added dual-mode view with grid and kanban layouts",
+        "Integrated ViewModeToggle component for seamless view switching",
+        "Added StageManager integration for kanban workflow customization",
+        "Enhanced project operations with stage-aware actions",
+        "Improved responsive design for both view modes",
+        "Added comprehensive project filtering and search capabilities"
+      ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView/ProjectCard.jsx": {
       "purpose": "Enhanced project card component with progress visualization, completion styling, and drag-and-drop support for both grid and kanban views",
@@ -313,7 +364,126 @@
         "Improved accessibility with ARIA labels and progress indicators",
         "Enhanced visual hierarchy with completion status styling",
         "URL link display with proper formatting and external link icons",
-        "Responsive design with flexible card layout"
+        "Responsive design with flexible card layout",
+        "Added drag-and-drop support for kanban board operations"
+      ]
+    },
+    "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView/ViewModeToggle.jsx": {
+      "purpose": "Toggle component for switching between grid and kanban views with visual indicators and accessibility support",
+      "exports": {
+        "functions": ["ViewModeToggle"],
+        "classes": [],
+        "constants": []
+      },
+      "imports": ["react", "lucide-react"],
+      "sideEffects": ["View mode state transitions"],
+      "features": [
+        "Clean toggle interface with LayoutGrid and Kanban icons",
+        "Active state visual feedback with shadow and color changes",
+        "Responsive design with text labels hidden on small screens",
+        "Disabled state support with opacity and cursor management",
+        "Smooth transition animations between modes",
+        "Accessibility support with proper button states and tooltips"
+      ]
+    },
+    "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView/StageManager.jsx": {
+      "purpose": "Comprehensive modal component for managing project stages with full CRUD operations, drag-and-drop reordering, and validation",
+      "exports": {
+        "functions": ["StageManager", "SortableStageItem"],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "lucide-react",
+        "@dnd-kit/core",
+        "@dnd-kit/sortable", 
+        "@dnd-kit/utilities",
+        "../../../utils/projectStages"
+      ],
+      "sideEffects": [
+        "Modal display and state management",
+        "Drag-and-drop operations for stage reordering",
+        "Stage validation and error handling",
+        "Color picker RGB to HSL conversion"
+      ],
+      "features": [
+        "Full CRUD operations: Create, Read, Update, Delete stages",
+        "Drag-and-drop reordering with @dnd-kit integration",
+        "Color picker with RGB to HSL conversion for consistent theming",
+        "Comprehensive validation with real-time error feedback",
+        "Reset to defaults functionality with user confirmation",
+        "Responsive design with mobile-friendly input layouts",
+        "Loading states and disabled states during operations",
+        "Stage descriptions and visual color indicators",
+        "Sortable stage items with grip handles and edit modes",
+        "Prevention of deleting the last remaining stage"
+      ]
+    },
+    "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView/KanbanBoard.jsx": {
+      "purpose": "Main kanban board layout component with configurable columns, comprehensive drag-drop support, and responsive design",
+      "exports": {
+        "functions": ["KanbanBoard"],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "@dnd-kit/core",
+        "@dnd-kit/sortable",
+        "lucide-react",
+        "./KanbanColumn",
+        "./ProjectCard",
+        "../../../utils/projectStages"
+      ],
+      "sideEffects": [
+        "Drag-and-drop operations with visual feedback",
+        "Project stage transitions and Firebase updates",
+        "Real-time project grouping and organization"
+      ],
+      "features": [
+        "Comprehensive drag-and-drop system with @dnd-kit/core",
+        "Visual drag overlay with enhanced styling and rotation effects",
+        "Responsive grid layout with automatic column sizing (max 4 columns)",
+        "Project grouping by stage with real-time updates",
+        "Enhanced error handling and validation for stage transitions",
+        "Loading states and error feedback for user actions",
+        "Mobile-responsive design with warning for small screens",
+        "Collision detection and keyboard accessibility support",
+        "Integration with projectStages utility for data organization",
+        "Visual feedback during drag operations with ring effects"
+      ]
+    },
+    "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView/KanbanColumn.jsx": {
+      "purpose": "Individual kanban column component for project stages with droppable functionality, stage visualization, and project management",
+      "exports": {
+        "functions": ["KanbanColumn"],
+        "classes": [],
+        "constants": []
+      },
+      "imports": [
+        "react",
+        "@dnd-kit/core",
+        "@dnd-kit/sortable",
+        "lucide-react",
+        "./ProjectCard"
+      ],
+      "sideEffects": [
+        "Droppable area management for project cards",
+        "Visual feedback during drag-over states",
+        "Project creation actions in appropriate stages"
+      ],
+      "features": [
+        "Droppable area implementation with @dnd-kit/core",
+        "Visual drag-over feedback with border and background changes",
+        "Stage header with color indicator, name, and project count",
+        "Add project button for planning stage and first stage",
+        "Empty state handling with contextual messages",
+        "Sortable context for project cards within columns",
+        "Stage description display in column footer",
+        "Responsive design with proper spacing and layout",
+        "Enhanced visual feedback with animated drop zones",
+        "Integration with ProjectCard component for consistent styling"
       ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectView.jsx": {
@@ -520,44 +690,94 @@
     "data_flow": "Firestore (primary) ↔ React State ↔ Obsidian Sync ↔ M5 Dial BLE ↔ AI Services (OpenAI/Gemini/Anthropic)",
     "configuration": "Environment Variables → Firebase Config → Application Constants → Feature Flags → Component Props",
     "key_components": [
-      "App.jsx - Global orchestrator",
+      "App.jsx - Global orchestrator with stage management",
       "DashboardView - Main interface with progress indicators", 
-      "ProjectView - Detailed project management",
-      "ProjectCard - Enhanced project display with progress visualization",
+      "ProjectsView - Dual-mode interface (grid/kanban) with comprehensive project management",
+      "KanbanBoard - Drag-and-drop workflow management with stage transitions",
+      "KanbanColumn - Stage-based project organization with visual feedback",
+      "StageManager - Full CRUD stage management with validation and reordering",
+      "ViewModeToggle - Seamless view switching between grid and kanban modes",
+      "ProjectCard - Enhanced project display with progress visualization and drag support",
       "ProgressBar - Reusable progress indicator with completion effects",
       "TaskItem - Hierarchical task display",
       "EnhancedTimerWidget - Pomodoro functionality",
       "RecommendationEngine - AI-powered suggestions"
     ],
     "integration_points": [
-      "Firebase Firestore - Real-time data persistence",
+      "Firebase Firestore - Real-time data persistence with stage management",
+      "@dnd-kit - Comprehensive drag-and-drop system for kanban workflows",
       "M5Stack Dial - Hardware timer via Web Bluetooth",
       "Obsidian - Knowledge management sync via REST API",
       "AI Services - Multi-provider recommendation engine",
       "ntfy.sh - External notification delivery",
       "Web Speech API - Text-to-speech functionality"
+    ],
+    "workflow_features": [
+      "Dual-mode project display: Traditional grid and kanban board views",
+      "Comprehensive stage management with default 4-stage workflow",
+      "Drag-and-drop project transitions between workflow stages",
+      "Customizable stages with color coding and descriptions",
+      "Real-time progress tracking with 5-color gradient system",
+      "Enhanced visual feedback for completed projects and tasks",
+      "Responsive design optimized for both desktop and mobile devices"
     ]
   },
   "development": {
     "approach": "Task-driven development with structured roadmap and completion tracking",
     "workflow": "Feature tasks → Implementation → Testing → Validation → Documentation",
     "task_status": "Active development with completed and prepared task queues",
-    "current_phase": "Feature enhancement and optimization phase",
+    "current_phase": "Feature enhancement and optimization phase - kanban workflow implementation complete",
     "version_control": "Git with main branch, task-based commits, and completion metadata",
     "testing": "Vitest with React Testing Library, minimal coverage currently",
     "deployment": "Netlify static hosting with environment variable configuration",
     "recent_completions": [
       "Task-1.1: Enhanced task filtering with Past Due and Nudged toggles in TasksView and ProjectFilters components",
-      "Task-1.2: Implemented comprehensive progress indicators with ProgressBar component, enhanced ProjectCard and DashboardView with real-time task completion tracking, 5-color gradient system, and completion celebration effects"
+      "Task-1.2: Implemented comprehensive progress indicators with ProgressBar component, enhanced ProjectCard and DashboardView with real-time task completion tracking, 5-color gradient system, and completion celebration effects",
+      "Task-1.4: Implemented comprehensive kanban board workflow management with KanbanBoard, KanbanColumn, ViewModeToggle, and StageManager components; added project stage utilities and drag-and-drop functionality"
     ],
     "file_structure": {
-      "total_source_files": 45,
-      "components": 24,
-      "utilities": 8,
+      "total_source_files": 48,
+      "components": 27,
+      "utilities": 9,
       "hooks": 4,
       "services": 1,
       "configuration": 3,
-      "documentation": "Comprehensive with PRD, roadmaps, and architecture docs"
+      "documentation": "Comprehensive with PRD, roadmaps, and architecture docs",
+      "new_kanban_components": [
+        "KanbanBoard.jsx - Main kanban board with drag-and-drop",
+        "KanbanColumn.jsx - Individual stage columns",
+        "ViewModeToggle.jsx - Grid/kanban view switching", 
+        "StageManager.jsx - Complete stage management modal"
+      ]
+    },
+    "task_14_implementation": {
+      "summary": "Comprehensive kanban board workflow management system",
+      "components_added": [
+        "KanbanBoard - Main board layout with drag-and-drop project management",
+        "KanbanColumn - Individual stage columns with visual feedback",
+        "ViewModeToggle - Clean interface for switching between grid and kanban views",
+        "StageManager - Full CRUD modal for stage management with validation"
+      ],
+      "utilities_added": [
+        "projectStages.js - Complete stage management utility with validation, migration, and organization functions"
+      ],
+      "enhancements_made": [
+        "Enhanced ProjectsView with dual-mode display and comprehensive project operations",
+        "Updated App.jsx with handleMoveProjectToStage function for Firebase integration",
+        "Added @dnd-kit integration for drag-and-drop functionality throughout kanban system",
+        "Implemented responsive design with mobile-friendly fallbacks and warnings",
+        "Added comprehensive error handling and loading states for all stage operations"
+      ],
+      "features_implemented": [
+        "Default 4-stage workflow: Planning → In Progress → Review → Complete",
+        "Drag-and-drop project movement between stages with visual feedback",
+        "Customizable stage colors using HSL color system for consistency",
+        "Stage validation with comprehensive error reporting",
+        "Project creation directly in appropriate stages (planning/first stage)",
+        "Responsive grid layout with automatic column sizing",
+        "Enhanced visual feedback during drag operations",
+        "Mobile-responsive design with warning for optimal experience"
+      ]
     }
   }
 }

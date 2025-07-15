@@ -712,16 +712,31 @@ export default function App() {
                 throw new Error('Project not found');
             }
             
-            // Update project stage in Firebase
-            await updateDoc(doc(db, basePath, 'projects', projectId), {
-                stage: newStageId
+            // Validate the new stage ID
+            if (!newStageId || newStageId.trim() === '') {
+                throw new Error('Invalid stage ID');
+            }
+            
+            console.log(`Moving project ${projectId} from "${project.stage}" to "${newStageId}"`);
+            console.log(`Firebase path: ${basePath}/projects/${projectId}`);
+            
+            // Update project stage in Firebase using correct path structure
+            const projectRef = doc(db, `${basePath}/projects`, projectId);
+            await updateDoc(projectRef, {
+                stage: newStageId,
+                lastModified: new Date().toISOString()
             });
+            
+            console.log(`Successfully updated project stage to: ${newStageId}`);
             
             // Show success notification
             showSuccess('Project Moved', `"${project.name}" moved to new stage.`);
             
         } catch (error) {
             console.error('Error moving project to stage:', error);
+            console.error('Project ID:', projectId);
+            console.error('New Stage ID:', newStageId);
+            console.error('Firebase path:', `${basePath}/projects/${projectId}`);
             showFirebaseError(error);
             throw error; // Re-throw so the UI can handle it
         }

@@ -56,17 +56,23 @@ function KanbanColumn({
                 )}
             </div>
 
-            {/* Droppable area for projects */}
+            {/* Enhanced droppable area for projects */}
             <div 
                 ref={setNodeRef}
-                className={`flex-1 p-4 space-y-4 min-h-32 transition-colors ${
-                    isOver ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                className={`flex-1 p-4 space-y-4 min-h-32 transition-all duration-200 ${
+                    isOver 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300 dark:border-blue-600 border-dashed' 
+                        : 'border-2 border-transparent'
                 }`}
             >
                 <SortableContext items={stageProjectIds} strategy={verticalListSortingStrategy}>
                     {projects.length === 0 ? (
-                        <div className="flex items-center justify-center h-32 text-gray-400 dark:text-gray-500 text-sm italic">
-                            {isOver ? 'Drop project here' : 'No projects'}
+                        <div className={`flex items-center justify-center h-32 text-sm italic transition-colors ${
+                            isOver 
+                                ? 'text-blue-600 dark:text-blue-400 font-medium' 
+                                : 'text-gray-400 dark:text-gray-500'
+                        }`}>
+                            {isOver ? '✨ Drop project here ✨' : 'No projects'}
                         </div>
                     ) : (
                         projects.map(project => (

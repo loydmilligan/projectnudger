@@ -9,7 +9,6 @@ import {
     useSensors,
 } from '@dnd-kit/core';
 import {
-    arrayMove,
     sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { AlertCircle, Loader2 } from 'lucide-react';
@@ -36,7 +35,6 @@ function KanbanBoard({
     isLoading = false
 }) {
     const [activeProject, setActiveProject] = useState(null);
-    const [isDragging, setIsDragging] = useState(false);
 
     // Drag and drop sensors
     const sensors = useSensors(
@@ -60,7 +58,6 @@ function KanbanBoard({
         const { active } = event;
         const project = projects.find(p => p.id === active.id);
         setActiveProject(project);
-        setIsDragging(true);
     };
 
     // Handle drag end
@@ -68,39 +65,56 @@ function KanbanBoard({
         const { active, over } = event;
         
         setActiveProject(null);
-        setIsDragging(false);
 
-        if (!over) return;
+        if (!over) {
+            console.log('Drag ended without valid drop target');
+            return;
+        }
 
         const projectId = active.id;
         const newStageId = over.id;
 
+        console.log(`Drag ended: Project ${projectId} dropped on stage ${newStageId}`);
+
         // Find the project being moved
         const project = projects.find(p => p.id === projectId);
-        if (!project) return;
+        if (!project) {
+            console.error('Project not found:', projectId);
+            return;
+        }
 
         // Check if the stage actually changed
-        if (project.stage === newStageId) return;
+        if (project.stage === newStageId) {
+            console.log('Project already in target stage, no move needed');
+            return;
+        }
 
         // Find the target stage
         const targetStage = stages.find(s => s.id === newStageId);
-        if (!targetStage) return;
+        if (!targetStage) {
+            console.error('Target stage not found:', newStageId);
+            return;
+        }
+
+        console.log(`Moving project "${project.name}" from "${project.stage}" to "${targetStage.name}"`);
 
         // Call the move handler
         if (onMoveProject) {
             try {
                 await onMoveProject(projectId, newStageId);
+                console.log('Project move completed successfully');
             } catch (error) {
                 console.error('Failed to move project:', error);
                 // Error handling should be done by the parent component
             }
+        } else {
+            console.warn('onMoveProject handler not provided');
         }
     };
 
     // Handle drag cancel
     const handleDragCancel = () => {
         setActiveProject(null);
-        setIsDragging(false);
     };
 
     // Loading state
@@ -166,10 +180,10 @@ function KanbanBoard({
                     })}
                 </div>
 
-                {/* Drag overlay */}
+                {/* Drag overlay with enhanced visual feedback */}
                 <DragOverlay>
                     {activeProject ? (
-                        <div className="opacity-90 transform rotate-2">
+                        <div className="opacity-95 transform rotate-2 shadow-2xl ring-2 ring-blue-500 ring-opacity-50">
                             <ProjectCard
                                 project={activeProject}
                                 tasks={tasks}
