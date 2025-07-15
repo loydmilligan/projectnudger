@@ -1,6 +1,6 @@
 {
-  "version": "1.4",
-  "generated": "2025-07-15T22:05:00.000Z",
+  "version": "1.5",
+  "generated": "2025-07-15T22:50:00.000Z",
   "project": {
     "name": "project-nudger",
     "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
@@ -91,8 +91,29 @@
       "imports": [],
       "sideEffects": []
     },
+    "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/utils/dateHelpers.js": {
+      "purpose": "Date and age calculation utilities for project management with color-coded age indicators",
+      "exports": {
+        "functions": [
+          "calculateProjectAge",
+          "formatAge",
+          "getAgeColorClass",
+          "getAgeInDays"
+        ],
+        "classes": [],
+        "constants": ["AGE_THRESHOLDS"]
+      },
+      "imports": [],
+      "sideEffects": [],
+      "features": [
+        "Calculate project age from creation date",
+        "Format age for human-readable display (days, weeks, months)",
+        "Color-coded age indicators based on configurable thresholds",
+        "Age threshold constants for visual feedback"
+      ]
+    },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/utils/helpers.js": {
-      "purpose": "Core utility functions for time formatting, color generation, URL validation, and task analysis",
+      "purpose": "Core utility functions for time formatting, color generation, URL validation, and task analysis - enhanced with project information utilities",
       "exports": {
         "functions": [
           "timeAgo",
@@ -103,13 +124,22 @@
           "isValidUrl",
           "formatUrl",
           "isPastDue",
-          "isNudged"
+          "isNudged",
+          "getTaskCountForProject",
+          "getProjectAge",
+          "getAgeColorClass"
         ],
         "classes": [],
         "constants": []
       },
-      "imports": [],
-      "sideEffects": []
+      "imports": ["./dateHelpers"],
+      "sideEffects": [],
+      "enhancements": [
+        "Added getTaskCountForProject function for calculating completed vs total tasks",
+        "Added getProjectAge function for age calculation and formatting",
+        "Added getAgeColorClass function for color-coded age indicators",
+        "Integrated with dateHelpers utility for consistent date handling"
+      ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/utils/taskHelpers.js": {
       "purpose": "Hierarchical task management utilities for building task trees and parent-child relationships",
@@ -352,7 +382,7 @@
       ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView/ProjectCard.jsx": {
-      "purpose": "Enhanced project card component with progress visualization, completion styling, and drag-and-drop support for both grid and kanban views",
+      "purpose": "Enhanced project card component with progress visualization, completion styling, task count displays, project age indicators, and drag-and-drop support for both grid and kanban views",
       "exports": {
         "functions": ["ProjectCard"],
         "classes": [],
@@ -370,7 +400,11 @@
         "Enhanced visual hierarchy with completion status styling",
         "URL link display with proper formatting and external link icons",
         "Responsive design with flexible card layout",
-        "Added drag-and-drop support for kanban board operations"
+        "Added drag-and-drop support for kanban board operations",
+        "Task-2.1: Added task count displays in 'X/Y complete' format",
+        "Task-2.1: Integrated project age indicators with color-coded badges",
+        "Task-2.1: Added Clock icon for better visual recognition of age",
+        "Task-2.1: Enhanced responsive layout to accommodate new information elements"
       ]
     },
     "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView/ViewModeToggle.jsx": {
@@ -739,12 +773,13 @@
       "Task-1.1: Enhanced task filtering with Past Due and Nudged toggles in TasksView and ProjectFilters components",
       "Task-1.2: Implemented comprehensive progress indicators with ProgressBar component, enhanced ProjectCard and DashboardView with real-time task completion tracking, 5-color gradient system, and completion celebration effects",
       "Task-1.4: Implemented comprehensive kanban board workflow management with KanbanBoard, KanbanColumn, ViewModeToggle, and StageManager components; added project stage utilities and drag-and-drop functionality",
-      "Task-1.5: Optimized project card layout with improved responsive breakpoints, reduced white space, and enhanced column progression for better visual balance across all screen sizes"
+      "Task-1.5: Optimized project card layout with improved responsive breakpoints, reduced white space, and enhanced column progression for better visual balance across all screen sizes",
+      "Task-2.1: Added task count displays and project age indicators with color-coded visual feedback - created dateHelpers utility, enhanced helpers with project information functions, and updated ProjectCard with at-a-glance information display"
     ],
     "file_structure": {
-      "total_source_files": 48,
+      "total_source_files": 49,
       "components": 27,
-      "utilities": 9,
+      "utilities": 10,
       "hooks": 4,
       "services": 1,
       "configuration": 3,

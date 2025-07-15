@@ -1,3 +1,6 @@
+// Import dateHelpers for age calculations
+import { calculateProjectAge, formatAge, getAgeColorClass as getAgeColorFromCategory } from './dateHelpers';
+
 export const timeAgo = (date) => {
     if (!date) return 'N/A';
     const seconds = Math.floor((new Date() - date) / 1000);
@@ -154,6 +157,64 @@ export const isPastDue = (task) => {
         // Handle any unexpected errors gracefully
         return false;
     }
+};
+
+/**
+ * Calculate task count statistics for a project
+ * @param {Object} project - Project object
+ * @param {Array} tasks - Array of all tasks
+ * @returns {Object} Object with completed, total, and percentage
+ */
+export const getTaskCountForProject = (project, tasks) => {
+  if (!project || !Array.isArray(tasks)) {
+    return { completed: 0, total: 0, percentage: 0 };
+  }
+
+  const projectTasks = tasks.filter(task => task.projectId === project.id);
+  const completedTasks = projectTasks.filter(task => task.isComplete);
+  
+  const total = projectTasks.length;
+  const completed = completedTasks.length;
+  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return { completed, total, percentage };
+};
+
+/**
+ * Get project age information with formatted display
+ * @param {Object} project - Project object with createdAt date
+ * @returns {Object} Age information with formatted string and metadata
+ */
+export const getProjectAge = (project) => {
+  if (!project || !project.createdAt) {
+    return { 
+      formatted: 'Unknown', 
+      days: 0, 
+      category: 'normal',
+      isNew: false,
+      isStale: false
+    };
+  }
+
+  const ageInfo = calculateProjectAge(project.createdAt);
+  const formatted = formatAge(ageInfo.days);
+
+  return {
+    formatted,
+    days: ageInfo.days,
+    category: ageInfo.category,
+    isNew: ageInfo.isNew,
+    isStale: ageInfo.isStale
+  };
+};
+
+/**
+ * Get age color class wrapper function
+ * @param {string} category - Age category
+ * @returns {string} Tailwind CSS color classes
+ */
+export const getAgeColorClass = (category) => {
+  return getAgeColorFromCategory(category);
 };
 
 /**

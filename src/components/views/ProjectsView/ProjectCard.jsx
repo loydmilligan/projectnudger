@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Edit2, Trash2, Archive, Loader2, GripVertical, ExternalLink } from 'lucide-react';
-import { timeAgo, isValidUrl, formatUrl } from '../../../utils/helpers';
+import { Edit2, Trash2, Archive, Loader2, GripVertical, ExternalLink, Clock } from 'lucide-react';
+import { timeAgo, isValidUrl, formatUrl, getTaskCountForProject, getProjectAge, getAgeColorClass } from '../../../utils/helpers';
 import ProgressBar from '../../shared/ProgressBar';
 
 /**
@@ -45,13 +45,14 @@ function ProjectCard({
     const projectTasks = tasks.filter(t => t.projectId === project.id && !t.isComplete)
         .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     
-    // Calculate task completion for progress bar
-    const allProjectTasks = tasks.filter(t => t.projectId === project.id);
-    const completedTasks = allProjectTasks.filter(t => t.isComplete);
-    const totalTasks = allProjectTasks.length;
-    const completedCount = completedTasks.length;
-    const completionPercentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+    // Calculate task completion for progress bar using helper function
+    const taskCount = getTaskCountForProject(project, tasks);
+    const { completed: completedCount, total: totalTasks, percentage: completionPercentage } = taskCount;
     const isFullyCompleted = completionPercentage === 100;
+    
+    // Calculate project age
+    const ageInfo = getProjectAge(project);
+    const ageColorClass = getAgeColorClass(ageInfo.category);
 
     const categoryColor = categories[project.category] || '#6366f1';
 
@@ -163,9 +164,21 @@ function ProjectCard({
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Owner: {project.owner}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Priority: {project.priority} | Created: {timeAgo(project.createdAt)}
-                </p>
+                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    <span>Priority: {project.priority}</span>
+                    <span className="font-medium">{completedCount}/{totalTasks} complete</span>
+                </div>
+                
+                {/* Project age indicator */}
+                <div className="flex items-center justify-between mt-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Created: {timeAgo(project.createdAt)}
+                    </span>
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-medium ${ageColorClass}`}>
+                        <Clock size={12} />
+                        <span>{ageInfo.formatted}</span>
+                    </div>
+                </div>
                 
                 {/* Progress Bar */}
                 <div className="mt-3">
