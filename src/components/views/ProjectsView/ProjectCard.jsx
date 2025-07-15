@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Edit2, Trash2, Archive, Loader2, GripVertical, ExternalLink } from 'lucide-react';
 import { timeAgo, isValidUrl, formatUrl } from '../../../utils/helpers';
+import ProgressBar from '../../shared/ProgressBar';
 
 /**
  * Enhanced ProjectCard component for both grid and kanban views
@@ -43,6 +44,14 @@ function ProjectCard({
     // Calculate project tasks
     const projectTasks = tasks.filter(t => t.projectId === project.id && !t.isComplete)
         .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    
+    // Calculate task completion for progress bar
+    const allProjectTasks = tasks.filter(t => t.projectId === project.id);
+    const completedTasks = allProjectTasks.filter(t => t.isComplete);
+    const totalTasks = allProjectTasks.length;
+    const completedCount = completedTasks.length;
+    const completionPercentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+    const isFullyCompleted = completionPercentage === 100;
 
     const categoryColor = categories[project.category] || '#6366f1';
 
@@ -50,8 +59,12 @@ function ProjectCard({
         <div
             ref={setNodeRef}
             style={style}
-            className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 border border-transparent hover:border-indigo-500 transition-colors flex flex-col ${
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 border transition-colors flex flex-col ${
                 isDragging ? 'shadow-lg' : ''
+            } ${
+                isFullyCompleted 
+                    ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20' 
+                    : 'border-transparent hover:border-indigo-500'
             }`}
         >
             {/* Header with drag handle and project info */}
@@ -153,6 +166,18 @@ function ProjectCard({
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Priority: {project.priority} | Created: {timeAgo(project.createdAt)}
                 </p>
+                
+                {/* Progress Bar */}
+                <div className="mt-3">
+                    <ProgressBar
+                        completed={completedCount}
+                        total={totalTasks}
+                        percentage={completionPercentage}
+                        size="sm"
+                        showLabel={true}
+                        className="w-full"
+                    />
+                </div>
                 
                 {/* Project URL - only display if valid URL exists */}
                 {project.url && isValidUrl(project.url) && (

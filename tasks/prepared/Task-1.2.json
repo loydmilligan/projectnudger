@@ -1,0 +1,141 @@
+{
+  "task_id": "Task-1.2",
+  "task_description": "Add visual progress bars and completion percentages to project cards - no obvious ProgressBar component found in manifest",
+  "baseline_manifest": {
+    "version": "1.1",
+    "generated": "2025-07-15T12:00:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "existing_components": {
+      "src/components/views/ProjectsView.jsx": {
+        "purpose": "Grid-based projects overview with filtering, task previews, and project management",
+        "exports": {
+          "functions": ["ProjectsView"]
+        }
+      },
+      "src/components/views/DashboardView/index.jsx": {
+        "purpose": "Main dashboard interface providing centralized overview of projects, timer, and AI recommendations",
+        "exports": {
+          "functions": ["DashboardView"]
+        }
+      }
+    }
+  },
+  "expected_manifest": {
+    "version": "1.1",
+    "generated": "2025-07-15T12:00:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "new_components": {
+      "src/components/shared/ProgressBar.jsx": {
+        "purpose": "Reusable progress bar component with Tailwind styling for displaying task completion percentages",
+        "exports": {
+          "functions": ["ProgressBar"],
+          "components": ["ProgressBar"]
+        },
+        "imports": ["react"],
+        "key_features": [
+          "Customizable progress percentage display",
+          "Tailwind CSS styling with color variants",
+          "Smooth animation transitions",
+          "Accessibility support with ARIA attributes",
+          "Completion state visual styling",
+          "Responsive design for different container sizes"
+        ],
+        "props": [
+          "percentage (number) - completion percentage 0-100",
+          "total (number) - total number of tasks",
+          "completed (number) - number of completed tasks",
+          "size (string) - 'sm', 'md', 'lg' for different sizes",
+          "showLabel (boolean) - whether to show percentage text",
+          "className (string) - additional CSS classes"
+        ]
+      }
+    },
+    "enhanced_components": {
+      "src/components/views/ProjectsView.jsx": {
+        "purpose": "Enhanced grid-based projects overview with filtering, task previews, project management, and visual progress indicators",
+        "exports": {
+          "functions": ["ProjectsView"]
+        },
+        "new_imports": ["../shared/ProgressBar"],
+        "enhancements": [
+          "Integrated ProgressBar component into project cards",
+          "Added task completion percentage calculations",
+          "Enhanced project card layout to accommodate progress bars",
+          "Added visual styling for fully completed projects",
+          "Implemented real-time progress updates with task changes"
+        ]
+      },
+      "src/components/views/DashboardView/index.jsx": {
+        "purpose": "Enhanced main dashboard interface with centralized overview of projects, timer, AI recommendations, and project progress indicators",
+        "exports": {
+          "functions": ["DashboardView"]
+        },
+        "new_imports": ["../shared/ProgressBar"],
+        "enhancements": [
+          "Added ProgressBar components to dashboard project overview",
+          "Integrated progress indicators with existing project display",
+          "Enhanced dashboard layout to show project completion status",
+          "Added progress-based visual feedback for project management"
+        ]
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": "Create reusable ProgressBar component and integrate into existing project display views",
+    "files_to_create": [
+      {
+        "file": "src/components/shared/ProgressBar.jsx",
+        "purpose": "Reusable progress bar component with percentage display and completion styling",
+        "key_exports": ["ProgressBar"]
+      }
+    ],
+    "files_to_modify": [
+      {
+        "file": "src/components/views/ProjectsView.jsx",
+        "changes": "Add ProgressBar import, calculate task completion percentages, integrate progress bars into project cards, add completion styling"
+      },
+      {
+        "file": "src/components/views/DashboardView/index.jsx",
+        "changes": "Add ProgressBar import, integrate progress indicators into dashboard project overview, enhance layout for progress display"
+      }
+    ],
+    "dependencies": [],
+    "integration_points": [
+      "Project task counting logic for completion calculations",
+      "Existing project card layouts in ProjectsView",
+      "Dashboard project display sections",
+      "Real-time task updates for progress recalculation",
+      "Tailwind CSS styling system for consistent design"
+    ],
+    "testing_approach": "Test progress calculations with various task counts, verify real-time updates, check responsive behavior, test performance with large project lists"
+  },
+  "acceptance_criteria": [
+    "Progress bars show accurate task completion ratios",
+    "Fully completed projects have distinct visual styling",
+    "Progress indicators update in real-time",
+    "Component is reusable across different views",
+    "Performance good with large project counts"
+  ],
+  "estimated_complexity": "Medium",
+  "prerequisites": [],
+  "baseline_metadata": {
+    "loaded_from": "codebase_manifest.json",
+    "timestamp": "2025-07-15T12:00:00.000Z",
+    "file_count": "44 source files",
+    "version": "1.1"
+  }
+}
