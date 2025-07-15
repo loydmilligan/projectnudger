@@ -1,0 +1,208 @@
+{
+  "task_id": "Task-2.2",
+  "task_description": "Improve project filter to hide archived projects by default with toggle option - ArchivedProjectsView exists but filter behavior may need refinement",
+  "baseline_manifest": {
+    "version": "1.5",
+    "generated": "2025-07-15T22:50:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration + @dnd-kit for drag-and-drop",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "files": {
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/shared/ProjectFilters.jsx": {
+        "purpose": "Enhanced project and task filtering controls with owner selection, status filtering, and task-specific toggles for Past Due and Nudged tasks",
+        "exports": {
+          "functions": ["ProjectFilters"],
+          "classes": [],
+          "constants": []
+        },
+        "imports": ["react", "lucide-react"],
+        "sideEffects": ["Filter state updates"],
+        "enhancements": [
+          "Added Past Due filter toggle with Clock icon from lucide-react",
+          "Added Nudged filter toggle with AlertTriangle icon from lucide-react",
+          "Added showTaskFilters prop to conditionally display task-specific filters",
+          "Enhanced with pastDueFilter, setPastDueFilter, nudgedFilter, setNudgedFilter props",
+          "Implemented visual styling with red theme for Past Due and orange theme for Nudged filters",
+          "Added hover states and active/inactive styling for toggle buttons"
+        ]
+      },
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView.jsx": {
+        "purpose": "Optimized projects management interface with enhanced card layout, improved responsive design, and dual-mode display (grid/kanban)",
+        "exports": {
+          "functions": ["ProjectsView"],
+          "classes": [],
+          "constants": []
+        },
+        "imports": [
+          "react",
+          "lucide-react",
+          "../shared/ProjectFilters",
+          "../../utils/helpers",
+          "./ProjectsView/KanbanBoard",
+          "./ProjectsView/ViewModeToggle",
+          "./ProjectsView/StageManager"
+        ],
+        "sideEffects": ["Project filtering", "Task interaction events", "View mode state management"],
+        "enhancements": [
+          "Added dual-mode view with grid and kanban layouts",
+          "Integrated ViewModeToggle component for seamless view switching",
+          "Added StageManager integration for kanban workflow customization",
+          "Enhanced project operations with stage-aware actions",
+          "Improved responsive design for both view modes",
+          "Added comprehensive project filtering and search capabilities",
+          "Task-1.5: Optimized grid layout with enhanced responsive breakpoints",
+          "Task-1.5: Reduced white space with gap-4 instead of gap-6",
+          "Task-1.5: Enhanced column progression (1→2→3→4) for better screen utilization",
+          "Task-1.5: Added medium breakpoint for improved tablet experience",
+          "Task-1.5: Better integration with ProgressBar components from Task-1.2"
+        ]
+      },
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ArchivedProjectsView.jsx": {
+        "purpose": "Archived projects management with restoration capabilities",
+        "exports": {
+          "functions": ["ArchivedProjectsView"],
+          "classes": [],
+          "constants": []
+        },
+        "imports": ["react", "lucide-react", "../shared/ProjectFilters", "../../utils/helpers"],
+        "sideEffects": ["Project restoration actions"]
+      }
+    },
+    "dependencies": {
+      "runtime": [
+        "react@19.1.0 - Core UI framework",
+        "react-dom@19.1.0 - DOM rendering library",
+        "firebase@11.9.1 - Backend database and authentication",
+        "lucide-react@0.517.0 - Icon library"
+      ]
+    }
+  },
+  "expected_manifest": {
+    "version": "1.6",
+    "generated": "2025-07-15T23:00:00.000Z",
+    "files": {
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/shared/ProjectFilters.jsx": {
+        "purpose": "Enhanced project and task filtering controls with owner selection, status filtering, task-specific toggles, and archive visibility management",
+        "exports": {
+          "functions": ["ProjectFilters"],
+          "classes": [],
+          "constants": []
+        },
+        "imports": ["react", "lucide-react"],
+        "sideEffects": ["Filter state updates", "Archive filter state management", "User preference persistence"],
+        "enhancements": [
+          "Added Past Due filter toggle with Clock icon from lucide-react",
+          "Added Nudged filter toggle with AlertTriangle icon from lucide-react",
+          "Added showTaskFilters prop to conditionally display task-specific filters",
+          "Enhanced with pastDueFilter, setPastDueFilter, nudgedFilter, setNudgedFilter props",
+          "Implemented visual styling with red theme for Past Due and orange theme for Nudged filters",
+          "Added hover states and active/inactive styling for toggle buttons",
+          "Task-2.2: Added 'Show Archived' toggle with Archive icon for archive visibility control",
+          "Task-2.2: Implemented showArchived state management with user preference persistence",
+          "Task-2.2: Added visual distinction for archived projects when toggle is enabled",
+          "Task-2.2: Enhanced filter props with showArchived and setShowArchived for parent component communication",
+          "Task-2.2: Added session storage for remembering archive filter preference"
+        ]
+      },
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView.jsx": {
+        "purpose": "Optimized projects management interface with enhanced card layout, improved responsive design, dual-mode display, and archive filtering by default",
+        "exports": {
+          "functions": ["ProjectsView"],
+          "classes": [],
+          "constants": []
+        },
+        "imports": [
+          "react",
+          "lucide-react",
+          "../shared/ProjectFilters",
+          "../../utils/helpers",
+          "./ProjectsView/KanbanBoard",
+          "./ProjectsView/ViewModeToggle",
+          "./ProjectsView/StageManager"
+        ],
+        "sideEffects": ["Project filtering", "Task interaction events", "View mode state management", "Archive filter state management"],
+        "enhancements": [
+          "Added dual-mode view with grid and kanban layouts",
+          "Integrated ViewModeToggle component for seamless view switching",
+          "Added StageManager integration for kanban workflow customization",
+          "Enhanced project operations with stage-aware actions",
+          "Improved responsive design for both view modes",
+          "Added comprehensive project filtering and search capabilities",
+          "Task-1.5: Optimized grid layout with enhanced responsive breakpoints",
+          "Task-1.5: Reduced white space with gap-4 instead of gap-6",
+          "Task-1.5: Enhanced column progression (1→2→3→4) for better screen utilization",
+          "Task-1.5: Added medium breakpoint for improved tablet experience",
+          "Task-1.5: Better integration with ProgressBar components from Task-1.2",
+          "Task-2.2: Added showArchived state management with default false (archived projects hidden by default)",
+          "Task-2.2: Enhanced project filtering logic to exclude archived projects when showArchived is false",
+          "Task-2.2: Integrated archive filter state with ProjectFilters component props",
+          "Task-2.2: Added session storage persistence for archive filter preference",
+          "Task-2.2: Enhanced performance with optimized filtering for large archived project counts"
+        ]
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": "Enhance existing ProjectFilters component with archive visibility toggle and modify ProjectsView to filter archived projects by default with user preference persistence",
+    "files_to_create": [],
+    "files_to_modify": [
+      {
+        "file": "src/components/shared/ProjectFilters.jsx",
+        "changes": "Add 'Show Archived' toggle button with Archive icon, implement showArchived state management, add session storage for preference persistence, and enhance component props"
+      },
+      {
+        "file": "src/components/views/ProjectsView.jsx",
+        "changes": "Add showArchived state management with default false, enhance project filtering logic to exclude archived projects, integrate with ProjectFilters component, and add session storage persistence"
+      }
+    ],
+    "dependencies": [],
+    "integration_points": [
+      "ProjectFilters component will provide archive visibility toggle that communicates with ProjectsView",
+      "ProjectsView will filter archived projects by default unless showArchived toggle is enabled",
+      "Session storage will persist user preference for archive visibility across sessions",
+      "Archive filter will work independently and in combination with other existing filters",
+      "Performance optimization for large archived project counts through efficient filtering"
+    ],
+    "technical_details": {
+      "archive_detection": "Projects will be considered archived if they have an 'archived' property set to true",
+      "default_behavior": "Archived projects hidden by default when user first visits ProjectsView",
+      "user_preference": "Archive visibility preference stored in sessionStorage as 'showArchived' boolean",
+      "filter_combination": "Archive filter works independently of other filters (owner, status, search)",
+      "performance": "Filtering applied at component level using useMemo for efficient re-renders"
+    },
+    "testing_approach": "Test default archive hiding behavior, toggle functionality, session storage persistence, filter combinations, and performance with large archived project datasets"
+  },
+  "acceptance_criteria": [
+    "Archived projects hidden from main project view by default",
+    "\"Show Archived\" toggle available when needed",
+    "Filter preference remembered during session",
+    "Performance good with large archived project counts",
+    "Clear visual distinction for archived projects when shown"
+  ],
+  "estimated_complexity": "Low",
+  "prerequisites": [],
+  "baseline_metadata": {
+    "loaded_from": "codebase_manifest.json",
+    "timestamp": "2025-07-15T22:50:00.000Z",
+    "file_count": 49,
+    "file_size": 48923,
+    "last_modified": "2025-07-15T22:50:00.000Z"
+  },
+  "completion": {
+    "status": "completed",
+    "commit_hash": "ec2d15d",
+    "commit_timestamp": "2025-07-15T23:10:00.000Z",
+    "validation_status": "PASS",
+    "lessons_learned": [
+      "Archive filtering with session storage provides excellent user experience",
+      "Conditional rendering prevents errors when setShowArchived is not provided",
+      "Blue color scheme works well for archive toggle visual distinction",
+      "Performance optimization with useMemo works efficiently for filtering"
+    ]
+  }
+}

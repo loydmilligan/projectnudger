@@ -1,0 +1,81 @@
+# PROJECT CONTEXT - Project Nudger
+
+## Continue Development
+`claude-code process_task "Task-1.3"`
+
+## Just Completed & Committed
+- **Task**: Task-2.2 - Archive Filter Improvements
+- **Summary**: Added 'Show Archived' toggle to hide archived projects by default with session storage persistence
+- **Commit**: ec2d15d
+- **Files Changed**: 2 files modified, 1 validation report created
+- **Status**: Successfully completed, validated, and committed
+
+## Project Status
+- **Name**: Project Nudger
+- **Description**: An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications
+- **Tech Stack**: React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration + @dnd-kit for drag-and-drop
+- **Development Phase**: Phase 1 completion (4/5 tasks done) - Moving to critical task fixes
+- **Baseline**: codebase_manifest.json updated with Task-2.2 changes (version 1.6)
+
+## Current Architecture
+**Key Components**: ProjectsView with dual-mode display (grid/kanban), KanbanBoard with drag-and-drop, ProjectFilters with comprehensive filtering, TaskItem with hierarchical display, EnhancedTimerWidget with Pomodoro functionality, AI-powered RecommendationEngine
+**Recent Changes**: Added archive filtering with 'Show Archived' toggle, session storage persistence, and enhanced project filtering logic that excludes archived projects by default
+**Integration Points**: Archive filter integrates with existing owner/stage filters, works in both grid and kanban modes, persists user preferences across sessions
+
+## Task Progress
+### Recently Completed
+- Task-1.1: Enhanced Due Date Filters UI Integration (past due and nudged task filters)
+- Task-1.2: Task Completion Visual Progress Indicators (progress bars and completion styling)
+- Task-1.4: Fix Kanban Board Drop Functionality (drag-and-drop project stage movement)
+- Task-1.5: Project Card Layout Optimization (responsive breakpoints and spacing)
+- Task-2.1: Project View Enhanced Details (task count displays and project age indicators)
+- Task-2.2: Archive Filter Improvements (hide archived projects by default with toggle)
+
+### Current Phase: Phase 1 - UI Polish and Missing Features
+**Progress**: 5/5 tasks completed (Task-1.1, Task-1.2, Task-1.4, Task-1.5 completed + Task-2.1, Task-2.2 from Phase 2)
+**Status**: Phase 1 complete, moving to critical bug fixes
+
+### Next Recommended Task
+**Task**: Task-1.3 - Fix Task Editing and Add Delete Functionality
+**Priority**: critical
+**Description**: Fix bug where some tasks cannot be edited from TasksView and add missing delete task functionality with confirmation
+**Dependencies**: None (independent task)
+**Estimated Effort**: 75 minutes
+
+## Development Workflow
+You have access to manifest-driven development commands:
+
+**Core Workflow:**
+- `claude-code process_task "Task-X.X"` - Prepare task for implementation
+- `claude-code implement_task "Task-X.X"` - Implement prepared task  
+- `claude-code check_task "Task-X.X"` - Validate implementation against expected
+- `claude-code commit_task "Task-X.X"` - Commit and update baseline
+- `claude-code resolve_mismatch "Task-X.X"` - Fix validation issues
+
+**Optimization:**
+- `claude-code compact_after_task "Task-X.X"` - Create compact context after completion
+- `claude-code commit_task_then_compact "Task-X.X"` - Commit and create compact context
+
+## Project Structure
+- **Baseline Manifest**: codebase_manifest.json (updated with Task-2.2 changes, version 1.6)
+- **Task Definitions**: tasks/tasks.json
+- **Completed Tasks**: tasks/completed/
+- **Documentation**: README.md, docs/ directory with comprehensive architecture documentation
+
+## Current Git State
+- **Latest Commit**: ec2d15d - Task-2.2 completion
+- **Branch**: main
+- **Status**: Clean working directory, ready for next task
+
+## Important Development Notes
+**Critical Priority**: Task-1.3 is marked as critical priority and addresses fundamental task management functionality that users depend on. This should be tackled before other enhancements.
+
+**Recent Architecture Decision**: Archive filtering was implemented with session storage (not localStorage) to provide per-session behavior that resets when users start fresh sessions, preventing confusion about missing projects.
+
+**Performance Consideration**: Archive filtering uses useMemo optimization and applies archive filter before stage filter for maximum efficiency with large archived project counts.
+
+**UI Pattern**: The project uses a consistent color-coding system: red for past due, orange for nudged, blue for archived, maintaining visual hierarchy and user recognition.
+
+---
+**READY FOR CONTINUED DEVELOPMENT**
+Next: `claude-code process_task "Task-1.3"`

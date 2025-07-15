@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     collection,
     addDoc,
@@ -10,14 +10,15 @@ import {
     increment,
     arrayUnion,
     getDocs,
-    writeBatch
+    writeBatch,
+    deleteDoc
 } from 'firebase/firestore';
 import { Plus, Zap, Target, Folder, Link, Calendar, Hash, Settings, X, Tag, Edit2, Trash2, ShieldAlert, LayoutDashboard, ListChecks, Briefcase, Sun, Moon, PlayCircle, Timer as TimerIcon, Coffee, Square, CheckCircle, Download, Upload, Beaker, Archive, ArchiveRestore, Users } from 'lucide-react';
 
 // Import configurations and utilities
 import { db, basePath } from './config/firebase';
 import { NUDGE_CONFIG, POMODORO_CONFIG } from './config/constants';
-import { timeAgo, generateHslColor, getComplementaryColor, getAnalogousColor, formatTime } from './utils/helpers';
+import { generateHslColor } from './utils/helpers';
 import { generateDummyData } from './utils/dummyData';
 
 // Import layout components
@@ -47,7 +48,7 @@ import useNotifications from './hooks/useNotifications';
 import { generateAINudge } from './utils/aiNudgeService';
 
 // Import task hierarchy utilities
-import { buildTaskHierarchy, getTaskChildren, canCompleteParent, getTaskDepth } from './utils/taskHelpers';
+import { buildTaskHierarchy, getTaskChildren, canCompleteParent } from './utils/taskHelpers';
 
 
 // --- Main App Component ---
@@ -201,7 +202,7 @@ export default function App() {
             const isEditing = !!projectData.id;
             
             if (isEditing) {
-                const { id, ...dataToUpdate } = projectData;
+                const { id: _id, ...dataToUpdate } = projectData;
                 // Ensure status is preserved or set to active if missing
                 if (!dataToUpdate.status) {
                     dataToUpdate.status = 'active';
@@ -209,7 +210,7 @@ export default function App() {
                 await updateDoc(doc(db, basePath, 'projects', id), dataToUpdate);
                 showSuccess('Project Updated', `"${projectData.name}" has been updated successfully.`);
             } else {
-                const { id, ...dataToCreate } = projectData;
+                const { id: _id, ...dataToCreate } = projectData;
                 // Assign default stage if not provided
                 if (!dataToCreate.stage) {
                     dataToCreate.stage = 'planning'; // Default stage
@@ -502,6 +503,55 @@ export default function App() {
         setIsTaskDetailModalOpen(true);
     };
 
+    const handleDeleteTask = async (taskId) => {
+        try {
+            setLoadingStates(prev => ({ ...prev, deleteTask: true }));
+            
+            // Find the task to delete
+            const taskToDelete = tasks.find(t => t.id === taskId);
+            if (!taskToDelete) {
+                showError('Task Not Found', 'The task you are trying to delete could not be found.');
+                return;
+            }
+            
+            // Get all child tasks that need to be deleted
+            const childTasks = getTaskChildren(tasks, taskId);
+            
+            // Create a batch operation for atomic deletion
+            const batch = writeBatch(db);
+            
+            // Delete the parent task
+            batch.delete(doc(db, basePath, 'tasks', taskId));
+            
+            // Delete all child tasks
+            childTasks.forEach(childTask => {
+                batch.delete(doc(db, basePath, 'tasks', childTask.id));
+            });
+            
+            // Execute the batch deletion
+            await batch.commit();
+            
+            // Show success notification
+            const deletedCount = 1 + childTasks.length;
+            const taskText = deletedCount === 1 ? 'task' : 'tasks';
+            showSuccess(
+                'Task Deleted', 
+                `"${taskToDelete.title}" and ${deletedCount === 1 ? 'its' : `${deletedCount - 1} associated`} ${taskText} ${deletedCount === 1 ? 'has' : 'have'} been deleted.`
+            );
+            
+            // If the deleted task was active, stop the session
+            if (activeSession && activeSession.taskId === taskId) {
+                await handleStopSession();
+            }
+            
+        } catch (error) {
+            console.error('Error deleting task:', error);
+            showFirebaseError(error);
+        } finally {
+            setLoadingStates(prev => ({ ...prev, deleteTask: false }));
+        }
+    };
+
     // Hierarchical task management functions
     const handleToggleExpand = (taskId) => {
         setExpandedTasks(prev => {
@@ -777,6 +827,7 @@ export default function App() {
                 categoryColor={categories[selectedProject.category]} 
                 onCompleteTask={handleCompleteTask} 
                 onEditTask={handleEditTask} 
+                onDeleteTask={handleDeleteTask}
                 onOpenNewTaskDetail={openTaskDetailForNew} 
                 onStartTask={handleStartTask} 
                 onEditProject={openEditProjectModal} 
@@ -835,6 +886,7 @@ export default function App() {
                 onStartTask={handleStartTask} 
                 onCompleteTask={handleCompleteTask} 
                 onEditTask={handleEditTask} 
+                onDeleteTask={handleDeleteTask}
                 activeSession={activeSession} 
                 aiNudgeRecommendations={aiNudgeRecommendations}
                 expandedTasks={expandedTasks}

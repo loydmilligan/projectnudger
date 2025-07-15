@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { PlayCircle, TimerIcon, Calendar, Loader2, AlertTriangle, Bell, ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { PlayCircle, TimerIcon, Calendar, Loader2, AlertTriangle, Bell, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { isPastDue, isNudgedTask } from '../../utils/taskFilters';
+import TaskDeleteConfirmModal from './TaskDeleteConfirmModal';
 
 function TaskItem({ 
     task = {}, 
     onToggle = null, 
     onOpenDetail = null, 
     onStartTask = null, 
+    onDeleteTask = null,
     isTaskActive = false,
     aiNudgeRecommendations = null,
     depth = 0,
@@ -17,6 +19,7 @@ function TaskItem({
 }) {
     const [isToggling, setIsToggling] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     // Development warnings for missing critical props
     if (process.env.NODE_ENV === 'development') {
         if (!task || typeof task !== 'object') {
@@ -36,6 +39,9 @@ function TaskItem({
         }
         if (!onAddSubTask) {
             console.warn('TaskItem: onAddSubTask handler is missing - add sub-task functionality will be disabled');
+        }
+        if (!onDeleteTask) {
+            console.warn('TaskItem: onDeleteTask handler is missing - delete functionality will be disabled');
         }
     }
 
@@ -58,7 +64,7 @@ function TaskItem({
         let baseClasses = 'flex items-center p-2.5 rounded-md text-sm transition-colors group relative';
         
         // Add indentation based on depth
-        const indentationPx = depth * 20;
+        // const indentationPx = depth * 20; // Currently unused but may be needed later
         
         // Background and border styling based on urgency (past due takes precedence)
         if (isPastDueTask) {
@@ -139,6 +145,22 @@ function TaskItem({
         if (onAddSubTask && typeof onAddSubTask === 'function') {
             onAddSubTask(safeTask);
         }
+    };
+
+    const handleDeleteTask = (e) => {
+        e.stopPropagation();
+        setShowDeleteModal(true);
+    };
+
+    const confirmDeleteTask = async (taskId) => {
+        if (onDeleteTask && typeof onDeleteTask === 'function') {
+            await onDeleteTask(taskId);
+        }
+        setShowDeleteModal(false);
+    };
+
+    const cancelDeleteTask = () => {
+        setShowDeleteModal(false);
     };
 
     return (
@@ -249,6 +271,19 @@ function TaskItem({
                 </button>
             )}
             
+            {/* Delete button */}
+            {onDeleteTask && (
+                <button 
+                    onClick={handleDeleteTask} 
+                    className="ml-2 p-1 text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete task"
+                    data-testid={`task-delete-button-${safeTask.id}`}
+                    aria-label={`Delete task: ${safeTask.title}`}
+                >
+                    <Trash2 size={16} />
+                </button>
+            )}
+            
             {/* Child count badge for parent tasks */}
             {children.length > 0 && (
                 <div 
@@ -287,8 +322,18 @@ function TaskItem({
                 onToggleExpand={onToggleExpand}
                 isExpanded={child.children && child.children.length > 0 ? isExpanded : false}
                 onAddSubTask={onAddSubTask}
+                onDeleteTask={onDeleteTask}
             />
         ))}
+        
+        {/* Delete confirmation modal */}
+        <TaskDeleteConfirmModal
+            isOpen={showDeleteModal}
+            onClose={cancelDeleteTask}
+            onConfirm={confirmDeleteTask}
+            task={safeTask}
+            childrenCount={children.length}
+        />
     </>
     );
 }

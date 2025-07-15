@@ -11,6 +11,7 @@ function TasksView({
     onStartTask, 
     onCompleteTask, 
     onEditTask, 
+    onDeleteTask,
     activeSession, 
     aiNudgeRecommendations,
     expandedTasks,
@@ -61,6 +62,7 @@ function TasksView({
                     onToggle={onCompleteTask}
                     onOpenDetail={onEditTask}
                     onStartTask={onStartTask}
+                    onDeleteTask={onDeleteTask}
                     isTaskActive={activeSession?.taskId === task.id}
                     aiNudgeRecommendations={aiNudgeRecommendations}
                     depth={task.depth || 0}

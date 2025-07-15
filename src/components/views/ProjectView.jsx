@@ -13,6 +13,7 @@ function ProjectView({
     categoryColor, 
     onCompleteTask, 
     onEditTask, 
+    onDeleteTask,
     onOpenNewTaskDetail, 
     nudgeState, 
     onBack, 
@@ -59,6 +60,7 @@ function ProjectView({
                 onToggle={onCompleteTask}
                 onOpenDetail={onEditTask}
                 onStartTask={onStartTask}
+                onDeleteTask={onDeleteTask}
                 aiNudgeRecommendations={aiNudgeRecommendations}
                 depth={task.depth || 0}
                 children={task.children || []}
@@ -82,6 +84,7 @@ function ProjectView({
                 onToggle={onCompleteTask} 
                 onOpenDetail={onEditTask} 
                 onStartTask={onStartTask} 
+                onDeleteTask={onDeleteTask}
                 aiNudgeRecommendations={aiNudgeRecommendations}
                 onAddSubTask={onAddSubTask}
             />
