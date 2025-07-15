@@ -1,0 +1,120 @@
+{
+  "task_id": "Task-1.5",
+  "task_description": "Optimize project card sizing and improve visual balance - reduce excessive white space and improve button proportions",
+  "baseline_manifest": {
+    "version": "1.3",
+    "generated": "2025-07-15T16:45:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration + @dnd-kit for drag-and-drop",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "existing_components": {
+      "src/components/views/ProjectsView.jsx": {
+        "purpose": "Comprehensive projects management interface with dual-mode display (grid/kanban), filtering, and project operations",
+        "exports": {
+          "functions": ["ProjectsView"]
+        },
+        "current_grid_layout": "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6",
+        "current_enhancements": [
+          "Added dual-mode view with grid and kanban layouts",
+          "Integrated ViewModeToggle component for seamless view switching",
+          "Enhanced filtering with stage-specific options",
+          "Added StageManager integration for workflow customization",
+          "Improved responsive design with mobile/tablet optimizations"
+        ]
+      }
+    }
+  },
+  "expected_manifest": {
+    "version": "1.3",
+    "generated": "2025-07-15T16:45:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration + @dnd-kit for drag-and-drop",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "enhanced_components": {
+      "src/components/views/ProjectsView.jsx": {
+        "purpose": "Optimized projects management interface with improved card layout, reduced white space, and better visual balance",
+        "exports": {
+          "functions": ["ProjectsView"]
+        },
+        "enhancements": [
+          "Optimized grid layout for better card sizing and spacing",
+          "Reduced excessive white space between project cards",
+          "Improved responsive breakpoints for optimal card dimensions",
+          "Enhanced card proportions to better accommodate progress bars",
+          "Better visual balance across different screen sizes",
+          "Optimized for integration with ProgressBar components from Task-1.2"
+        ],
+        "layout_improvements": [
+          "Adjusted grid gap for tighter, more efficient use of space",
+          "Optimized column counts for different breakpoints",
+          "Improved card aspect ratios and sizing",
+          "Enhanced spacing for progress bar integration"
+        ]
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": "Optimize ProjectsView grid layout through Tailwind class adjustments for better card sizing, spacing, and visual balance",
+    "files_to_create": [],
+    "files_to_modify": [
+      {
+        "file": "src/components/views/ProjectsView.jsx",
+        "changes": "Optimize grid layout classes, adjust card spacing, improve responsive breakpoints for better visual balance and reduced white space"
+      }
+    ],
+    "dependencies": [],
+    "integration_points": [
+      "ProgressBar components from Task-1.2 must fit well within optimized layout",
+      "ProjectCard component spacing and proportions",
+      "Responsive design across desktop, tablet, and mobile breakpoints",
+      "Kanban board view should remain unaffected by grid optimizations",
+      "Filter and view mode controls should maintain proper spacing"
+    ],
+    "testing_approach": "Test layout optimization across multiple screen sizes, verify progress bar integration, ensure responsive behavior remains functional",
+    "specific_optimizations": [
+      "Adjust grid gap from gap-6 to more appropriate spacing",
+      "Optimize column breakpoints for better card utilization",
+      "Ensure cards have appropriate min-height and max-width constraints",
+      "Test with varying numbers of projects (1, 3, 6, 12+ projects)",
+      "Verify progress bars from Task-1.2 integrate well with new layout"
+    ]
+  },
+  "acceptance_criteria": [
+    "Project cards appropriately sized without excess white space",
+    "Action buttons properly proportioned within cards",
+    "Layout responsive across desktop, tablet, mobile",
+    "Progress bars integrate well with card layout",
+    "Visual balance improved on all screen sizes"
+  ],
+  "estimated_complexity": "Low",
+  "prerequisites": ["Task-1.2"],
+  "baseline_metadata": {
+    "loaded_from": "codebase_manifest.json",
+    "timestamp": "2025-07-15T21:50:00.000Z",
+    "file_count": "48 source files",
+    "version": "1.3"
+  },
+  "completion": {
+    "status": "completed",
+    "commit_hash": "284e2b5149aa12cc7f8458e07af625e326f3ed63",
+    "commit_timestamp": "2025-07-15T22:10:00.000Z",
+    "validation_status": "PASS",
+    "lessons_learned": [
+      "Simple layout optimizations can significantly improve user experience",
+      "Responsive breakpoints need careful consideration for tablet users",
+      "Gap spacing has major impact on visual density and card utilization",
+      "Column progression should scale logically across screen sizes",
+      "Layout changes should consider integration with existing components like ProgressBar"
+    ]
+  }
+}

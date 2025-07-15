@@ -1,0 +1,186 @@
+{
+  "task_id": "Task-1.3",
+  "task_description": "Fix bug where some tasks cannot be edited from TasksView and add missing delete task functionality with confirmation",
+  "baseline_manifest": {
+    "version": "1.2",
+    "generated": "2025-07-15T14:30:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "existing_components": {
+      "src/components/shared/TaskItem.jsx": {
+        "purpose": "Reusable task component with hierarchical display, action buttons, and status indicators",
+        "exports": {
+          "functions": ["TaskItem"]
+        }
+      },
+      "src/components/views/TasksView.jsx": {
+        "purpose": "Enhanced master task list with expanded filtering capabilities, hierarchical display, and bulk operations",
+        "exports": {
+          "functions": ["TasksView"]
+        }
+      },
+      "src/components/views/ProjectView.jsx": {
+        "purpose": "Detailed single project view with hierarchical task management and AI integration",
+        "exports": {
+          "functions": ["ProjectView"]
+        }
+      },
+      "src/App.jsx": {
+        "purpose": "Main application orchestrator managing global state, Firebase subscriptions, and all core business logic",
+        "exports": {
+          "functions": ["App", "ProjectModal", "ImportConfirmModal", "SessionEndModal", "TaskDetailModal", "ProjectDeleteConfirmModal"]
+        }
+      }
+    }
+  },
+  "expected_manifest": {
+    "version": "1.2",
+    "generated": "2025-07-15T14:30:00.000Z", 
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "new_components": {
+      "src/components/shared/TaskDeleteConfirmModal.jsx": {
+        "purpose": "Confirmation modal for task deletion with hierarchical relationship warnings and proper Firebase cleanup",
+        "exports": {
+          "functions": ["TaskDeleteConfirmModal"]
+        },
+        "imports": ["react", "lucide-react", "firebase/firestore"],
+        "key_features": [
+          "Task deletion confirmation with task details display",
+          "Warning for hierarchical task relationships (parent/child)",
+          "Firebase Firestore deletion handling", 
+          "Error handling with user feedback",
+          "Accessible modal with proper focus management",
+          "Cancel and confirm actions with loading states"
+        ],
+        "props": [
+          "task (object) - task to be deleted",
+          "isOpen (boolean) - modal visibility state",
+          "onClose (function) - close modal handler",
+          "onConfirm (function) - delete confirmation handler",
+          "isDeleting (boolean) - loading state during deletion",
+          "children (array) - child tasks for relationship warnings"
+        ]
+      }
+    },
+    "enhanced_components": {
+      "src/components/shared/TaskItem.jsx": {
+        "purpose": "Enhanced task component with complete CRUD operations, hierarchical display, delete confirmation, and consistent edit functionality",
+        "exports": {
+          "functions": ["TaskItem"]
+        },
+        "new_imports": ["./TaskDeleteConfirmModal"],
+        "enhancements": [
+          "Added delete button with confirmation modal integration",
+          "Fixed edit functionality to work consistently across all contexts",
+          "Enhanced error handling for failed operations",
+          "Added proper prop drilling for edit/delete handlers",
+          "Implemented hierarchical deletion warnings",
+          "Added loading states for delete operations"
+        ]
+      },
+      "src/components/views/TasksView.jsx": {
+        "purpose": "Enhanced master task list with complete task management capabilities including edit and delete operations",
+        "exports": {
+          "functions": ["TasksView"]
+        },
+        "enhancements": [
+          "Fixed missing edit handler prop passing to TaskItem components",
+          "Added delete task functionality with proper error handling",
+          "Enhanced task interaction with consistent CRUD operations",
+          "Improved error feedback for failed operations"
+        ]
+      },
+      "src/components/views/ProjectView.jsx": {
+        "purpose": "Enhanced project view with complete task management including edit and delete capabilities",
+        "exports": {
+          "functions": ["ProjectView"]
+        },
+        "enhancements": [
+          "Ensured edit functionality works for all project tasks",
+          "Added delete task support with confirmation",
+          "Enhanced error handling for task operations",
+          "Improved task interaction consistency"
+        ]
+      },
+      "src/App.jsx": {
+        "purpose": "Enhanced application orchestrator with complete task CRUD operations and improved error handling",
+        "exports": {
+          "functions": ["App", "ProjectModal", "ImportConfirmModal", "SessionEndModal", "TaskDetailModal", "ProjectDeleteConfirmModal"]
+        },
+        "enhancements": [
+          "Added deleteTask function with Firebase integration",
+          "Enhanced editTask function with better error handling",
+          "Improved task operation error feedback",
+          "Added proper task deletion with hierarchical relationship handling",
+          "Enhanced Firebase error handling and user notifications"
+        ]
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": "Fix edit functionality bugs and implement complete delete task feature with confirmation modal and proper error handling",
+    "files_to_create": [
+      {
+        "file": "src/components/shared/TaskDeleteConfirmModal.jsx",
+        "purpose": "Confirmation modal for task deletion with relationship warnings and Firebase cleanup",
+        "key_exports": ["TaskDeleteConfirmModal"]
+      }
+    ],
+    "files_to_modify": [
+      {
+        "file": "src/components/shared/TaskItem.jsx",
+        "changes": "Add delete button, integrate confirmation modal, fix edit functionality, add error handling"
+      },
+      {
+        "file": "src/components/views/TasksView.jsx",
+        "changes": "Fix missing edit handler prop passing, add delete functionality, enhance error handling"
+      },
+      {
+        "file": "src/components/views/ProjectView.jsx", 
+        "changes": "Ensure edit/delete functionality works for all project tasks, add error handling"
+      },
+      {
+        "file": "src/App.jsx",
+        "changes": "Add deleteTask function with Firebase integration, enhance editTask error handling, improve user feedback"
+      }
+    ],
+    "dependencies": [],
+    "integration_points": [
+      "Firebase Firestore for task deletion operations",
+      "TaskDetailModal for task editing functionality",
+      "Hierarchical task relationships for deletion warnings",
+      "Error handling and user notification systems",
+      "TaskItem component prop interface for CRUD operations"
+    ],
+    "testing_approach": "Test edit functionality from all views (TasksView, ProjectView, DashboardView), test delete operations with and without child tasks, verify Firebase operations, test error handling scenarios"
+  },
+  "acceptance_criteria": [
+    "All tasks can be edited from TasksView regardless of context",
+    "Edit functionality opens TaskDetailModal with current task data",
+    "Delete button available on all tasks with confirmation dialog",
+    "Delete operations properly remove task from Firebase",
+    "Hierarchical tasks handle delete with parent/child relationships",
+    "Error handling provides user feedback for failed operations"
+  ],
+  "estimated_complexity": "High",
+  "prerequisites": [],
+  "baseline_metadata": {
+    "loaded_from": "codebase_manifest.json",
+    "timestamp": "2025-07-15T14:30:00.000Z",
+    "file_count": "45 source files",
+    "version": "1.2"
+  }
+}

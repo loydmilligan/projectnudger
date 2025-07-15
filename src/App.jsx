@@ -764,7 +764,7 @@ export default function App() {
 
     // --- Render Logic ---
     const renderView = () => {
-        if (activeView === 'archived') { return <ArchivedProjectsView allProjects={projects} onSaveProject={handleSaveProject}/>; }
+        if (activeView === 'archived') { return <ArchivedProjectsView allProjects={projects} onSaveProject={handleSaveProject} onDeleteProject={handleDeleteProject}/>; }
         if (activeView === 'tracking') { return <TrackingView session={activeSession} tasks={tasks} onSessionEnd={handleSessionEnd} />; }
         if (selectedProjectId) {
             const projectTasks = tasks.filter(t => t.projectId === selectedProjectId);

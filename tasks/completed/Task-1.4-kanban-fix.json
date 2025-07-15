@@ -1,0 +1,146 @@
+{
+  "task_id": "Task-1.4",
+  "task_description": "Fix critical bug where projects can be dragged in kanban board but won't drop into other buckets - all projects stuck in planning stage",
+  "baseline_manifest": {
+    "version": "1.2",
+    "generated": "2025-07-15T14:30:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "existing_components": {
+      "src/components/views/ProjectsView/KanbanBoard.jsx": {
+        "purpose": "Main kanban board layout component with configurable columns and drag-drop support",
+        "exports": {
+          "functions": ["KanbanBoard"]
+        }
+      },
+      "src/components/views/ProjectsView/KanbanColumn.jsx": {
+        "purpose": "Individual kanban column component for project stages with droppable areas",
+        "exports": {
+          "functions": ["KanbanColumn"]
+        }
+      },
+      "src/App.jsx": {
+        "purpose": "Main application orchestrator managing global state, Firebase subscriptions, and all core business logic",
+        "exports": {
+          "functions": ["App", "ProjectModal", "ImportConfirmModal", "SessionEndModal", "TaskDetailModal", "ProjectDeleteConfirmModal"]
+        }
+      }
+    }
+  },
+  "expected_manifest": {
+    "version": "1.2",
+    "generated": "2025-07-15T14:30:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "enhanced_components": {
+      "src/components/views/ProjectsView/KanbanBoard.jsx": {
+        "purpose": "Enhanced kanban board with improved drag/drop handling, visual feedback, and error handling for stage transitions",
+        "exports": {
+          "functions": ["KanbanBoard"]
+        },
+        "enhancements": [
+          "Enhanced drop zone visual feedback with clearer indication of valid drop areas",
+          "Improved error handling for failed project stage transitions",
+          "Added loading states and visual feedback during project moves",
+          "Enhanced drag overlay with better visual representation",
+          "Improved collision detection for more reliable drop behavior",
+          "Added validation for stage transitions before attempting moves"
+        ]
+      },
+      "src/components/views/ProjectsView/KanbanColumn.jsx": {
+        "purpose": "Enhanced kanban column with improved droppable area detection and visual feedback",
+        "exports": {
+          "functions": ["KanbanColumn"]
+        },
+        "enhancements": [
+          "Enhanced drop zone visual feedback with better highlighting",
+          "Improved droppable area size and detection sensitivity",
+          "Added better visual indicators for valid drop zones",
+          "Enhanced accessibility for drag and drop operations"
+        ]
+      },
+      "src/App.jsx": {
+        "purpose": "Enhanced application orchestrator with fixed project stage/status update functionality for kanban board",
+        "exports": {
+          "functions": ["App", "ProjectModal", "ImportConfirmModal", "SessionEndModal", "TaskDetailModal", "ProjectDeleteConfirmModal"]
+        },
+        "enhancements": [
+          "Fixed onMoveProject function to properly update project stage/status in Firebase",
+          "Added proper error handling and user feedback for failed project moves",
+          "Enhanced Firebase transaction handling for project stage updates",
+          "Added validation to ensure project stage changes persist correctly",
+          "Improved optimistic updates with proper rollback on failures",
+          "Added notification system integration for move operation feedback"
+        ]
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": "Audit and fix drag/drop implementation focusing on Firebase project stage updates and visual feedback",
+    "files_to_create": [],
+    "files_to_modify": [
+      {
+        "file": "src/App.jsx",
+        "changes": "Fix onMoveProject function to properly update project stage/status field in Firebase, add error handling, improve user feedback"
+      },
+      {
+        "file": "src/components/views/ProjectsView/KanbanBoard.jsx",
+        "changes": "Enhance drop zone visual feedback, improve error handling, add loading states for move operations"
+      },
+      {
+        "file": "src/components/views/ProjectsView/KanbanColumn.jsx",
+        "changes": "Improve droppable area detection, enhance visual feedback for drop zones"
+      }
+    ],
+    "dependencies": [],
+    "integration_points": [
+      "Firebase Firestore for project stage/status field updates",
+      "@dnd-kit drag and drop library for kanban board functionality",
+      "Project stages configuration and validation",
+      "User notification system for move operation feedback",
+      "Real-time data synchronization for stage changes"
+    ],
+    "testing_approach": "Test project movement between all kanban stages, verify Firebase updates persist after page refresh, test error handling scenarios, validate visual feedback during drag operations"
+  },
+  "acceptance_criteria": [
+    "Projects can be successfully dropped into any kanban stage",
+    "Project stage/status updates in Firebase when moved",
+    "Visual feedback shows valid drop zones during drag",
+    "Stage changes persist after page refresh",
+    "All kanban stages accept dropped projects correctly",
+    "No projects get stuck in single stage"
+  ],
+  "estimated_complexity": "Medium",
+  "prerequisites": [],
+  "baseline_metadata": {
+    "loaded_from": "codebase_manifest.json",
+    "timestamp": "2025-07-15T14:30:00.000Z",
+    "file_count": "45 source files",
+    "version": "1.2"
+  },
+  "completion": {
+    "status": "completed",
+    "commit_hash": "06e8fcc572c6440eb9a42f88a1f636747951dda4",
+    "commit_timestamp": "2025-07-15T21:45:00.000Z",
+    "validation_status": "PASS",
+    "lessons_learned": [
+      "Firebase path structure was critical - using doc(db, `${basePath}/projects`, projectId) resolved the core issue",
+      "Comprehensive error logging during drag/drop operations greatly aids debugging",
+      "Enhanced visual feedback with dashed borders and sparkle emojis improves user experience",
+      "Adding lastModified timestamps to Firebase updates helps with change tracking",
+      "Validation of stage IDs and project existence prevents edge case errors"
+    ]
+  }
+}

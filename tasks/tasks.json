@@ -1,0 +1,503 @@
+{
+  "project_info": {
+    "name": "Project Nudger - Remaining Enhancements",
+    "description": "React-based project management application with Firebase backend - remaining polish and enhancement tasks based on current implementation state",
+    "version": "1.0.0",
+    "baseline_manifest": "codebase_manifest.json",
+    "estimated_timeline": "5 weeks for remaining polish, critical fixes, and template system",
+    "tech_stack": "React 19.1.0, Firebase, Tailwind CSS, @dnd-kit, AI Integration (OpenAI/Gemini/Anthropic)",
+    "current_status": "Most major features implemented - focusing on UX polish and missing components"
+  },
+  "tasks": {
+    "Task-1.1": {
+      "id": "Task-1.1",
+      "title": "Enhanced Due Date Filters UI Integration",
+      "priority": "high",
+      "estimated_time": "45 minutes",
+      "dependencies": [],
+      "phase": "Phase 1: UI Polish and Missing Features",
+      "description": "Add \"Past Due\" and \"Nudged\" filter options to the UI filters - functions exist in helpers.js but may not be exposed in filter interface",
+      "benefit_score": 4,
+      "complexity_score": 3,
+      "actions": [
+        "Check if ProjectFilters.jsx includes Past Due and Nudged options",
+        "Add filter options to UI if missing",
+        "Ensure filters work with existing isPastDue and isNudged functions",
+        "Add visual indicators for filtered tasks",
+        "Test filter combinations"
+      ],
+      "acceptance_criteria": [
+        "\"Past Due\" filter option visible in filter UI",
+        "\"Nudged\" filter option visible in filter UI", 
+        "Filters work correctly with existing helper functions",
+        "Visual indicators show past due and nudged tasks",
+        "Filters work in combination with other filters"
+      ],
+      "files_to_create": [],
+      "files_to_modify": [
+        "src/components/shared/ProjectFilters.jsx",
+        "src/components/views/TasksView.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-1.2": {
+      "id": "Task-1.2", 
+      "title": "Task Completion Visual Progress Indicators",
+      "priority": "high",
+      "estimated_time": "60 minutes",
+      "dependencies": [],
+      "phase": "Phase 1: UI Polish and Missing Features",
+      "description": "Add visual progress bars and completion percentages to project cards - no obvious ProgressBar component found in manifest",
+      "benefit_score": 4,
+      "complexity_score": 4,
+      "actions": [
+        "Create ProgressBar component with Tailwind styling",
+        "Calculate task completion percentages for projects",
+        "Integrate progress indicators into ProjectsView cards",
+        "Add completion styling for fully completed projects",
+        "Ensure real-time updates with task changes"
+      ],
+      "acceptance_criteria": [
+        "Progress bars show accurate task completion ratios",
+        "Fully completed projects have distinct visual styling",
+        "Progress indicators update in real-time",
+        "Component is reusable across different views",
+        "Performance good with large project counts"
+      ],
+      "files_to_create": [
+        "src/components/shared/ProgressBar.jsx"
+      ],
+      "files_to_modify": [
+        "src/components/views/ProjectsView.jsx",
+        "src/components/views/DashboardView/index.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-1.3": {
+      "id": "Task-1.3",
+      "title": "Fix Task Editing and Add Delete Functionality",
+      "priority": "critical",
+      "estimated_time": "75 minutes", 
+      "dependencies": [],
+      "phase": "Phase 1: UI Polish and Missing Features",
+      "description": "Fix bug where some tasks cannot be edited from TasksView and add missing delete task functionality with confirmation",
+      "benefit_score": 5,
+      "complexity_score": 4,
+      "actions": [
+        "Audit TaskItem component in TasksView for missing edit handlers",
+        "Ensure editTask function is properly passed to TaskItem in all contexts",
+        "Add delete task functionality with confirmation modal",
+        "Test task editing from TasksView, ProjectView, and DashboardView",
+        "Add proper error handling for failed edit/delete operations",
+        "Ensure Firebase updates work correctly for all task operations"
+      ],
+      "acceptance_criteria": [
+        "All tasks can be edited from TasksView regardless of context",
+        "Edit functionality opens TaskDetailModal with current task data",
+        "Delete button available on all tasks with confirmation dialog",
+        "Delete operations properly remove task from Firebase",
+        "Hierarchical tasks handle delete with parent/child relationships",
+        "Error handling provides user feedback for failed operations"
+      ],
+      "files_to_create": [
+        "src/components/shared/TaskDeleteConfirmModal.jsx"
+      ],
+      "files_to_modify": [
+        "src/components/shared/TaskItem.jsx",
+        "src/components/views/TasksView.jsx", 
+        "src/components/views/ProjectView.jsx",
+        "src/App.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-1.4": {
+      "id": "Task-1.4",
+      "title": "Fix Kanban Board Drop Functionality", 
+      "priority": "critical",
+      "estimated_time": "60 minutes",
+      "dependencies": [],
+      "phase": "Phase 1: UI Polish and Missing Features",
+      "description": "Fix critical bug where projects can be dragged in kanban board but won't drop into other buckets - all projects stuck in planning stage",
+      "benefit_score": 5,
+      "complexity_score": 4,
+      "actions": [
+        "Audit KanbanBoard drag and drop implementation",
+        "Fix drop zone detection and project stage updates", 
+        "Ensure Firebase project stage/status field updates correctly",
+        "Test project movement between all kanban stages",
+        "Add visual feedback for valid drop zones",
+        "Verify stage persistence after page refresh"
+      ],
+      "acceptance_criteria": [
+        "Projects can be successfully dropped into any kanban stage",
+        "Project stage/status updates in Firebase when moved",
+        "Visual feedback shows valid drop zones during drag",
+        "Stage changes persist after page refresh",
+        "All kanban stages accept dropped projects correctly",
+        "No projects get stuck in single stage"
+      ],
+      "files_to_create": [],
+      "files_to_modify": [
+        "src/components/views/ProjectsView/KanbanBoard.jsx",
+        "src/App.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-1.5": {
+      "id": "Task-1.5",
+      "title": "Project Card Layout Optimization",
+      "priority": "medium", 
+      "estimated_time": "45 minutes",
+      "dependencies": ["Task-1.2"],
+      "phase": "Phase 1: UI Polish and Missing Features",
+      "description": "Optimize project card sizing and improve visual balance - reduce excessive white space and improve button proportions",
+      "benefit_score": 3,
+      "complexity_score": 3,
+      "actions": [
+        "Analyze current ProjectsView card layout",
+        "Adjust Tailwind classes for optimal card dimensions",
+        "Improve action button spacing and proportions",
+        "Test responsive behavior across devices",
+        "Ensure progress bars fit well in optimized layout"
+      ],
+      "acceptance_criteria": [
+        "Project cards appropriately sized without excess white space",
+        "Action buttons properly proportioned within cards",
+        "Layout responsive across desktop, tablet, mobile",
+        "Progress bars integrate well with card layout",
+        "Visual balance improved on all screen sizes"
+      ],
+      "files_to_create": [],
+      "files_to_modify": [
+        "src/components/views/ProjectsView.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-2.1": {
+      "id": "Task-2.1",
+      "title": "Project View Enhanced Details",
+      "priority": "medium",
+      "estimated_time": "75 minutes", 
+      "dependencies": ["Task-1.2"],
+      "phase": "Phase 2: Enhanced Project Information",
+      "description": "Add task count displays (\"X/Y complete\") and project age indicators to project cards for better at-a-glance information",
+      "benefit_score": 4,
+      "complexity_score": 4,
+      "actions": [
+        "Add task count calculation and display",
+        "Implement project age calculation from creation date",
+        "Add visual age indicators with color coding",
+        "Design layout for additional information elements",
+        "Ensure information updates in real-time"
+      ],
+      "acceptance_criteria": [
+        "Task counts display as \"X/Y complete\" format",
+        "Project age shown with appropriate visual indicators",
+        "Age indicators use color coding for quick recognition",
+        "Card layout accommodates new information cleanly",
+        "All information updates in real-time"
+      ],
+      "files_to_create": [
+        "src/utils/dateHelpers.js"
+      ],
+      "files_to_modify": [
+        "src/components/views/ProjectsView.jsx",
+        "src/utils/helpers.js"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-2.2": {
+      "id": "Task-2.2",
+      "title": "Archive Filter Improvements", 
+      "priority": "medium",
+      "estimated_time": "30 minutes",
+      "dependencies": [],
+      "phase": "Phase 2: Enhanced Project Information",
+      "description": "Improve project filter to hide archived projects by default with toggle option - ArchivedProjectsView exists but filter behavior may need refinement",
+      "benefit_score": 3,
+      "complexity_score": 2,
+      "actions": [
+        "Review current archive filtering in ProjectFilters.jsx",
+        "Ensure archived projects hidden by default",
+        "Add \"Show Archived\" toggle if not present",
+        "Test filter behavior with archived projects",
+        "Maintain user preference for filter state"
+      ],
+      "acceptance_criteria": [
+        "Archived projects hidden from main project view by default",
+        "\"Show Archived\" toggle available when needed",
+        "Filter preference remembered during session",
+        "Performance good with large archived project counts",
+        "Clear visual distinction for archived projects when shown"
+      ],
+      "files_to_create": [],
+      "files_to_modify": [
+        "src/components/shared/ProjectFilters.jsx",
+        "src/components/views/ProjectsView.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-3.1": {
+      "id": "Task-3.1",
+      "title": "Time Tracking Enhancements",
+      "priority": "medium",
+      "estimated_time": "90 minutes",
+      "dependencies": [],
+      "phase": "Phase 3: Advanced Feature Polish",
+      "description": "Enhance existing time tracking with manual entry, visual indicators, and expandable task details - build on existing EnhancedTimerWidget and TrackingView",
+      "benefit_score": 4,
+      "complexity_score": 6,
+      "actions": [
+        "Review existing time tracking in EnhancedTimerWidget",
+        "Add manual time entry modal component", 
+        "Create visual indicators for tasks with tracked time",
+        "Implement expandable task details with time history",
+        "Add time tracking settings and preferences",
+        "Integrate with existing Pomodoro functionality"
+      ],
+      "acceptance_criteria": [
+        "Manual time entry modal allows adding time with notes",
+        "Visual indicators show which tasks have time tracked",
+        "Expandable tasks show detailed time tracking history",
+        "Integration with existing timer works seamlessly",
+        "Time data persists correctly in Firebase",
+        "Settings control time tracking behavior"
+      ],
+      "files_to_create": [
+        "src/components/shared/TimeEntryModal.jsx",
+        "src/components/shared/ExpandableTaskDetails.jsx"
+      ],
+      "files_to_modify": [
+        "src/components/shared/TaskItem.jsx",
+        "src/components/views/DashboardView/EnhancedTimerWidget.jsx",
+        "src/components/views/TrackingView.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-3.3": {
+      "id": "Task-3.3", 
+      "title": "Project Template System",
+      "priority": "high",
+      "estimated_time": "180 minutes",
+      "dependencies": ["Task-1.3"],
+      "phase": "Phase 3: Advanced Feature Polish",
+      "description": "Create project template system allowing users to define template projects with predefined tasks/subtasks and variable substitution for rapid project creation",
+      "benefit_score": 5,
+      "complexity_score": 8,
+      "actions": [
+        "Design template data structure with task hierarchies",
+        "Create template management UI (create, edit, delete templates)",
+        "Implement variable system ({project_name}, {project_owner}, {project_stage}, etc.)",
+        "Add template selection during project creation",
+        "Build template instantiation engine that creates projects + tasks",
+        "Add template preview functionality",
+        "Create default template library with common project types"
+      ],
+      "acceptance_criteria": [
+        "Users can create templates with predefined task structures",
+        "Variable substitution works for {project_name}, {project_owner}, {project_stage}",
+        "Template selection available during new project creation",
+        "Template instantiation creates project with full task hierarchy",
+        "Template management UI allows CRUD operations on templates",
+        "Default templates provided for common project types",
+        "Template preview shows final structure before creation"
+      ],
+      "files_to_create": [
+        "src/components/templates/TemplateManager.jsx",
+        "src/components/templates/TemplateSelector.jsx", 
+        "src/components/templates/TemplatePreview.jsx",
+        "src/utils/templateEngine.js",
+        "src/data/defaultTemplates.js"
+      ],
+      "files_to_modify": [
+        "src/App.jsx",
+        "src/components/views/ProjectsView.jsx",
+        "src/components/views/SettingsView.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-3.4": {
+      "id": "Task-3.4",
+      "title": "Drag & Drop Polish and Mobile Support",
+      "priority": "low",
+      "estimated_time": "60 minutes",
+      "dependencies": [],
+      "phase": "Phase 3: Advanced Feature Polish", 
+      "description": "Polish existing drag & drop implementation - @dnd-kit is installed but may need mobile touch improvements and visual feedback enhancements",
+      "benefit_score": 3,
+      "complexity_score": 5,
+      "actions": [
+        "Review current drag & drop implementation",
+        "Improve mobile touch interface support",
+        "Enhance visual feedback during dragging",
+        "Add drop zone indicators",
+        "Test drag & drop across different views",
+        "Optimize performance for large task lists"
+      ],
+      "acceptance_criteria": [
+        "Drag & drop works smoothly on mobile devices",
+        "Clear visual feedback during drag operations",
+        "Drop zones clearly indicated to users",
+        "Works consistently across TasksView and ProjectView",
+        "Performance remains good with large lists",
+        "Accessibility considerations addressed"
+      ],
+      "files_to_create": [],
+      "files_to_modify": [
+        "src/components/shared/TaskItem.jsx",
+        "src/components/views/TasksView.jsx",
+        "src/components/views/ProjectView.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-4.1": {
+      "id": "Task-4.1",
+      "title": "Kanban Board Visual Enhancements",
+      "priority": "low",
+      "estimated_time": "75 minutes",
+      "dependencies": ["Task-1.4"],
+      "phase": "Phase 4: Advanced Features Polish",
+      "description": "Polish existing Kanban board implementation with stage management UI, filtering improvements, and mobile optimization - builds on Task-1.4 drop functionality fix",
+      "benefit_score": 3,
+      "complexity_score": 5,
+      "actions": [
+        "Add stage configuration and management UI",
+        "Improve mobile/tablet kanban experience", 
+        "Enhance filtering for kanban view",
+        "Add stage-specific project counts",
+        "Optimize visual polish and animations",
+        "Add stage color customization"
+      ],
+      "acceptance_criteria": [
+        "Stage configuration allows custom workflow setup",
+        "Mobile/tablet kanban experience is functional", 
+        "Filtering works correctly in kanban view",
+        "Stage columns show project counts",
+        "Visual polish and animations enhance UX",
+        "Stage colors can be customized by user"
+      ],
+      "files_to_create": [
+        "src/components/shared/StageConfigModal.jsx"
+      ],
+      "files_to_modify": [
+        "src/components/views/ProjectsView/KanbanBoard.jsx",
+        "src/components/views/ProjectsView.jsx",
+        "src/components/shared/ProjectFilters.jsx"
+      ],
+      "dependencies_to_add": []
+    },
+    "Task-5.1": {
+      "id": "Task-5.1",
+      "title": "Testing Infrastructure Setup",
+      "priority": "low",
+      "estimated_time": "120 minutes",
+      "dependencies": [],
+      "phase": "Phase 5: Quality and Testing",
+      "description": "Expand testing coverage - Vitest and React Testing Library are installed but manifest notes \"minimal coverage currently\"",
+      "benefit_score": 3,
+      "complexity_score": 6,
+      "actions": [
+        "Review existing test setup and coverage",
+        "Add unit tests for utility functions",
+        "Create integration tests for key user flows",
+        "Add component tests for critical UI elements",
+        "Set up test data factories and mocks",
+        "Configure coverage reporting and thresholds"
+      ],
+      "acceptance_criteria": [
+        "Core utility functions have unit test coverage",
+        "Key user flows have integration test coverage",
+        "Critical components have component tests",
+        "Test coverage reporting is configured",
+        "Tests run reliably in CI/CD pipeline",
+        "Mock factories support test data generation"
+      ],
+      "files_to_create": [
+        "src/tests/utils/helpers.test.js",
+        "src/tests/utils/taskHelpers.test.js",
+        "src/tests/components/TaskItem.test.jsx",
+        "src/tests/integration/projectManagement.test.js",
+        "src/tests/factories/testData.js"
+      ],
+      "files_to_modify": [
+        "vitest.config.js",
+        "package.json"
+      ],
+      "dependencies_to_add": []
+    }
+  },
+  "phases": {
+    "Phase 1": {
+      "name": "UI Polish and Missing Features",
+      "description": "Complete remaining UI components and polish existing features",
+      "tasks": ["Task-1.1", "Task-1.2", "Task-1.3", "Task-1.4", "Task-1.5"],
+      "critical_path": true,
+      "estimated_time": "285 minutes"
+    },
+    "Phase 2": {
+      "name": "Enhanced Project Information", 
+      "description": "Improve project cards with better information display and filtering",
+      "tasks": ["Task-2.1", "Task-2.2"],
+      "critical_path": false,
+      "estimated_time": "105 minutes"
+    },
+    "Phase 3": {
+      "name": "Advanced Feature Polish",
+      "description": "Polish existing advanced features and add template system",
+      "tasks": ["Task-3.1", "Task-3.2", "Task-3.3", "Task-3.4"],
+      "critical_path": false,
+      "estimated_time": "420 minutes"
+    },
+    "Phase 4": {
+      "name": "Advanced Features Polish",
+      "description": "Polish kanban and other advanced functionality",
+      "tasks": ["Task-4.1"],
+      "critical_path": false,
+      "estimated_time": "75 minutes"
+    },
+    "Phase 5": {
+      "name": "Quality and Testing",
+      "description": "Improve test coverage and code quality",
+      "tasks": ["Task-5.1"],
+      "critical_path": false,
+      "estimated_time": "120 minutes"
+    }
+  },
+  "critical_path": ["Task-1.1", "Task-1.2", "Task-1.3", "Task-1.4", "Task-1.5"],
+  "parallel_opportunities": {
+    "after_task_1_1": ["Task-1.3", "Task-1.4", "Task-2.2", "Task-3.1", "Task-3.2"],
+    "after_task_1_2": ["Task-1.5", "Task-2.1"],
+    "after_task_1_3": ["Task-3.3"],
+    "after_task_1_4": ["Task-4.1"],
+    "independent": ["Task-3.1", "Task-3.2", "Task-3.4", "Task-5.1"]
+  },
+  "total_estimated_time": "16.25 hours",
+  "completion_status": {
+    "major_features_complete": [
+      "Task management with hierarchical sub-tasks",
+      "Drag & drop task reordering", 
+      "Kanban board for projects",
+      "AI-powered recommendations",
+      "Hardware integration (M5Stack Dial)",
+      "Obsidian knowledge management sync",
+      "Pomodoro timer with session tracking",
+      "Project management with CRUD operations",
+      "Real-time Firebase synchronization"
+    ],
+    "remaining_work": [
+      "Critical: Fix task editing bugs and add delete functionality",
+      "Critical: Fix kanban board drop functionality", 
+      "Major Feature: Project template system with variable substitution",
+      "UI polish and visual indicators",
+      "Filter enhancements", 
+      "Time tracking improvements",
+      "Mobile experience optimization",
+      "Test coverage expansion"
+    ]
+  },
+  "notes": {
+    "implementation_status": "Most major functionality already implemented - focus on polish and UX improvements",
+    "ai_progress": "AI has implemented significantly more than originally planned, including advanced integrations, but has critical kanban drop functionality bug",
+    "recommended_approach": "Start with critical bug fixes (task editing/delete, kanban drops), then add major template feature, then focus on UI polish and UX improvements"
+  }
+}

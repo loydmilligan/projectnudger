@@ -1,15 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
-import { Download, Upload, Beaker, Sun, Moon, X, Brain } from 'lucide-react';
+import { Download, Upload, Beaker, Sun, Moon, X, Brain, Trash2 } from 'lucide-react';
 import { db, basePath } from '../../config/firebase';
 import { NUDGE_CONFIG } from '../../config/constants';
 import useNotifications from '../../hooks/useNotifications';
+import { cleanupProjectsAndTasks, previewCleanup } from '../../utils/cleanupData';
 
 function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, onGenerateDummyData, owners, setSettings, projects, tasks, onTestAINudge, activeSession }) {
     const fileInputRef = useRef(null);
     const handleImportClick = () => fileInputRef.current.click();
     const [localSettings, setLocalSettings] = useState(currentSettings);
     const { showSuccess, showError, showInfo, showFirebaseError } = useNotifications();
+    const [showCleanupModal, setShowCleanupModal] = useState(false);
+    const [cleanupPreview, setCleanupPreview] = useState(null);
+    const [isCleaningUp, setIsCleaningUp] = useState(false);
 
     const handleSave = async () => {
         console.log('Saving settings:', localSettings);
@@ -22,6 +26,47 @@ function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, 
         } catch(e) { 
             console.error("Error saving settings:", e);
             showFirebaseError(e);
+        }
+    };
+
+    const handleCleanupPreview = async () => {
+        try {
+            const projectsToKeep = ["3dprints", "Trinium Sales", "Update Home assistant"];
+            const preview = await previewCleanup(projectsToKeep);
+            setCleanupPreview(preview);
+            setShowCleanupModal(true);
+        } catch (error) {
+            console.error('Error generating cleanup preview:', error);
+            showError('Failed to generate cleanup preview', error.message);
+        }
+    };
+
+    const handleCleanup = async () => {
+        if (!window.confirm('Are you sure? This will permanently delete all projects and tasks except for: 3dprints, Trinium Sales, and Update Home assistant. This action cannot be undone!')) {
+            return;
+        }
+
+        setIsCleaningUp(true);
+        try {
+            const projectsToKeep = ["3dprints", "Trinium Sales", "Update Home assistant"];
+            const summary = await cleanupProjectsAndTasks(projectsToKeep);
+            
+            showSuccess(
+                'Cleanup Complete',
+                `Deleted ${summary.projectsDeleted} projects and ${summary.tasksDeleted} tasks. Kept ${summary.projectsKept} projects and ${summary.tasksKept} tasks.`
+            );
+            
+            setShowCleanupModal(false);
+            
+            // Reload the page to refresh the data
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } catch (error) {
+            console.error('Error during cleanup:', error);
+            showError('Cleanup Failed', error.message);
+        } finally {
+            setIsCleaningUp(false);
         }
     };
     
@@ -400,6 +445,18 @@ function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, 
                                 <Upload size={16} className="mr-2"/> Import Data
                             </button>
                         </div>
+                        
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <button 
+                                onClick={handleCleanupPreview} 
+                                className="w-full flex items-center justify-center px-4 py-3 rounded-md text-sm font-semibold bg-red-600 hover:bg-red-700 text-white transition-colors"
+                            >
+                                <Trash2 size={16} className="mr-2"/> Cleanup Projects & Tasks
+                            </button>
+                            <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                                Remove all projects and tasks except: 3dprints, Trinium Sales, and Update Home assistant
+                            </p>
+                        </div>
                         <input 
                             type="file" 
                             ref={fileInputRef} 
@@ -427,6 +484,109 @@ function SettingsView({ currentSettings, onExportData, onFileSelectedForImport, 
                     Save Settings
                 </button>
             </div>
+
+            {/* Cleanup Preview Modal */}
+            {showCleanupModal && cleanupPreview && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                Cleanup Preview
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                Review what will be deleted before proceeding
+                            </p>
+                        </div>
+                        
+                        <div className="p-6 space-y-6">
+                            {/* Projects to Keep */}
+                            <div>
+                                <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">
+                                    Projects to Keep ({cleanupPreview.projectsToKeep.length})
+                                </h4>
+                                <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-3">
+                                    {cleanupPreview.projectsToKeep.length === 0 ? (
+                                        <p className="text-sm text-gray-500">None found</p>
+                                    ) : (
+                                        <ul className="space-y-1">
+                                            {cleanupPreview.projectsToKeep.map(project => (
+                                                <li key={project.id} className="text-sm text-green-800 dark:text-green-200">
+                                                    • {project.name} ({project.status})
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Projects to Delete */}
+                            <div>
+                                <h4 className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">
+                                    Projects to Delete ({cleanupPreview.projectsToDelete.length})
+                                </h4>
+                                <div className="bg-red-50 dark:bg-red-900/20 rounded-md p-3 max-h-32 overflow-y-auto">
+                                    {cleanupPreview.projectsToDelete.length === 0 ? (
+                                        <p className="text-sm text-gray-500">None</p>
+                                    ) : (
+                                        <ul className="space-y-1">
+                                            {cleanupPreview.projectsToDelete.map(project => (
+                                                <li key={project.id} className="text-sm text-red-800 dark:text-red-200">
+                                                    • {project.name} ({project.status})
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Tasks Summary */}
+                            <div>
+                                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                    Tasks Summary
+                                </h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-3">
+                                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                                            Tasks to Keep: {cleanupPreview.tasksToKeep.length}
+                                        </p>
+                                    </div>
+                                    <div className="bg-red-50 dark:bg-red-900/20 rounded-md p-3">
+                                        <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                                            Tasks to Delete: {cleanupPreview.tasksToDelete.length}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
+                            <button 
+                                onClick={() => setShowCleanupModal(false)}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleCleanup}
+                                disabled={isCleaningUp}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                            >
+                                {isCleaningUp ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        Cleaning...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 size={16} className="mr-2"/>
+                                        Confirm Cleanup
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

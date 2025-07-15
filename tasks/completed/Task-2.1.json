@@ -1,250 +1,212 @@
 {
   "task_id": "Task-2.1",
-  "task_description": "Extend due date filter options - Add 'Past Due' and 'Nudged' options to existing due date filter dropdown in TasksView component. Update filter UI while maintaining existing filter functionality.",
-  "current_manifest": {
-    "version": "1.0-archaeological",
-    "generated": "2025-07-11T12:00:00.000Z",
+  "task_description": "Add task count displays (\"X/Y complete\") and project age indicators to project cards for better at-a-glance information",
+  "baseline_manifest": {
+    "version": "1.4",
+    "generated": "2025-07-15T22:05:00.000Z",
     "project": {
       "name": "project-nudger",
-      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and escalating notifications",
-      "version": "0.0.0"
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration + @dnd-kit for drag-and-drop",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
     },
-    "current_filter_analysis": {
-      "tasks_view_component": {
-        "file_path": "src/components/views/TasksView.jsx",
-        "current_filter_state": {
-          "project": "All",
-          "tag": "",
-          "dueDate": "All"
-        },
-        "existing_due_date_options": [
-          {
-            "value": "All",
-            "label": "Any Time",
-            "description": "Shows all tasks regardless of due date"
-          },
-          {
-            "value": "7",
-            "label": "Next 7 Days",
-            "description": "Shows tasks due within the next 7 days"
-          },
-          {
-            "value": "30",
-            "label": "Next 30 Days",
-            "description": "Shows tasks due within the next 30 days"
-          }
-        ],
-        "current_filter_logic": {
-          "location": "filteredTasks useMemo hook, line 12",
-          "implementation": "filters.dueDate === 'All' || (task.dueDate && new Date(task.dueDate) < new Date(new Date().setDate(new Date().getDate() + Number(filters.dueDate))))",
-          "behavior": "Numeric values represent days ahead from current date"
-        },
-        "filter_ui_structure": {
-          "container": "Grid layout with 3 columns for project, tag, and due date filters",
-          "styling": "Consistent select dropdown styling with dark mode support",
-          "classes": "w-full mt-1 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm"
-        }
-      },
-      "integration_context": {
-        "nudge_system": {
-          "service_file": "src/utils/aiNudgeService.js",
-          "functionality": "AI-powered task and project recommendation engine with multi-LLM support",
-          "nudge_detection": "Tasks can be flagged by AI nudge system for user attention"
-        },
-        "task_data_model": {
-          "due_date_field": "task.dueDate",
-          "format": "ISO date string",
-          "optional": true
-        },
-        "existing_views": [
-          "DashboardView - no task filtering",
-          "ProjectsView - project-level filtering only",
-          "TasksView - comprehensive task filtering (current focus)"
-        ]
-      }
-    }
-  },
-  "expected_manifest": {
-    "source_files": {
-      "src/components/views/TasksView.jsx": {
-        "purpose": "Comprehensive task list view with enhanced filtering including past due and nudged task options",
+    "files": {
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView.jsx": {
+        "purpose": "Optimized projects management interface with enhanced card layout, improved responsive design, and dual-mode display (grid/kanban)",
         "exports": {
-          "functions": [
-            {
-              "name": "TasksView",
-              "signature": "TasksView({ tasks, projects, onStartTask, onCompleteTask, onEditTask, activeSession }) -> JSX.Element",
-              "description": "Renders master task list with comprehensive filtering including past due and nudged task detection"
-            }
-          ],
+          "functions": ["ProjectsView"],
           "classes": [],
           "constants": []
         },
         "imports": [
-          "react",
-          "../shared/TaskItem"
+          "react", 
+          "lucide-react", 
+          "../shared/ProjectFilters", 
+          "../../utils/helpers", 
+          "./ProjectsView/KanbanBoard",
+          "./ProjectsView/ViewModeToggle",
+          "./ProjectsView/StageManager"
         ],
-        "sideEffects": [
-          "Filter state management with localStorage persistence",
-          "Real-time task filtering and sorting"
-        ],
-        "changes": {
-          "enhanced_due_date_filter": "Added 'Past Due' and 'Nudged' options to existing filter dropdown",
-          "filter_option_structure": "Extended filter options while maintaining backward compatibility",
-          "ui_consistency": "Maintained existing styling and layout patterns",
-          "filter_preparation": "Prepared filter value structure for upcoming logic implementation in Tasks 2.2-2.4"
-        }
-      }
-    },
-    "architecture": {
-      "main_flow": "React App → Firebase Firestore ↔ Real-time Subscriptions → Component State → Enhanced Filtering → UI Updates",
-      "data_flow": "Firestore (primary) ↔ React State ↔ Enhanced Filter Logic ↔ Filtered Task Display",
-      "configuration": "Environment variables → Firebase config → Application constants → Enhanced Filter Options",
-      "integration_patterns": [
-        "Firebase real-time listeners for live data synchronization",
-        "Enhanced filter dropdown with past due and nudged task options",
-        "Prepared integration points for AI nudge system detection",
-        "Consistent styling patterns with existing project and tag filters"
-      ]
-    },
-    "new_features": {
-      "enhanced_due_date_filter": {
-        "past_due_option": {
-          "value": "past_due",
-          "label": "Past Due",
-          "description": "Shows tasks with due dates before current date"
-        },
-        "nudged_option": {
-          "value": "nudged",
-          "label": "Nudged",
-          "description": "Shows tasks that have been flagged by AI nudge system"
-        },
-        "maintained_options": [
-          "Any Time (All)",
-          "Next 7 Days",
-          "Next 30 Days"
+        "enhancements": [
+          "Task-1.5: Optimized grid layout with enhanced responsive breakpoints",
+          "Task-1.5: Reduced white space with gap-4 instead of gap-6",
+          "Task-1.5: Enhanced column progression (1→2→3→4) for better screen utilization",
+          "Task-1.5: Added medium breakpoint for improved tablet experience",
+          "Task-1.5: Better integration with ProgressBar components from Task-1.2"
         ]
       },
-      "filter_state_preparation": {
-        "value_structure": "Prepared to handle non-numeric filter values for special cases",
-        "backward_compatibility": "Existing numeric day filters continue to work",
-        "extensibility": "Filter structure ready for upcoming logic implementation"
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/utils/helpers.js": {
+        "purpose": "Core utility functions for time formatting, color generation, URL validation, and task analysis",
+        "exports": {
+          "functions": [
+            "timeAgo",
+            "generateHslColor",
+            "getComplementaryColor", 
+            "getAnalogousColor",
+            "formatTime",
+            "isValidUrl",
+            "formatUrl",
+            "isPastDue",
+            "isNudged"
+          ],
+          "classes": [],
+          "constants": []
+        },
+        "imports": [],
+        "sideEffects": []
+      }
+    },
+    "dependencies": {
+      "runtime": [
+        "react@19.1.0 - Core UI framework",
+        "react-dom@19.1.0 - DOM rendering library", 
+        "firebase@11.9.1 - Backend database and authentication",
+        "lucide-react@0.517.0 - Icon library"
+      ]
+    }
+  },
+  "expected_manifest": {
+    "version": "1.5",
+    "generated": "2025-07-15T22:30:00.000Z",
+    "files": {
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/utils/dateHelpers.js": {
+        "purpose": "Date and age calculation utilities for project management with color-coded age indicators",
+        "exports": {
+          "functions": [
+            "calculateProjectAge",
+            "formatAge", 
+            "getAgeColorClass",
+            "getAgeInDays"
+          ],
+          "classes": [],
+          "constants": ["AGE_THRESHOLDS"]
+        },
+        "imports": [],
+        "sideEffects": [],
+        "features": [
+          "Calculate project age from creation date",
+          "Format age for human-readable display (days, weeks, months)",
+          "Color-coded age indicators based on configurable thresholds",
+          "Age threshold constants for visual feedback"
+        ]
       },
-      "ui_enhancements": {
-        "consistent_styling": "New options match existing dropdown styling",
-        "dark_mode_support": "Proper dark mode styling for new filter options",
-        "responsive_design": "Filter options work correctly on all device sizes"
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/utils/helpers.js": {
+        "purpose": "Core utility functions for time formatting, color generation, URL validation, and task analysis - enhanced with project information utilities",
+        "exports": {
+          "functions": [
+            "timeAgo",
+            "generateHslColor",
+            "getComplementaryColor", 
+            "getAnalogousColor",
+            "formatTime",
+            "isValidUrl",
+            "formatUrl",
+            "isPastDue",
+            "isNudged",
+            "getTaskCountForProject",
+            "getProjectAge",
+            "getAgeColorClass"
+          ],
+          "classes": [],
+          "constants": []
+        },
+        "imports": ["./dateHelpers"],
+        "sideEffects": [],
+        "enhancements": [
+          "Added getTaskCountForProject function for calculating completed vs total tasks",
+          "Added getProjectAge function for age calculation and formatting",
+          "Added getAgeColorClass function for color-coded age indicators",
+          "Integrated with dateHelpers utility for consistent date handling"
+        ]
+      },
+      "/home/mmariani/Projects/ProjectNudger/Project Nudger/src/components/views/ProjectsView.jsx": {
+        "purpose": "Enhanced projects management interface with task count displays, age indicators, and improved information display",
+        "exports": {
+          "functions": ["ProjectsView"],
+          "classes": [],
+          "constants": []
+        },
+        "imports": [
+          "react", 
+          "lucide-react", 
+          "../shared/ProjectFilters", 
+          "../../utils/helpers", 
+          "../../utils/dateHelpers",
+          "./ProjectsView/KanbanBoard",
+          "./ProjectsView/ViewModeToggle",
+          "./ProjectsView/StageManager"
+        ],
+        "enhancements": [
+          "Task-1.5: Optimized grid layout with enhanced responsive breakpoints",
+          "Task-1.5: Reduced white space with gap-4 instead of gap-6",
+          "Task-1.5: Enhanced column progression (1→2→3→4) for better screen utilization",
+          "Task-1.5: Added medium breakpoint for improved tablet experience",
+          "Task-1.5: Better integration with ProgressBar components from Task-1.2",
+          "Task-2.1: Added task count displays in 'X/Y complete' format",
+          "Task-2.1: Integrated project age indicators with color coding",
+          "Task-2.1: Enhanced project cards with at-a-glance information display",
+          "Task-2.1: Real-time updates for task counts and age indicators",
+          "Task-2.1: Responsive layout accommodating new information elements"
+        ]
       }
     }
   },
   "implementation_notes": {
-    "approach": "Add new filter options to existing due date dropdown while maintaining all existing functionality and preparing for upcoming filter logic implementation",
-    "files_to_create": [],
+    "approach": "Create new dateHelpers utility, enhance helpers.js with project information functions, and update ProjectsView to display task counts and age indicators",
+    "files_to_create": [
+      {
+        "file": "src/utils/dateHelpers.js",
+        "purpose": "Date and age calculation utilities for project management",
+        "key_exports": ["calculateProjectAge", "formatAge", "getAgeColorClass", "getAgeInDays"]
+      }
+    ],
     "files_to_modify": [
       {
-        "file": "src/components/views/TasksView.jsx",
-        "changes": "Add 'Past Due' and 'Nudged' options to due date filter select dropdown, maintain existing filter state structure and UI styling"
+        "file": "src/utils/helpers.js",
+        "changes": "Add getTaskCountForProject, getProjectAge, and getAgeColorClass functions"
+      },
+      {
+        "file": "src/components/views/ProjectsView.jsx", 
+        "changes": "Add task count and age display to project cards with color-coded indicators"
       }
     ],
     "dependencies": [],
     "integration_points": [
-      "Existing filter state management in TasksView component",
-      "Current due date filtering logic (to be extended in Tasks 2.2-2.4)",
-      "Consistent styling with project and tag filter dropdowns",
-      "Preparation for AI nudge system integration",
-      "Preparation for past due date detection logic"
+      "ProjectsView component will use enhanced helpers for task counting and age display",
+      "dateHelpers utility will provide consistent date formatting across the application",
+      "Age indicators will use color coding for quick visual recognition",
+      "Task counts will integrate with existing progress bar system from Task-1.2"
     ],
-    "testing_approach": "Verify new filter options appear in dropdown, maintain existing filter functionality, ensure UI styling consistency, test dropdown behavior across device sizes",
-    "upcoming_tasks": {
-      "Task-2.2": "Implement past due detection logic for new filter option",
-      "Task-2.3": "Implement nudged task detection logic for new filter option", 
-      "Task-2.4": "Update task filtering function to handle new filter types and combinations"
-    }
+    "testing_approach": "Test task count accuracy, age calculation correctness, color coding thresholds, and responsive layout integration"
   },
   "acceptance_criteria": [
-    "Due date filter dropdown includes new 'Past Due' option",
-    "Due date filter dropdown includes new 'Nudged' option",
-    "All existing filter options remain functional (Any Time, Next 7 Days, Next 30 Days)",
-    "New filter options maintain consistent styling with existing options",
-    "Dropdown behavior remains responsive across all device sizes",
-    "Filter state management continues to work correctly",
-    "No breaking changes to existing filter functionality",
-    "UI layout remains clean and professional with new options"
+    "Task counts display as \"X/Y complete\" format",
+    "Project age shown with appropriate visual indicators",
+    "Age indicators use color coding for quick recognition",
+    "Card layout accommodates new information cleanly",
+    "All information updates in real-time"
   ],
-  "estimated_complexity": "Low",
-  "prerequisites": [],
-  "detailed_changes": {
-    "src/components/views/TasksView.jsx": {
-      "due_date_filter_dropdown": {
-        "current_options": [
-          "Any Time (value: 'All')",
-          "Next 7 Days (value: '7')",
-          "Next 30 Days (value: '30')"
-        ],
-        "new_options": [
-          "Past Due (value: 'past_due')",
-          "Nudged (value: 'nudged')"
-        ],
-        "option_ordering": [
-          "Any Time",
-          "Past Due",
-          "Nudged", 
-          "Next 7 Days",
-          "Next 30 Days"
-        ]
-      },
-      "filter_state_compatibility": {
-        "existing_structure": "filters.dueDate can be 'All', '7', or '30'",
-        "new_structure": "filters.dueDate can be 'All', 'past_due', 'nudged', '7', or '30'",
-        "backward_compatibility": "Existing numeric values continue to work unchanged"
-      },
-      "ui_consistency": {
-        "styling_classes": "Maintain exact same CSS classes as existing options",
-        "dark_mode": "Ensure new options work correctly in dark theme",
-        "responsive_behavior": "Dropdown remains functional on mobile devices"
-      }
-    }
+  "estimated_complexity": "Medium",
+  "prerequisites": ["Task-1.2 - Task Completion Visual Progress Indicators (completed)"],
+  "baseline_metadata": {
+    "loaded_from": "codebase_manifest.json",
+    "timestamp": "2025-07-15T22:05:00.000Z",
+    "file_count": 48,
+    "file_size": 37704,
+    "last_modified": "2025-07-15T02:22:00.583419377"
   },
-  "validation_checklist": [
-    "New 'Past Due' option appears in due date filter dropdown",
-    "New 'Nudged' option appears in due date filter dropdown", 
-    "Existing filter options continue to work correctly",
-    "Dropdown styling is consistent across all options",
-    "Filter selection updates state correctly for new options",
-    "No visual regressions in filter UI layout",
-    "Dark mode styling works correctly for new options",
-    "Mobile responsive behavior remains intact",
-    "No console errors when selecting new filter options"
-  ],
-  "preparation_for_upcoming_tasks": {
-    "Task-2.2": {
-      "past_due_detection": "Filter value 'past_due' ready for date comparison logic",
-      "date_handling": "Prepared for timezone-aware date comparison implementation"
-    },
-    "Task-2.3": {
-      "nudged_detection": "Filter value 'nudged' ready for AI nudge system integration",
-      "nudge_data_structure": "Prepared for task nudge history analysis"
-    },
-    "Task-2.4": {
-      "filter_logic_extension": "Filter state structure ready for enhanced filtering function",
-      "combination_filtering": "Prepared for multi-filter combinations (past due + project, etc.)"
-    },
-    "visual_indicators": {
-      "Task-2.5": "Filter options in place for future visual indicator implementation",
-      "consistency": "UI foundation ready for past due and nudged task visual cues"
-    }
-  },
-  "implementation_context": {
-    "phase": "Phase 1: Core Task Functionality Fixes",
-    "priority": "High",
-    "estimated_time": "15 minutes (portion of 75-minute Task 2)",
-    "benefit_score": "4",
-    "complexity_score": "2",
-    "dependencies": "None",
-    "part_of_larger_task": {
-      "parent_task": "Task 2: Enhanced Due Date Filters",
-      "total_subtasks": 5,
-      "current_subtask": "2.1 of 2.5",
-      "sequence": "UI first, then logic implementation"
-    }
+  "completion": {
+    "status": "completed",
+    "commit_hash": "34eaa08",
+    "commit_timestamp": "2025-07-15T22:50:00.000Z",
+    "validation_status": "PASS",
+    "lessons_learned": [
+      "Color-coded age indicators provide excellent visual feedback for project age",
+      "Task count displays in 'X/Y complete' format are highly informative",
+      "dateHelpers utility creates reusable age calculation patterns",
+      "Real-time updates work seamlessly with existing project/task state"
+    ]
   }
 }

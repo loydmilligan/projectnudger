@@ -1,40 +1,128 @@
 {
   "task_id": "Task-1.1",
-  "task_description": "Fix bug where some tasks cannot be checked off or have timers started - ensure all task interaction buttons work consistently across all views and contexts. Audit TaskItem component usage across all views, examine TaskItem component in DashboardView, ProjectsView, and TasksView, document inconsistent prop passing patterns, and identify missing handlers or event propagation issues.",
-  "status": "completed",
-  "completion_timestamp": "2025-07-12T12:00:00.000Z",
-  "commit_hash": "9b4e16e",
-  "commit_message": "Task-1.1: Fix task interaction handlers missing in TasksView",
-  "files_modified": [
-    "src/App.jsx",
-    "src/components/views/TasksView.jsx"
-  ],
-  "files_created": [
-    "tasks/prepared/Task-1.1.json",
-    "tasks/validation/Task-1.1-validation-report.json",
-    "tasks/task_list.md",
-    "project_manifest.json",
-    "codebase_manifest.json"
-  ],
-  "implementation_summary": {
-    "approach": "Added universal task action handlers in App.jsx and ensured consistent prop passing to TasksView component",
-    "key_changes": [
-      "Added handleToggleTask function in App.jsx for universal task completion with Firebase updates and nudge notifications",
-      "Added handleOpenTaskDetail function in App.jsx for task editing modal triggers",
-      "Updated TasksView component to accept and pass onToggle and onOpenDetail props to TaskItem components",
-      "Implemented error handling with user feedback alerts for failed task operations",
-      "Ensured consistent task interaction behavior across all views"
-    ],
-    "validation_status": "EXACT_MATCH",
-    "all_acceptance_criteria_met": true
+  "task_description": "Add \"Past Due\" and \"Nudged\" filter options to the UI filters - functions exist in helpers.js but may not be exposed in filter interface",
+  "baseline_manifest": {
+    "version": "1.0",
+    "generated": "2025-07-15T00:00:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "files": {
+      "src/utils/helpers.js": {
+        "purpose": "Core utility functions for time formatting, color generation, URL validation, and task analysis",
+        "exports": {
+          "functions": ["timeAgo", "generateHslColor", "getComplementaryColor", "getAnalogousColor", "formatTime", "isValidUrl", "formatUrl", "isPastDue", "isNudged"]
+        }
+      },
+      "src/components/shared/ProjectFilters.jsx": {
+        "purpose": "Project filtering controls with owner selection and status filtering",
+        "exports": {
+          "functions": ["ProjectFilters"]
+        }
+      },
+      "src/components/views/TasksView.jsx": {
+        "purpose": "Master task list with filtering, hierarchical display, and bulk operations",
+        "exports": {
+          "functions": ["TasksView"]
+        }
+      }
+    }
   },
-  "lessons_learned": [
-    "Universal handlers in App.jsx ensure consistency across all views",
-    "Proper prop drilling from App through view components to shared components",
-    "Error handling with user feedback is essential for async operations",
-    "Reusing existing modal and notification systems maintains code consistency"
+  "expected_manifest": {
+    "version": "1.0",
+    "generated": "2025-07-15T00:00:00.000Z",
+    "project": {
+      "name": "project-nudger",
+      "description": "An opinionated task management application designed to combat project neglect and procrastination through a weighted priority system and an escalating series of notifications",
+      "version": "0.0.0",
+      "tech_stack": "React 19.1.0 + Vite 6.3.5 + Firebase Firestore + Tailwind CSS + Web Bluetooth + AI Integration",
+      "deployment": "Netlify static site with Firebase backend",
+      "repository": "Active Git repository with task-driven development workflow"
+    },
+    "files": {
+      "src/utils/helpers.js": {
+        "purpose": "Core utility functions for time formatting, color generation, URL validation, and task analysis",
+        "exports": {
+          "functions": ["timeAgo", "generateHslColor", "getComplementaryColor", "getAnalogousColor", "formatTime", "isValidUrl", "formatUrl", "isPastDue", "isNudged"]
+        }
+      },
+      "src/components/shared/ProjectFilters.jsx": {
+        "purpose": "Enhanced project filtering controls with owner selection, status filtering, Past Due and Nudged filters",
+        "exports": {
+          "functions": ["ProjectFilters"]
+        },
+        "enhancements": [
+          "Added Past Due filter option with visual indicator",
+          "Added Nudged filter option with visual indicator", 
+          "Integrated with existing isPastDue and isNudged helper functions",
+          "Enhanced filter state management for new filter types"
+        ]
+      },
+      "src/components/views/TasksView.jsx": {
+        "purpose": "Enhanced master task list with expanded filtering capabilities, hierarchical display, and bulk operations",
+        "exports": {
+          "functions": ["TasksView"]
+        },
+        "enhancements": [
+          "Integrated Past Due and Nudged filter logic",
+          "Added visual indicators for past due and nudged tasks",
+          "Enhanced filter combination handling",
+          "Improved task filtering performance"
+        ]
+      }
+    }
+  },
+  "implementation_notes": {
+    "approach": "Enhance existing filter components to integrate Past Due and Nudged filters using existing helper functions",
+    "files_to_create": [],
+    "files_to_modify": [
+      {
+        "file": "src/components/shared/ProjectFilters.jsx",
+        "changes": "Add Past Due and Nudged filter toggle buttons, integrate with existing filter state management, connect to helper functions"
+      },
+      {
+        "file": "src/components/views/TasksView.jsx", 
+        "changes": "Apply new filter logic using isPastDue and isNudged functions, add visual indicators for filtered tasks, ensure filter combinations work correctly"
+      }
+    ],
+    "dependencies": [],
+    "integration_points": [
+      "Existing ProjectFilters component state management",
+      "Helper functions isPastDue and isNudged from utils/helpers.js",
+      "TasksView filtering and display logic",
+      "Current filter combination system"
+    ],
+    "testing_approach": "Test individual filters, test filter combinations, verify visual indicators, check performance with large task lists"
+  },
+  "acceptance_criteria": [
+    "\"Past Due\" filter option visible in filter UI",
+    "\"Nudged\" filter option visible in filter UI",
+    "Filters work correctly with existing helper functions",
+    "Visual indicators show past due and nudged tasks",
+    "Filters work in combination with other filters"
   ],
-  "breaking_changes": false,
-  "tests_added": false,
-  "manifest_updated": true
+  "estimated_complexity": "Low",
+  "prerequisites": [],
+  "baseline_metadata": {
+    "loaded_from": "codebase_manifest.json",
+    "timestamp": "2025-07-15T00:00:00.000Z",
+    "file_count": "44 source files"
+  },
+  "completion": {
+    "status": "completed",
+    "commit_hash": "cd45b49ab433e8ea0a94be17029fb4b82dcc1c8a",
+    "commit_timestamp": "2025-07-15T18:26:00.000Z",
+    "validation_status": "PASS",
+    "lessons_learned": [
+      "Task filters integration works well with existing component architecture",
+      "Toggle buttons provide better UX than dropdown-only approach for binary filters",
+      "Visual indicators enhance task management workflow significantly",
+      "Combining multiple filter types requires careful state management but improves functionality"
+    ]
+  }
 }
